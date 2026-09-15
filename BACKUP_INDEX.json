@@ -1,0 +1,84 @@
+{
+  "schema": 2,
+  "source_repo": "kelffren/gemini",
+  "backup_repo": "kelffren/geminirespaldo",
+  "policy": {
+    "clean_definition": "No blocking bug/crash detected by the current required automated gates",
+    "clean_requires": [
+      "kelo_ci",
+      "quality_ratchet",
+      "ui_quality",
+      "foundation_architecture",
+      "live_mobile_audit",
+      "fresh_playability_smoke"
+    ],
+    "defer_if_required_checks_are_still_running": true,
+    "semi_after_missing_or_failed_checks_hours": 2,
+    "prune_trigger_clean_count": 10,
+    "prune_count": 5,
+    "minimum_clean_after_prune": 5,
+    "prune_priority": [
+      "SEMI",
+      "oldest CLEAN"
+    ]
+  },
+  "snapshots": [
+    {
+      "id": 1,
+      "status": "SEMI",
+      "branch": "snapshots/0001-SEMI-V6.69-20260915-114456",
+      "source_sha": "f067af974e42b7b94d384a73a2739711057556df",
+      "source_tree_sha": "1dc75ed2a006c419553edcecbaefc51fa966ebf8",
+      "snapshot_commit": "75275e56f26204cebf894d06612898b177798972",
+      "version": "V6.69",
+      "created_at": "2026-09-15T11:44:56.267557+00:00",
+      "active": true,
+      "qualification": {
+        "kelo_ci": {
+          "success": false,
+          "run_id": null,
+          "conclusion": "missing"
+        },
+        "quality_ratchet": {
+          "success": false,
+          "run_id": null,
+          "conclusion": "missing"
+        },
+        "ui_quality": {
+          "success": false,
+          "run_id": null,
+          "conclusion": "missing"
+        },
+        "foundation_architecture": {
+          "success": false,
+          "run_id": null,
+          "conclusion": "missing"
+        },
+        "live_mobile_audit": {
+          "success": false,
+          "run_id": null,
+          "conclusion": "missing"
+        },
+        "fresh_playability_smoke": {
+          "success": true,
+          "outcome": "success"
+        },
+        "detected_failures": [
+          "kelo_ci not successful for exact source SHA",
+          "quality_ratchet not successful for exact source SHA",
+          "ui_quality not successful for exact source SHA",
+          "foundation_architecture not successful for exact source SHA",
+          "live_mobile_audit not successful for exact source SHA"
+        ]
+      }
+    }
+  ],
+  "last_run_at": "2026-09-15T11:45:02.614787+00:00",
+  "latest_snapshot": "snapshots/0001-SEMI-V6.69-20260915-114456",
+  "latest_clean": null,
+  "active_counts": {
+    "clean": 0,
+    "semi": 1,
+    "total": 1
+  }
+}
