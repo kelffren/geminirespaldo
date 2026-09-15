@@ -1,0 +1,79 @@
+name: Kelo Versioned Backup Vault
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      force_semi:
+        description: 'Guardar SEMI aunque los checks del source aún no estén listos'
+        required: false
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/versioned-backup.yml'
+      - 'scripts/backup_vault.py'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kelo-versioned-backup-vault
+  cancel-in-progress: false
+
+jobs:
+  qualify-and-backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout backup vault
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Clone current Kelo World main
+        run: |
+          rm -rf _source
+          git clone --depth 1 --branch main https://github.com/kelffren/gemini.git _source
+          echo "SOURCE_SHA=$(git -C _source rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Install Playwright for fresh playability test
+        working-directory: _source
+        run: npm install --no-save playwright@1.55.0
+
+      - name: Fresh mobile playability and crash test
+        id: smoke
+        continue-on-error: true
+        working-directory: _source
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: |
+          rm -rf artifacts
+          mkdir -p artifacts
+          python3 -m http.server 4173 >/tmp/kelo-backup-smoke-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 0.25
+          done
+          AUDIT_URL='http://127.0.0.1:4173/?offline=1&qa-live-audit=1' node scripts/live-playability-audit.mjs
+
+      - name: Classify, snapshot and apply retention policy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_DIR: _source
+          SMOKE_RESULT: ${{ steps.smoke.outcome }}
+          FORCE_SEMI: ${{ github.event_name == 'workflow_dispatch' && inputs.force_semi || false }}
+        run: python3 scripts/backup_vault.py
+
+      - name: Upload qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backup-qualification-${{ env.SOURCE_SHA }}
+          path: _source/artifacts/
+          if-no-files-found: warn
+          retention-days: 7
