@@ -14,41 +14,40 @@ INDEX_PATH = Path("BACKUP_INDEX.json")
 TOKEN = os.environ.get("GITHUB_TOKEN", "")
 SMOKE_RESULT = os.environ.get("SMOKE_RESULT", "failure").lower()
 FORCE_SEMI = os.environ.get("FORCE_SEMI", "false").lower() == "true"
+REQUIRED_WORKFLOWS = {
+    "kelo_ci": ".github/workflows/ci.yml",
+    "quality_ratchet": ".github/workflows/quality.yml",
+    "ui_quality": ".github/workflows/ui-quality.yml",
+    "foundation_architecture": ".github/workflows/foundation-architecture-ci.yml",
+    "live_mobile_audit": ".github/workflows/live-audit.yml",
+}
 
 
 def run(args, cwd=None, check=True, input_text=None):
-    result = subprocess.run(
-        args,
-        cwd=cwd,
-        check=False,
-        text=True,
-        input=input_text,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+    result = subprocess.run(args, cwd=cwd, check=False, text=True, input=input_text,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if check and result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or result.stdout.strip() or f"command failed: {args[0]}")
     return result
 
 
 def api(path):
-    headers = {
-        "Accept": "application/vnd.github+json",
-        "User-Agent": "kelo-versioned-backup-vault",
-        "X-GitHub-Api-Version": "2022-11-28",
-    }
-    if TOKEN:
-        headers["Authorization"] = f"Bearer {TOKEN}"
-    req = Request(f"https://api.github.com{path}", headers=headers)
+    # Source repository is public. Keep this request unauthenticated so the backup
+    # repository-scoped GITHUB_TOKEN cannot hide public source workflow data.
+    req = Request(
+        f"https://api.github.com{path}",
+        headers={
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "kelo-versioned-backup-vault",
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+    )
     with urlopen(req, timeout=30) as response:
         return json.load(response)
 
 
 def latest_workflow_run(runs, workflow_path, source_sha):
-    matches = [
-        r for r in runs
-        if r.get("head_sha") == source_sha and r.get("path") == workflow_path
-    ]
+    matches = [r for r in runs if r.get("head_sha") == source_sha and r.get("path") == workflow_path]
     matches.sort(key=lambda r: r.get("created_at") or "", reverse=True)
     return matches[0] if matches else None
 
@@ -67,15 +66,12 @@ def load_index():
     if INDEX_PATH.exists():
         return json.loads(INDEX_PATH.read_text())
     return {
-        "schema": 1,
+        "schema": 2,
         "source_repo": SOURCE_REPO,
         "backup_repo": BACKUP_REPO,
         "policy": {
-            "clean_requires": [
-                "Kelo CI success for exact source SHA",
-                "Live mobile screenshot audit success for exact source SHA",
-                "fresh mobile playability smoke success with no crash/pageerror detected",
-            ],
+            "clean_definition": "No blocking bug/crash detected by the current required automated gates",
+            "clean_requires": list(REQUIRED_WORKFLOWS.keys()) + ["fresh_playability_smoke"],
             "defer_if_required_checks_are_still_running": True,
             "semi_after_missing_or_failed_checks_hours": 2,
             "prune_trigger_clean_count": 10,
@@ -93,7 +89,7 @@ def remote_url():
     return f"https://x-access-token:{TOKEN}@github.com/{BACKUP_REPO}.git"
 
 
-def push_snapshot(source_sha, tree_sha, branch, message):
+def push_snapshot(tree_sha, branch, message):
     env = os.environ.copy()
     env.update({
         "GIT_AUTHOR_NAME": "Kelo Backup Vault",
@@ -101,25 +97,13 @@ def push_snapshot(source_sha, tree_sha, branch, message):
         "GIT_COMMITTER_NAME": "Kelo Backup Vault",
         "GIT_COMMITTER_EMAIL": "backup-vault@users.noreply.github.com",
     })
-    commit = subprocess.run(
-        ["git", "commit-tree", tree_sha],
-        cwd=SOURCE_DIR,
-        text=True,
-        input=message + "\n",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=env,
-    )
+    commit = subprocess.run(["git", "commit-tree", tree_sha], cwd=SOURCE_DIR, text=True,
+                            input=message + "\n", stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
     if commit.returncode != 0:
         raise RuntimeError(commit.stderr.strip())
     snapshot_commit = commit.stdout.strip()
-    result = subprocess.run(
-        ["git", "push", remote_url(), f"{snapshot_commit}:refs/heads/{branch}"],
-        cwd=SOURCE_DIR,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+    result = subprocess.run(["git", "push", remote_url(), f"{snapshot_commit}:refs/heads/{branch}"],
+                            cwd=SOURCE_DIR, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or result.stdout.strip())
     return snapshot_commit
@@ -158,46 +142,46 @@ def main():
         print(f"BACKUP_SKIP already cataloged source_sha={source_sha}")
         return 0
 
-    runs_data = api(f"/repos/{SOURCE_REPO}/actions/runs?branch=main&per_page=100")
-    runs = runs_data.get("workflow_runs", [])
-    ci = latest_workflow_run(runs, ".github/workflows/ci.yml", source_sha)
-    live = latest_workflow_run(runs, ".github/workflows/live-audit.yml", source_sha)
-
-    required = {"kelo_ci": ci, "live_mobile_audit": live}
-    pending = [
-        name for name, run_info in required.items()
-        if run_info and run_info.get("status") in {"queued", "in_progress", "waiting", "pending"}
-    ]
-    missing = [name for name, run_info in required.items() if not run_info]
+    runs = api(f"/repos/{SOURCE_REPO}/actions/runs?branch=main&per_page=100").get("workflow_runs", [])
+    required = {
+        name: latest_workflow_run(runs, path, source_sha)
+        for name, path in REQUIRED_WORKFLOWS.items()
+    }
+    pending = [name for name, r in required.items()
+               if r and r.get("status") in {"queued", "in_progress", "waiting", "pending"}]
+    missing = [name for name, r in required.items() if not r]
 
     if not FORCE_SEMI and (pending or (missing and age_hours < 2.0)):
         print(json.dumps({
-            "decision": "DEFER",
-            "source_sha": source_sha,
-            "age_hours": round(age_hours, 2),
-            "pending": pending,
-            "missing": missing,
-            "smoke": SMOKE_RESULT,
+            "decision": "DEFER", "source_sha": source_sha, "age_hours": round(age_hours, 2),
+            "pending": pending, "missing": missing, "smoke": SMOKE_RESULT,
         }))
         return 0
 
-    ci_success = bool(ci and ci.get("status") == "completed" and ci.get("conclusion") == "success")
-    live_success = bool(live and live.get("status") == "completed" and live.get("conclusion") == "success")
-    smoke_success = SMOKE_RESULT == "success"
-    status = "CLEAN" if ci_success and live_success and smoke_success else "SEMI"
+    qualification = {}
+    failures = []
+    all_required_success = True
+    for name, run_info in required.items():
+        success = bool(run_info and run_info.get("status") == "completed" and run_info.get("conclusion") == "success")
+        all_required_success = all_required_success and success
+        qualification[name] = {
+            "success": success,
+            "run_id": run_info.get("id") if run_info else None,
+            "conclusion": run_info.get("conclusion") if run_info else "missing",
+        }
+        if not success:
+            failures.append(f"{name} not successful for exact source SHA")
 
+    smoke_success = SMOKE_RESULT == "success"
+    qualification["fresh_playability_smoke"] = {"success": smoke_success, "outcome": SMOKE_RESULT}
+    if not smoke_success:
+        failures.append("fresh playability smoke failed")
+
+    status = "CLEAN" if all_required_success and smoke_success else "SEMI"
     next_id = max([int(s.get("id", 0)) for s in snapshots] or [0]) + 1
     now = datetime.now(timezone.utc)
     stamp = now.strftime("%Y%m%d-%H%M%S")
     branch = f"snapshots/{next_id:04d}-{status}-{version}-{stamp}"
-
-    failures = []
-    if not ci_success:
-        failures.append("Kelo CI not successful for exact source SHA")
-    if not live_success:
-        failures.append("Live mobile screenshot audit not successful for exact source SHA")
-    if not smoke_success:
-        failures.append("fresh playability smoke failed")
 
     message = (
         f"Kelo World backup {next_id:04d} {status}\n"
@@ -205,9 +189,9 @@ def main():
         f"Version: {version}\n"
         f"Classification: {status}\n"
     )
-    snapshot_commit = push_snapshot(source_sha, tree_sha, branch, message)
-
-    record = {
+    snapshot_commit = push_snapshot(tree_sha, branch, message)
+    qualification["detected_failures"] = failures
+    snapshots.append({
         "id": next_id,
         "status": status,
         "branch": branch,
@@ -217,27 +201,9 @@ def main():
         "version": version,
         "created_at": now.isoformat(),
         "active": True,
-        "qualification": {
-            "kelo_ci": {
-                "success": ci_success,
-                "run_id": ci.get("id") if ci else None,
-                "conclusion": ci.get("conclusion") if ci else "missing",
-            },
-            "live_mobile_audit": {
-                "success": live_success,
-                "run_id": live.get("id") if live else None,
-                "conclusion": live.get("conclusion") if live else "missing",
-            },
-            "fresh_playability_smoke": {
-                "success": smoke_success,
-                "outcome": SMOKE_RESULT,
-            },
-            "detected_failures": failures,
-        },
-    }
-    snapshots.append(record)
+        "qualification": qualification,
+    })
 
-    # Retention: nothing is pruned until there are at least 10 active CLEAN snapshots.
     active = [s for s in snapshots if s.get("active", True)]
     clean_active = [s for s in active if s.get("status") == "CLEAN"]
     pruned = []
@@ -260,9 +226,12 @@ def main():
             if old.get("status") == "CLEAN":
                 current_clean -= 1
 
+    index["schema"] = 2
+    index["policy"] = load_index().get("policy", index.get("policy", {})) if not INDEX_PATH.exists() else index.get("policy", {})
     index["last_run_at"] = datetime.now(timezone.utc).isoformat()
     index["latest_snapshot"] = branch
-    index["latest_clean"] = next((s["branch"] for s in reversed(snapshots) if s.get("status") == "CLEAN" and s.get("active", True)), None)
+    index["latest_clean"] = next((s["branch"] for s in reversed(snapshots)
+                                  if s.get("status") == "CLEAN" and s.get("active", True)), None)
     index["active_counts"] = {
         "clean": sum(1 for s in snapshots if s.get("active", True) and s.get("status") == "CLEAN"),
         "semi": sum(1 for s in snapshots if s.get("active", True) and s.get("status") == "SEMI"),
@@ -274,14 +243,9 @@ def main():
     commit_catalog(f"backup: register {next_id:04d} {status}")
 
     print(json.dumps({
-        "decision": status,
-        "id": next_id,
-        "branch": branch,
-        "source_sha": source_sha,
-        "version": version,
-        "failures": failures,
-        "pruned": pruned,
-        "active_counts": index["active_counts"],
+        "decision": status, "id": next_id, "branch": branch,
+        "source_sha": source_sha, "version": version,
+        "failures": failures, "pruned": pruned, "active_counts": index["active_counts"],
     }))
     return 0
 
