@@ -1,0 +1,39 @@
+name: Forge live mobile audit
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'engine-net.js'
+      - 'src/systems/equipment-system.js'
+      - 'src/systems/forge-system.js'
+      - 'src/systems/armor-aura.js'
+      - 'src/systems/illumination.js'
+      - 'scripts/live-forge-audit.mjs'
+      - '.github/workflows/forge-live-audit.yml'
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax
+        run: node --check scripts/live-forge-audit.mjs
+      - name: Install Playwright
+        run: npm install --no-save playwright@1.55.0
+      - name: Audit LIVE mobile forge
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/live-forge-audit.mjs
+      - name: Upload forge evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forge-live-mobile-audit
+          path: artifacts/
+          if-no-files-found: warn

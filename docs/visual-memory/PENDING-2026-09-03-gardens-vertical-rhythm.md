@@ -1,0 +1,10 @@
+## Validated Gardens Vertical Hedge Rhythm — joins v3 / compositions v4 — 2026-09-03
+
+- Fresh reference review kept Pixadom as a density/readability benchmark only and reinforced the value of preserving obvious circulation while adding environmental richness. Current 32×32 top-down tileset practice also favors small modular variant families plus explicit metadata/contracts over extra prop density.
+- `gardens-joins-v3` expands the modular join atlas from 256×32 / 8 cells to 288×32 / 9 cells while preserving IDs 0–7 and appending `HEDGE_V_ALT:8`, a restrained mirrored vertical mid variant derived from the authored hedge vocabulary.
+- `gardens-compositions-v4` keeps the same 11 composition footprints, coordinates, path clearance, landmark clearance, and density. The east upper/lower vertical hedge runs now use `HEDGE_V_ALT`; the west vertical run retains the original `HEDGE_V`, creating controlled left/right rhythm variation.
+- No gameplay systems or world geometry changed. `world-map.js` remains `world-v1.14` because the renderer already resolves named join-atlas cells generically through the registry-backed composition contract.
+- Validation: Kelo CI and GitHub Pages passed. The focused LIVE mobile audit passed at 390×844 CSS / 780×1688 canvas with `gardens-joins-v3`, `registry-authored-garden-compositions-v4`, `verticalAltUsageCount=2`, `consoleErrors=[]`, `failedRequests=[]`, and `httpErrors=[]`.
+- Manual inspection of the LIVE screenshot confirms the east-side vertical hedge run has a less mechanically repeated center silhouette with no broken seams; promenade, fountain clearance, hero readability, and overall density remain intact.
+- QA decision: focused evidence should frame the changed region, so the Gardens variant capture now centers farther east instead of relying only on contract assertions.
+- Next bottleneck: corner/junction vocabulary remains mostly a single `HEDGE_CORNER` stamp and the overall garden framing is still strongly orthogonal. The next safe pass is 1–2 modular corner/junction variants using the same footprints and density before adding props or another landmark.

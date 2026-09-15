@@ -1,0 +1,48 @@
+name: Universal Content Studio
+
+on:
+  pull_request:
+    paths:
+      - 'src/creators/content/**'
+      - 'src/creators/importers/universal-content-importer.mjs'
+      - 'src/creators/ui/content-studio-workspace.mjs'
+      - 'src/creators/workspaces/content-studio-workspace.mjs'
+      - 'src/creators/creator-entry.mjs'
+      - 'src/creators/ui/creator-hub.mjs'
+      - 'src/online/kelo-supabase-*.mjs'
+      - 'supabase/migrations/**'
+      - 'scripts/universal-content-studio-audit.mjs'
+      - 'docs/systems/UNIVERSAL_CONTENT_STUDIO.md'
+      - 'docs/system-catalog.json'
+      - 'package.json'
+      - '.github/workflows/universal-content-studio-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/creators/content/**'
+      - 'src/creators/importers/universal-content-importer.mjs'
+      - 'supabase/migrations/**'
+      - 'scripts/universal-content-studio-audit.mjs'
+      - 'docs/systems/UNIVERSAL_CONTENT_STUDIO.md'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Syntax
+        run: |
+          node --check src/creators/content/content-type-schemas.mjs
+          node --check src/creators/content/runtime-content-registry.mjs
+          node --check src/creators/content/supabase-content-repository.mjs
+          node --check src/creators/content/universal-content-service.mjs
+          node --check src/creators/importers/universal-content-importer.mjs
+          node --check src/creators/ui/content-studio-workspace.mjs
+          node --check src/online/kelo-supabase-browser-session.mjs
+      - name: Universal content audit
+        run: npm run audit:universal-content
+      - name: Documentation audit
+        run: npm run audit:docs

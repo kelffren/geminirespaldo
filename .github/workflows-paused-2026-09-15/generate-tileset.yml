@@ -1,0 +1,45 @@
+name: Generate production tileset
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'scripts/generate_tileset.py'
+      - '.github/workflows/generate-tileset.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Generate deterministic 512px atlas
+        run: python3 scripts/generate_tileset.py
+      - name: Validate PNG contract
+        run: |
+          python3 - <<'PY'
+          import struct
+          p='assets/tileset.png'
+          b=open(p,'rb').read(24)
+          assert b[:8] == b'\x89PNG\r\n\x1a\n'
+          w,h=struct.unpack('>II',b[16:24])
+          assert (w,h)==(512,512), (w,h)
+          assert w%32==0 and h%32==0
+          print('PASS tileset',w,h,'tile=32 grid=16x16')
+          PY
+      - name: Commit generated atlas
+        run: |
+          if git diff --quiet -- assets/tileset.png; then
+            echo 'tileset already current'
+            exit 0
+          fi
+          git config user.name 'kelo-tileset-bot'
+          git config user.email '68343904+kelffren@users.noreply.github.com'
+          git add assets/tileset.png
+          git commit -m 'Generate deterministic 32px Roman garden tileset'
+          git push origin HEAD:main

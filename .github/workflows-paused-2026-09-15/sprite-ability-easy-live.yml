@@ -1,0 +1,58 @@
+name: Sprite Ability Easy LIVE
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/creators/sprite-ability/**'
+      - 'src/creators/creator-entry.mjs'
+      - 'src/creators/repository/indexeddb-creator-state-adapter.mjs'
+      - 'src/creators/ui/creator-hub.mjs'
+      - 'scripts/live-sprite-ability-easy-smoke.mjs'
+      - '.github/workflows/sprite-ability-easy-live.yml'
+
+jobs:
+  easy-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax
+        run: |
+          node --check src/creators/sprite-ability/sprite-ability-easy-ui.mjs
+          node --check src/creators/repository/indexeddb-creator-state-adapter.mjs
+          node --check src/creators/ui/creator-hub.mjs
+          node --check scripts/live-sprite-ability-easy-smoke.mjs
+      - name: Install Playwright
+        run: npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund playwright@1.55.0
+      - name: Wait for exact Easy UI version on deployed Pages
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 45); do
+            easy="$(curl --max-time 10 -fsSL "https://kelffren.github.io/gemini/src/creators/sprite-ability/sprite-ability-easy-ui.mjs?smoke=${GITHUB_SHA}-${i}" || true)"
+            entry="$(curl --max-time 10 -fsSL "https://kelffren.github.io/gemini/src/creators/creator-entry.mjs?smoke=${GITHUB_SHA}-${i}" || true)"
+            state="$(curl --max-time 10 -fsSL "https://kelffren.github.io/gemini/src/creators/repository/indexeddb-creator-state-adapter.mjs?smoke=${GITHUB_SHA}-${i}" || true)"
+            hub="$(curl --max-time 10 -fsSL "https://kelffren.github.io/gemini/src/creators/ui/creator-hub.mjs?smoke=${GITHUB_SHA}-${i}" || true)"
+            if grep -q 'kelo-sprite-ability-easy-v1-style' <<<"$easy" \
+              && grep -q 'installSpriteAbilityEasyUI' <<<"$entry" \
+              && grep -q 'kelo-creators-core-v1.12.1-sprite-easy-open' <<<"$entry" \
+              && grep -q 'ensureCreatorInputLocks' <<<"$entry" \
+              && grep -q 'creator-indexeddb-state-v1.1.0-nonblocking' <<<"$state" \
+              && grep -q 'kelo-creator-hub-v1.9.0-sprite-ability-direct' <<<"$hub"; then
+              echo 'PASS deployed Pages contains exact direct-open Easy Sprite Ability version'
+              exit 0
+            fi
+            echo "Waiting for exact Sprite Ability Easy version on Pages ($i/45)..."
+            sleep 4
+          done
+          echo 'FAIL Pages never exposed the exact Sprite Ability Easy version in time'
+          exit 1
+      - name: Open Sprite Ability Easy Mode in live Chrome
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: timeout 75s node scripts/live-sprite-ability-easy-smoke.mjs

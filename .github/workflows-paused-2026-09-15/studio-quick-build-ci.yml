@@ -1,0 +1,134 @@
+name: Studio Quick Build CI
+
+on:
+  pull_request:
+    paths:
+      - 'src/studio/tools/quick-build-tool.mjs'
+      - 'src/studio/tools/room-build-tool.mjs'
+      - 'src/studio/tools/room-floor-planner.mjs'
+      - 'src/studio/tools/room-opening-tool.mjs'
+      - 'src/studio/tools/room-material-tool.mjs'
+      - 'src/studio/tools/select-tool.mjs'
+      - 'src/studio/tools/creator-actions.mjs'
+      - 'src/studio/tools/register-basic-tools.mjs'
+      - 'src/studio/tools/placement-tool.mjs'
+      - 'src/studio/document/document-commands.mjs'
+      - 'src/studio/render/studio-overlay-renderer.mjs'
+      - 'scripts/studio-quick-build-audit.mjs'
+      - 'scripts/studio-quick-build-drag-audit.mjs'
+      - 'scripts/studio-room-build-audit.mjs'
+      - 'scripts/studio-room-drag-threshold-audit.mjs'
+      - 'scripts/studio-room-square-lock-audit.mjs'
+      - 'scripts/studio-room-plan-cache-audit.mjs'
+      - 'scripts/studio-room-centered-drag-audit.mjs'
+      - 'scripts/studio-room-floor-fill-audit.mjs'
+      - 'scripts/studio-room-preview-cleanup-audit.mjs'
+      - 'scripts/studio-room-opening-audit.mjs'
+      - 'scripts/studio-group-rotate-audit.mjs'
+      - 'scripts/studio-group-scale-audit.mjs'
+      - 'scripts/studio-room-clone-isolation-audit.mjs'
+      - 'scripts/studio-rotated-duplicate-clearance-audit.mjs'
+      - 'scripts/studio-room-material-audit.mjs'
+      - 'scripts/studio-paste-clearance-audit.mjs'
+      - '.github/workflows/studio-quick-build-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/studio/tools/quick-build-tool.mjs'
+      - 'src/studio/tools/room-build-tool.mjs'
+      - 'src/studio/tools/room-floor-planner.mjs'
+      - 'src/studio/tools/room-opening-tool.mjs'
+      - 'src/studio/tools/room-material-tool.mjs'
+      - 'src/studio/tools/select-tool.mjs'
+      - 'src/studio/tools/creator-actions.mjs'
+      - 'src/studio/tools/register-basic-tools.mjs'
+      - 'src/studio/tools/placement-tool.mjs'
+      - 'src/studio/document/document-commands.mjs'
+      - 'src/studio/render/studio-overlay-renderer.mjs'
+      - 'scripts/studio-quick-build-audit.mjs'
+      - 'scripts/studio-quick-build-drag-audit.mjs'
+      - 'scripts/studio-room-build-audit.mjs'
+      - 'scripts/studio-room-drag-threshold-audit.mjs'
+      - 'scripts/studio-room-square-lock-audit.mjs'
+      - 'scripts/studio-room-plan-cache-audit.mjs'
+      - 'scripts/studio-room-centered-drag-audit.mjs'
+      - 'scripts/studio-room-floor-fill-audit.mjs'
+      - 'scripts/studio-room-preview-cleanup-audit.mjs'
+      - 'scripts/studio-room-opening-audit.mjs'
+      - 'scripts/studio-group-rotate-audit.mjs'
+      - 'scripts/studio-group-scale-audit.mjs'
+      - 'scripts/studio-room-clone-isolation-audit.mjs'
+      - 'scripts/studio-rotated-duplicate-clearance-audit.mjs'
+      - 'scripts/studio-room-material-audit.mjs'
+      - 'scripts/studio-paste-clearance-audit.mjs'
+      - '.github/workflows/studio-quick-build-ci.yml'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax
+        run: |
+          node --check src/studio/tools/quick-build-tool.mjs
+          node --check src/studio/tools/room-build-tool.mjs
+          node --check src/studio/tools/room-floor-planner.mjs
+          node --check src/studio/tools/room-opening-tool.mjs
+          node --check src/studio/tools/room-material-tool.mjs
+          node --check src/studio/tools/select-tool.mjs
+          node --check src/studio/tools/creator-actions.mjs
+          node --check src/studio/tools/register-basic-tools.mjs
+          node --check src/studio/tools/placement-tool.mjs
+          node --check src/studio/document/document-commands.mjs
+          node --check src/studio/render/studio-overlay-renderer.mjs
+          node --check scripts/studio-quick-build-audit.mjs
+          node --check scripts/studio-quick-build-drag-audit.mjs
+          node --check scripts/studio-room-build-audit.mjs
+          node --check scripts/studio-room-drag-threshold-audit.mjs
+          node --check scripts/studio-room-square-lock-audit.mjs
+          node --check scripts/studio-room-plan-cache-audit.mjs
+          node --check scripts/studio-room-centered-drag-audit.mjs
+          node --check scripts/studio-room-floor-fill-audit.mjs
+          node --check scripts/studio-room-preview-cleanup-audit.mjs
+          node --check scripts/studio-room-opening-audit.mjs
+          node --check scripts/studio-group-rotate-audit.mjs
+          node --check scripts/studio-group-scale-audit.mjs
+          node --check scripts/studio-room-clone-isolation-audit.mjs
+          node --check scripts/studio-rotated-duplicate-clearance-audit.mjs
+          node --check scripts/studio-room-material-audit.mjs
+          node --check scripts/studio-paste-clearance-audit.mjs
+      - name: Quick Build phase 1-3 contract
+        run: node scripts/studio-quick-build-audit.mjs
+      - name: Quick Build phase 4 drag contract
+        run: node scripts/studio-quick-build-drag-audit.mjs
+      - name: Quick Build phase 5 room contract
+        run: node scripts/studio-room-build-audit.mjs
+      - name: Quick Build phase 5.4 intentional room drag contract
+        run: node scripts/studio-room-drag-threshold-audit.mjs
+      - name: Quick Build phase 5.5 ROOM square lock contract
+        run: node scripts/studio-room-square-lock-audit.mjs
+      - name: Quick Build phase 5.6 ROOM quantized plan cache contract
+        run: node scripts/studio-room-plan-cache-audit.mjs
+      - name: Quick Build phase 5.7 ROOM centered drag contract
+        run: node scripts/studio-room-centered-drag-audit.mjs
+      - name: Quick Build phase 5.8 ROOM floor fill contract
+        run: node scripts/studio-room-floor-fill-audit.mjs
+      - name: Quick Build phase 5.9 ROOM preview cleanup contract
+        run: node scripts/studio-room-preview-cleanup-audit.mjs
+      - name: Quick Build phase 6.0 ROOM semantic opening contract
+        run: node scripts/studio-room-opening-audit.mjs
+      - name: Quick Build phase 7.0 composition rotation contract
+        run: node scripts/studio-group-rotate-audit.mjs
+      - name: Quick Build phase 7.1 composition scale contract
+        run: node scripts/studio-group-scale-audit.mjs
+      - name: Quick Build phase 7.2 cloned ROOM isolation contract
+        run: node scripts/studio-room-clone-isolation-audit.mjs
+      - name: Quick Build phase 7.3 rotated duplicate clearance contract
+        run: node scripts/studio-rotated-duplicate-clearance-audit.mjs
+      - name: Quick Build phase 7.4 ROOM material contract
+        run: node scripts/studio-room-material-audit.mjs
+      - name: Quick Build phase 7.5 automatic paste clearance contract
+        run: node scripts/studio-paste-clearance-audit.mjs

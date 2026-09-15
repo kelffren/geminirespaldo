@@ -1,0 +1,55 @@
+name: Kelo Studio Foundation
+on:
+  pull_request:
+    paths:
+      - 'src/studio/**'
+      - 'src/creators/workspaces/world-workspace.mjs'
+      - 'src/ui/studio-launcher.js'
+      - 'scripts/studio-foundation-audit.mjs'
+      - 'scripts/studio-creator-v1-audit.mjs'
+      - 'scripts/studio-overlap-cycle-audit.mjs'
+      - 'scripts/studio-nudge-audit.mjs'
+      - 'scripts/studio-indexeddb-nonblocking-audit.mjs'
+      - 'index.html'
+      - 'package.json'
+      - '.github/workflows/studio-foundation.yml'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check Studio modules
+        run: |
+          find src/studio -type f -name '*.mjs' -print0 | xargs -0 -n1 node --check
+          node --check src/creators/workspaces/world-workspace.mjs
+          node --check src/ui/studio-launcher.js
+          node --check scripts/studio-foundation-audit.mjs
+          node --check scripts/studio-creator-v1-audit.mjs
+          node --check scripts/studio-overlap-cycle-audit.mjs
+          node --check scripts/studio-nudge-audit.mjs
+          node --check scripts/studio-indexeddb-nonblocking-audit.mjs
+      - name: IndexedDB non-blocking recovery audit
+        run: node scripts/studio-indexeddb-nonblocking-audit.mjs
+      - name: Overlap selection focused audit
+        run: node scripts/studio-overlap-cycle-audit.mjs
+      - name: Studio nudge focused audit
+        run: node scripts/studio-nudge-audit.mjs
+      - name: Studio foundation functional audit
+        run: node scripts/studio-foundation-audit.mjs
+      - name: Studio Creator V1 functional audit
+        run: node scripts/studio-creator-v1-audit.mjs
+      - name: Verify two-stage lazy boot contract
+        run: |
+          if grep -Eq 'src/studio/|studio-entry\.mjs|src/creators/' index.html; then
+            echo 'Studio and Creator modules must not be eagerly loaded by index.html'
+            exit 1
+          fi
+          grep -Eq 'src/ui/studio-launcher\.js(\?v=[^"'"'"'[:space:]>]+)?' index.html
+          grep -Fq "import('./../creators/ui/creator-hub.mjs')" src/ui/studio-launcher.js
+          ! grep -Fq "import('./../studio/" src/ui/studio-launcher.js
+          grep -Fq "import('../../studio/integration/live-studio-controller.mjs')" src/creators/workspaces/world-workspace.mjs

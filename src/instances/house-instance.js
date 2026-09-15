@@ -1,0 +1,45 @@
+/* KELO-INDEX
+ * area: INSTANCES
+ * keys: HOUSE AUTHORITY PERSISTENCE SNAPSHOT PERMISSIONS RECOVERY
+ * hace: instancia casas offline con snapshot durable y autoridad local reemplazable
+ * online: installAuthorityAdapter/installPersistenceAdapter cambian a servidor/DB sin tocar UI ni Property
+ */
+(function(){
+  'use strict';
+  const I=window.KELO_INSTANCES,S=window.KELO_PROPERTY_SYSTEM;
+  if(!I||!S){console.error('[Kelo house] instance/property system missing');return;}
+  const STORAGE='kelo_house_snapshots_v1',SCHEMA=1;
+  const clone=v=>JSON.parse(JSON.stringify(v));
+  const now=()=>Date.now();
+  const readAll=()=>{try{const raw=JSON.parse(localStorage.getItem(STORAGE)||'{}');return raw&&typeof raw==='object'?raw:{};}catch(e){return{};}};
+  const writeAll=data=>{try{localStorage.setItem(STORAGE,JSON.stringify(data));}catch(err){console.error('[Kelo house] persist',err);throw err;}};
+  const localPersistence={async load(houseId){return clone(readAll()[String(houseId)]||null);},async save(snapshot){const all=readAll();all[String(snapshot.houseId)]=clone(snapshot);writeAll(all);return clone(snapshot);},async remove(houseId){const all=readAll();delete all[String(houseId)];writeAll(all);return true;}};
+  let persistence=localPersistence,remoteAuthority=null;
+  function defaultConfig(){return{bounds:{x:0,y:0,w:768,h:544},spawn:{x:384,y:456},maxPlayers:8,idleTTL:120000};}
+  function freshSnapshot(houseId,ownerId,config){const c=Object.assign(defaultConfig(),clone(config||{}));c.bounds=Object.assign(defaultConfig().bounds,clone(config?.bounds||{}));c.spawn=Object.assign({x:c.bounds.x+c.bounds.w/2,y:c.bounds.y+c.bounds.h-88},clone(config?.spawn||{}));return{schema:SCHEMA,houseId:String(houseId),ownerId:String(ownerId),revision:0,layoutRevision:0,instanceConfig:c,placements:[],permissions:{[String(ownerId)]:'owner'},updatedAt:now()};}
+  const roleCaps=Object.freeze({owner:{canEnter:true,canBuild:true,canMoveAssets:true,canRemoveAssets:true,canInvite:true},editor:{canEnter:true,canBuild:true,canMoveAssets:true,canRemoveAssets:true,canInvite:false},visitor:{canEnter:true,canBuild:false,canMoveAssets:false,canRemoveAssets:false,canInvite:false},blocked:{canEnter:false,canBuild:false,canMoveAssets:false,canRemoveAssets:false,canInvite:false}});
+  function roleOf(snapshot,actorId){actorId=String(actorId||'');if(actorId===String(snapshot.ownerId))return'owner';return String(snapshot.permissions?.[actorId]||'visitor');}
+  function caps(snapshot,actorId){return roleCaps[roleOf(snapshot,actorId)]||roleCaps.visitor;}
+  async function loadSnapshot(houseId,ownerId,config){const found=await persistence.load(houseId);if(found&&found.schema===SCHEMA&&Array.isArray(found.placements)&&found.permissions)return found;const fresh=freshSnapshot(houseId,ownerId,config);await persistence.save(fresh);return fresh;}
+  function runtimeForPayload(data){const byId=data?.instanceId&&I._getRuntime?.(data.instanceId);if(byId)return byId;const current=I.current?.();if(current?.type==='house'){const r=I._getRuntime?.(current.instanceId);if(r)return r;}const parcelId=String(data?.parcelId||'');if(parcelId){for(const row of I.getActiveInstances()){if(row.type==='house'&&row.parcelId===parcelId)return I._getRuntime?.(row.instanceId)||null;}}const placementId=String(data?.placementId||'');if(placementId){const rec=S.getPlacements().find(p=>p.placementId===placementId);if(rec){for(const row of I.getActiveInstances()){if(row.type==='house'&&row.parcelId===rec.parcelId)return I._getRuntime?.(row.instanceId)||null;}}}return null;}
+  async function persistRuntime(i,bumpRevision,bumpLayout){if(!i)throw new Error('HOUSE_INSTANCE_NOT_FOUND');const snap=clone(i.runtimeState?.snapshot||freshSnapshot(i.resourceId,i.ownerId,i.config));if(bumpRevision)snap.revision=(Number(snap.revision)||0)+1;if(bumpLayout)snap.layoutRevision=(Number(snap.layoutRevision)||0)+1;snap.instanceConfig=clone(i.config||snap.instanceConfig||defaultConfig());snap.permissions=clone(i.permissions||snap.permissions||{});snap.placements=S.getPlacements(i.parcelId);snap.updatedAt=now();i.revision=snap.revision;i.runtimeState.snapshot=snap;await persistence.save(snap);return clone(snap);}
+  function requireCap(i,actorId,cap){const snap=i?.runtimeState?.snapshot;if(!snap)throw new Error('HOUSE_SNAPSHOT_MISSING');if(!caps(snap,actorId)[cap])throw new Error('HOUSE_PERMISSION_DENIED');return snap;}
+  async function localRequest(op,payload){const data=payload||{},actorId=String(data.actorId||data.ownerId||S.playerId());
+    if(op==='house:get'){const houseId=String(data.houseId||'');if(!houseId)throw new Error('HOUSE_ID_REQUIRED');return loadSnapshot(houseId,String(data.ownerId||actorId),data.config);}
+    if(op==='house:enter'){const houseId=String(data.houseId||`home:${data.ownerId||actorId}`),ownerId=String(data.ownerId||actorId);const saved=await loadSnapshot(houseId,ownerId,data.config);if(!caps(saved,actorId).canEnter)throw new Error('HOUSE_ENTRY_DENIED');return I.enter('house',houseId,{id:actorId,role:roleOf(saved,actorId)},{ownerId:saved.ownerId,maxPlayers:saved.instanceConfig.maxPlayers,config:saved.instanceConfig,authoritySource:'local-house-authority'});}
+    if(op==='house:leave'){const i=runtimeForPayload(data);if(i)await persistRuntime(i,false,false);return I.leaveCurrent(actorId,{idleTTL:data.idleTTL});}
+    if(op==='house:save'){const i=runtimeForPayload(data);return persistRuntime(i,false,false);}
+    if(op==='permission:update'){const i=runtimeForPayload(data);requireCap(i,actorId,'canInvite');const target=String(data.targetId||'');const role=String(data.role||'visitor');if(!target||!roleCaps[role])throw new Error('INVALID_HOUSE_PERMISSION');i.permissions[target]=role;return persistRuntime(i,true,false);}
+    if(['place','move','rotate','scale','remove'].includes(op)){
+      const i=runtimeForPayload(data);if(!i)throw new Error('HOUSE_INSTANCE_NOT_FOUND');const cap=op==='place'?'canBuild':op==='remove'?'canRemoveAssets':'canMoveAssets';requireCap(i,actorId,cap);const localPayload=Object.assign({},data,{ownerId:String(i.ownerId)});delete localPayload.actorId;const result=await S.authorityLocalRequest(op,localPayload);await persistRuntime(i,true,true);return result;
+    }
+    throw new Error('UNKNOWN_HOUSE_OPERATION');
+  }
+  async function request(op,payload){if(remoteAuthority&&typeof remoteAuthority.request==='function')return remoteAuthority.request(op,payload||{});return localRequest(op,payload||{});}
+  function installAuthorityAdapter(adapter){if(adapter&&typeof adapter.request!=='function')throw new Error('INVALID_HOUSE_AUTHORITY_ADAPTER');remoteAuthority=adapter||null;window.KELO_HOUSE_AUDIT.authority=remoteAuthority?'server-adapter':'local-authority';}
+  function installPersistenceAdapter(adapter){if(!adapter||typeof adapter.load!=='function'||typeof adapter.save!=='function')throw new Error('INVALID_HOUSE_PERSISTENCE_ADAPTER');persistence=adapter;window.KELO_HOUSE_AUDIT.persistence='adapter';}
+  I.registerType('house',{async create(ctx){const snap=await loadSnapshot(ctx.resourceId,ctx.ownerId,ctx.config);const p=await S.authorityLocalRequest('ensureHouseParcel',{ownerId:snap.ownerId,houseId:snap.houseId,bounds:snap.instanceConfig.bounds});await S.authorityLocalRequest('replaceHouseLayout',{ownerId:snap.ownerId,parcelId:p.parcelId,placements:snap.placements,authorityRestore:true});const instance={ownerId:snap.ownerId,parcelId:p.parcelId,revision:snap.revision,maxPlayers:snap.instanceConfig.maxPlayers,config:clone(snap.instanceConfig),permissions:clone(snap.permissions),runtimeState:{snapshot:clone(snap)},authoritySource:remoteAuthority?'server-adapter':'local-house-authority'};instance.onEnter=async(_participant,runtime)=>window.KELO_INSTANCE_RUNTIME?.enter?.(runtime);instance.onExit=async()=>window.KELO_INSTANCE_RUNTIME?.leave?.();instance.onDestroy=async(runtime,opts)=>{await window.KELO_INSTANCE_RUNTIME?.leave?.();if(opts?.reason!=='crash')await persistRuntime(runtime,false,false);};return instance;}});
+  window.KELO_HOUSE_AUTHORITY=Object.freeze({version:'house-authority-v1.0.0',request,installAuthorityAdapter,installPersistenceAdapter,getPersistenceMode:()=>persistence===localPersistence?'localStorage':'adapter',roleOf:(houseId,actorId)=>persistence.load(houseId).then(s=>s?roleOf(s,actorId):null),capabilities:roleCaps});
+  window.KELO_HOUSES=Object.freeze({version:'house-instance-v1.0.0',houseIdForOwner:ownerId=>`home:${String(ownerId||S.playerId())}`,enterOwn:()=>request('house:enter',{houseId:`home:${S.playerId()}`,ownerId:S.playerId(),actorId:S.playerId()}),leave:()=>request('house:leave',{actorId:S.playerId()}),current:()=>{const i=I.current();return i?.type==='house'?i:null;}});
+  window.KELO_HOUSE_AUDIT={version:'house-instance-v1.0.0',schema:SCHEMA,authority:'local-authority',persistence:'localStorage',serverReplaceable:true,permissions:true,recovery:true};
+})();

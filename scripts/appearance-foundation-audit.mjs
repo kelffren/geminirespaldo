@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+const require=createRequire(import.meta.url);
+const A=require('../src/appearance/appearance-system.js');
+A.registerProfile({id:'appearance.audit.horse',targetType:'mount',slots:['head','body','aura'],anchors:{rider:{x:0,y:-20}},depthRules:{down:{body:10,head:20,aura:40}},directionRules:{faces:['down','left','right','up']},animationRules:{motions:['idle','run']}});
+const sample={id:'outfit.audit.crown',displayName:'Audit Crown',targetType:'mount',slotId:'head',compatibleProfiles:['appearance.audit.horse'],assetBundleId:'asset.audit.crown',transforms:{default:{x:3,y:-4,scaleX:1,scaleY:1}},layerRules:{depth:20},tags:['audit']};
+A.registerItem(sample);
+const resolved=A.resolveLoadout({profileId:'appearance.audit.horse',slots:{head:sample.id},direction:'down',motion:'idle'});
+assert.equal(resolved.ok,true);assert.equal(resolved.layers.length,1);assert.equal(resolved.layers[0].transform.x,3);assert.equal(resolved.layers[0].depth,20);
+for(let i=0;i<20000;i++)A.registerItem({id:`outfit.audit.bulk.${i}`,displayName:`Bulk ${i}`,targetType:'mount',slotId:'body',compatibleProfiles:['appearance.audit.horse'],assetBundleId:`asset.bulk.${i}`,transforms:{default:{x:0,y:0}},layerRules:{depth:10}});
+assert.equal(A.itemCount,20001);assert.equal(A.getItem('outfit.audit.bulk.19999').displayName,'Bulk 19999');
+const cosmetic=A.getItem(sample.id);assert.equal(Object.prototype.hasOwnProperty.call(cosmetic,'stats'),false,'appearance definition must stay gameplay-stat free');
+assert.equal(A.validateItem({...sample,id:'outfit.audit.bad',slotId:'unknown'}).ok,false);
+console.log(JSON.stringify({ok:true,version:A.version,profiles:A.profileCount,items:A.itemCount,twentyK:true,cosmeticStatFree:true,resolver:true},null,2));

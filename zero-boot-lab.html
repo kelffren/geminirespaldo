@@ -1,0 +1,85 @@
+<!-- KELO-INDEX
+  area: LAB / ZERO BOOT
+  owner: isolated performance experiment
+  keys: ZERO BOOT IOS SAFARI STAGES METRICS NO FREEZE
+  purpose: medir qué capas pueden salir del arranque de producción sin tocar index.html durante el experimento
+  do-not: NO convertir en producción automáticamente; promoción solo después de pruebas
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#05070a">
+<title>Kelo World · Zero Boot Lab</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}html,body{width:100%;height:100%;overflow:hidden;background:#05070a;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}#game-canvas{width:100%;height:100%;display:block;touch-action:none}#ui-layer{position:absolute;inset:0;pointer-events:none}.zbl{position:fixed;left:8px;right:8px;top:max(8px,env(safe-area-inset-top));z-index:2147483000;max-height:48dvh;overflow:auto;padding:10px;border:1px solid rgba(231,197,106,.45);border-radius:16px;background:rgba(5,12,15,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}.zbl h1{font-size:14px;color:#f0d27d}.zbl p{font-size:10px;color:#aab9b4;margin:4px 0 8px}.zbl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.zbl button{min-height:42px;border-radius:11px;border:1px solid rgba(231,197,106,.4);background:#132529;color:#f5dc94;font-weight:800}.zbl button:disabled{opacity:.45}.zbl-stats{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.zbl-pill{font-size:9px;padding:5px 7px;border-radius:999px;background:#0e2024;border:1px solid rgba(255,255,255,.08)}#zbl-log{font:9px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;color:#b9ccc5;white-space:pre-wrap;max-height:92px;overflow:auto;border-top:1px solid rgba(255,255,255,.07);padding-top:7px}.zbl-ok{color:#99df9e}.zbl-bad{color:#ffaaa0}
+</style>
+</head>
+<body>
+<canvas id="game-canvas"></canvas>
+<div id="ui-layer"><div id="action-bar-container"></div></div>
+<div id="social-modal" style="display:none"><span id="social-target-name"></span></div>
+<div id="pvp-hud" style="display:none"><span id="player-hp-fill"></span><span id="rival-hp-fill"></span><span id="rival-name"></span></div>
+<section class="zbl">
+<h1>ZERO BOOT LAB · iPhone</h1>
+<p>Arranca solo con el núcleo ya probado. Cada botón añade una capa, secuencialmente y con control de frame. Nada se precarga solo.</p>
+<div class="zbl-grid">
+<button data-stage="visual">1 · Visual Core</button>
+<button data-stage="legacy">2 · Legacy World</button>
+<button data-stage="environment">3 · Environment</button>
+<button data-stage="ui">4 · UI completa</button>
+</div>
+<div class="zbl-stats"><span class="zbl-pill" id="zbl-loaded">Base listo</span><span class="zbl-pill" id="zbl-transfer">Red 0 KB</span><span class="zbl-pill" id="zbl-decoded">JS 0 KB</span></div>
+<div id="zbl-log">BOOT: núcleo mínimo activo.</div>
+</section>
+<script>
+window.KELO_ZERO_BOOT_LAB=true;window.KELO_ASSETLESS_FREEZE_LAB=true;window.KELO_WORLD_DECORATION_RESET=false;window.KELO_HIDE_MINIMAP=true;window.__keloHoldGameLoop=true;document.documentElement.setAttribute('data-kelo-auth-gate','off');document.documentElement.setAttribute('data-kelo-guest-play','1');
+</script>
+<!-- Núcleo mínimo heredado del assetless-freeze-test. -->
+<script src="src/core/events/event-bus.js?v=zero-boot-1"></script>
+<script src="src/core/input-lock-system.js?v=zero-boot-1"></script>
+<script src="src/core/movement-profile.js?v=zero-boot-1"></script>
+<script src="src/core/kelo-runtime-bootstrap.js?v=3-player-vitals"></script>
+<script src="src/physics/collision-utils.js?v=zero-boot-1"></script>
+<script src="engine-a.js?v=151"></script>
+<script src="src/core/player-state-system.js?v=1"></script>
+<script>window.KELO_COLLISION.attachLegacyObstacleArray(obstacles,{adoptExistingOwner:'core-static'});</script>
+<script src="src/core/input-system.js?v=zero-boot-1"></script>
+<script src="src/core/movement-system.js?v=zero-boot-1"></script>
+<script src="engine-b.js?v=95-boot-ready"></script>
+<script src="engine-c.js?v=230-sim-owner"></script>
+<script>window.__keloBootReady=true;window.dispatchEvent(new Event('kelo:boot-ready'));</script>
+<script src="src/core/boot-stage-loader.js?v=1"></script>
+<script>
+(function(){
+'use strict';
+var Lab=window.KeloBootStageLab;
+Lab.configure({
+  visual:{label:'Visual Core',files:[
+    'src/core/camera-follow-shadow.js?v=1','src/core/camera-system.js?v=1','src/core/avatar-render-system.js?v=2-base-zoo-authority','src/core/render-extension-system.js?v=3','src/core/simulation-extension-system.js?v=4-sim-owner','src/core/simulation-farm-shadow.js?v=1'
+  ]},
+  legacy:{label:'Legacy World',depends:['visual'],files:[
+    'engine-d.js?v=95','engine-e.js?v=94','engine-f.js?v=95','engine-g.js?v=96','src/environment/mobile-performance-contract.js?v=2-cache-working-set','engine-h.js?v=151','engine-i.js?v=94','engine-j.js?v=94','engine-k.js?v=94'
+  ]},
+  environment:{label:'Environment',depends:['legacy'],files:[
+    'src/environment/rural-nature-atlas.js?v=200','src/environment/gardens-atlas.js?v=2','src/environment/gardens-joins.js?v=3','src/environment/terrain-contract.js?v=1','src/environment/generated/arboleskelo1-atlas.js?v=1','src/environment/tile-registry.js?v=237','src/environment/atlas-contract.js?v=4','src/environment/gardens-t-junction-registry.js?v=1','src/environment/district-decals-registry.js?v=3','src/environment/gardens-compositions.js?v=10','src/environment/world-map.js?v=terrain-191','src/environment/environment-layer-stack.js?v=4','src/environment/surface-ground.js?v=1','src/environment/prop-contract.js?v=7-map-probe','src/environment/generic-props.js?v=9','src/environment/prefab-contract.js?v=1','engine-l.js?v=223'
+  ]},
+  ui:{label:'UI completa',depends:['environment'],files:[
+    'src/ui/luxe-shell.js?v=231','src/ui/mobile-orientation.js?v=6','src/ui/luxe-player-hud.js?v=4-minimap-live-20260914','src/systems/performance-governor.js?v=4-boot-ready'
+  ]}
+});
+var log=document.getElementById('zbl-log'),loaded=document.getElementById('zbl-loaded'),transfer=document.getElementById('zbl-transfer'),decoded=document.getElementById('zbl-decoded');
+function kb(n){return (Number(n||0)/1024).toFixed(1)+' KB';}
+function line(text,cls){var d=document.createElement('div');if(cls)d.className=cls;d.textContent=text;log.appendChild(d);log.scrollTop=log.scrollHeight;}
+function refresh(){var s=Lab.getState().state;loaded.textContent='Capas '+s.loaded.length+'/4';transfer.textContent='Red '+kb(s.totalTransfer);decoded.textContent='JS '+kb(s.totalDecoded);}
+window.addEventListener('kelo:zero-boot:file-end',function(e){var d=e.detail;line('✓ '+d.stage+' · '+d.src+' · '+d.wallMs+'ms · '+kb(d.transferSize),'zbl-ok');refresh();});
+window.addEventListener('kelo:zero-boot:file-error',function(e){line('✕ '+e.detail.src,'zbl-bad');refresh();});
+window.addEventListener('kelo:zero-boot:throttle',function(e){line('PAUSA frame '+e.detail.frameMs+'ms');});
+window.addEventListener('kelo:zero-boot:stage-end',function(e){line('ETAPA LISTA: '+e.detail.label,'zbl-ok');refresh();});
+document.querySelectorAll('[data-stage]').forEach(function(btn){btn.addEventListener('click',function(){var stage=btn.getAttribute('data-stage');btn.disabled=true;line('CARGANDO '+stage+'…');Lab.loadStage(stage).then(function(ok){line(ok?'OK '+stage:'FALLO '+stage,ok?'zbl-ok':'zbl-bad');}).catch(function(err){line('ERROR '+String(err&&err.message||err),'zbl-bad');}).finally(function(){btn.disabled=false;refresh();});});});
+refresh();
+})();
+</script>
+</body>
+</html>

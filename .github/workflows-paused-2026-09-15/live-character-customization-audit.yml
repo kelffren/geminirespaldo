@@ -1,0 +1,69 @@
+name: Live Character Customization Audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/characters/character-slot-schema.js'
+      - 'src/characters/character-customization.js'
+      - 'src/characters/character-visual-presets.js'
+      - 'src/characters/character-content-packs.js'
+      - 'src/characters/character-visual-stack.js'
+      - 'src/characters/character-demo-kit.js'
+      - 'src/characters/customization-assets/**'
+      - 'src/ui/character-customizer-ui.js'
+      - 'src/ui/character-customizer-preview.js'
+      - 'src/ui/character-customizer-responsive.css'
+      - 'src/ui/profile-panel-close.js'
+      - 'src/ui/self-interaction-ui.js'
+      - 'scripts/live-character-customization-audit.mjs'
+      - '.github/workflows/live-character-customization-audit.yml'
+  workflow_dispatch:
+
+jobs:
+  live-mobile-character-customizer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Wait for Character Creator V2 on Pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 42); do
+            body="$(curl -fsSL --retry 2 --retry-delay 1 "https://kelffren.github.io/gemini/src/ui/profile-panel-close.js?character-creator-v2=${GITHUB_SHA}-${i}" || true)"
+            if printf '%s' "$body" | grep -q 'character-slot-schema.js?v=2' \
+              && printf '%s' "$body" | grep -q 'character-customization.js?v=6' \
+              && printf '%s' "$body" | grep -q 'character-visual-presets.js?v=3' \
+              && printf '%s' "$body" | grep -q 'character-content-packs.js?v=2' \
+              && printf '%s' "$body" | grep -q 'character-visual-stack.js?v=3' \
+              && printf '%s' "$body" | grep -q 'character-demo-kit.js?v=3' \
+              && printf '%s' "$body" | grep -q 'character-customizer-ui.js?v=3' \
+              && printf '%s' "$body" | grep -q 'character-customizer-preview.js?v=3' \
+              && printf '%s' "$body" | grep -q 'character-customizer-responsive.css?v=1'; then
+              echo "Character Creator V2 bootstrap is live"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Character Creator V2 did not appear on Pages in time"
+          exit 1
+      - name: Live portrait + landscape Character Creator V2 audit
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+        run: node scripts/live-character-customization-audit.mjs
+      - name: Upload Character Creator V2 live evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-character-creator-v2
+          path: artifacts/character-customization-live/
+          if-no-files-found: warn
+          retention-days: 14

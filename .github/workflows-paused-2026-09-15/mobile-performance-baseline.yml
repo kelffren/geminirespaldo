@@ -1,0 +1,36 @@
+name: Mobile Performance Baseline
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/systems/performance-governor.js'
+      - 'scripts/mobile-performance-baseline.mjs'
+      - 'index.html'
+      - '.github/workflows/mobile-performance-baseline.yml'
+
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Run 390x844 LIVE baseline
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          BASELINE_MS: '120000'
+        run: node scripts/mobile-performance-baseline.mjs
+      - name: Upload baseline artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-performance-baseline-${{ github.sha }}
+          path: artifacts/mobile-performance
+          if-no-files-found: warn

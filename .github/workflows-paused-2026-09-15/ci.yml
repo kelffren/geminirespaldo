@@ -1,0 +1,174 @@
+name: Kelo CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PNG validation tooling
+        run: python -m pip install --disable-pip-version-check pillow
+
+      - name: Core files
+        run: |
+          test -f index.html
+          test -f engine-a.js
+          test -f engine-c.js
+          test -f engine-l.js
+          test -f engine-o.js
+          test -f engine-p.js
+          test -f engine-net.js
+          test -f server/index.js
+          test -f server/package.json
+          test -f server/nobility-store.js
+          test -f supabase/migrations/20260910014344_legacy_nobility_baseline.sql
+          test -f src/systems/nobility.js
+          test -f src/systems/nobility-authority.js
+          test -f src/systems/nobility-combat.js
+          test -f src/systems/performance-governor.js
+          test -f src/environment/tile-registry.js
+          test -f src/environment/atlas-contract.js
+          test -f src/environment/world-map.js
+          test -f src/environment/environment-layer-stack.js
+          test -f src/environment/prop-contract.js
+          test -f src/environment/generic-props.js
+          test -f src/environment/plaza-depth.js
+          test -f src/characters/character-appearance.js
+          test -f scripts/live-fountain-audit.mjs
+          test -f scripts/validate-asset-integrity.mjs
+          test -f scripts/validate-performance-telemetry.mjs
+          test -f assets/hero.PNG
+          test -f assets/fuentekelo.PNG
+          test -f assets/justicia_fountain_v2.PNG
+          test -f assets/cesped.PNG
+          test -f assets/cesped-runtime.PNG
+
+      - name: Syntax
+        run: |
+          node --check engine-a.js
+          node --check engine-c.js
+          node --check engine-l.js
+          node --check engine-o.js
+          node --check engine-p.js
+          node --check engine-net.js
+          node --check server/index.js
+          node --check server/nobility-store.js
+          node --check src/systems/nobility.js
+          node --check src/systems/nobility-authority.js
+          node --check src/systems/nobility-combat.js
+          node --check src/systems/performance-governor.js
+          node --check src/environment/tile-registry.js
+          node --check src/environment/atlas-contract.js
+          node --check src/environment/world-map.js
+          node --check src/environment/environment-layer-stack.js
+          node --check src/environment/prop-contract.js
+          node --check src/environment/generic-props.js
+          node --check src/environment/plaza-depth.js
+          node --check src/characters/character-appearance.js
+          node --check scripts/live-fountain-audit.mjs
+          node --check scripts/server-nobility-audit.js
+          node --check scripts/validate-asset-integrity.mjs
+          node --check scripts/validate-performance-telemetry.mjs
+
+      - name: Strict asset integrity
+        run: |
+          node scripts/validate-asset-integrity.mjs
+          node scripts/validate-png-pipeline.mjs
+          bad="$(find assets -type f ! -iname '*.png' -print)"
+          if [ -n "$bad" ]; then
+            echo 'assets/ contains non-PNG files:'
+            echo "$bad"
+            exit 1
+          fi
+
+      - name: Frame telemetry contract
+        run: node scripts/validate-performance-telemetry.mjs
+
+      - name: Authoritative nobility mechanics
+        run: node scripts/server-nobility-audit.js
+
+      - name: Authored world visual contract
+        run: |
+          grep -q "window.KELO_WORLD_DECORATION_RESET=true" index.html
+          if grep -q "window.KELO_WORLD_DECORATION_RESET=false" index.html; then
+            echo 'index.html bypasses the iPhone-safe staged world bootstrap before world-map loads'
+            exit 1
+          fi
+          if grep -q "assets/fuentekelo-runtime.PNG" index.html; then
+            echo 'superseded fountain runtime is still bootstrapped by index.html'
+            exit 1
+          fi
+          grep -q "version:'1.10.0'" src/environment/prop-contract.js
+          grep -q "generic-prop-contract-v10-forest-plaza-playable" src/environment/prop-contract.js
+          test "$(grep -c "plazaFountainKelo:Object.freeze" src/environment/prop-contract.js)" -eq 1
+          grep -q "src:'assets/justicia_fountain_v2.PNG?art=502'" src/environment/prop-contract.js
+          grep -q "id:'plaza-fountain-kelo'" src/environment/prop-contract.js
+          grep -q "position:Object.freeze({x:1080,y:800})" src/environment/prop-contract.js
+          grep -q "size:Object.freeze({w:720,h:720})" src/environment/prop-contract.js
+          grep -q "baseY:1505" src/environment/prop-contract.js
+          grep -q "visibleDuringReset:true" src/environment/prop-contract.js
+          grep -q "actor-base-y-redraw-v1" src/environment/prop-contract.js
+          grep -q "generic-props-v2.0" src/environment/generic-props.js
+          grep -q "data-driven-props-v6-reset-visible" src/environment/generic-props.js
+          grep -q "const DECORATION_RESET=false" src/environment/environment-layer-stack.js
+          grep -q "environment-layer-stack-v2.5" src/environment/environment-layer-stack.js
+          grep -q "formal-base-back-actor-front-order-v1" src/environment/environment-layer-stack.js
+          grep -q "else acquireManagedAtlases()" src/environment/world-map.js
+          grep -q "window.KELO_WORLD_DECORATION_RESET!==true" engine-l.js
+          grep -q "if (resetActive())" engine-o.js
+          grep -q "if (resetActive())" engine-p.js
+          grep -q "const DEFAULT_BOT = DEFAULT_PLAYER;" src/characters/character-appearance.js
+          grep -q "plaza-fountain-v3.0" src/environment/plaza-depth.js
+          grep -q "single-front-layer-with-actor-redraw-v1" src/environment/plaza-depth.js
+          grep -q "decorationResetVisible:true" src/environment/plaza-depth.js
+          if grep -Eq "new Image\(|drawImage|L\.register\(" src/environment/plaza-depth.js; then
+            echo 'special-case fountain renderer reintroduced in plaza-depth.js'
+            exit 1
+          fi
+          if grep -Eq "new Image\(" src/environment/generic-props.js src/environment/world-map.js; then
+            echo 'generic environment renderer bypasses Atlas Contract'
+            exit 1
+          fi
+          if grep -Eq "assets/plaza-ground-v1\.png|assets/tileset-vclean\.png|assets/kelo-luxe-boutique\.png" index.html; then
+            echo 'deleted legacy art is still preloaded or directly bootstrapped'
+            exit 1
+          fi
+
+      - name: Current Justicia fountain and historical source contract
+        run: |
+          test "$(git hash-object assets/fuentekelo.PNG)" = "2ae3403e28cb3dca39cab310084292d397c79c6e"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest=json.loads(Path('src/environment/art-asset-manifest.json').read_text())
+          fountain=[a for a in manifest['assets'] if a.get('id')=='justicia-fountain-v2']
+          assert len(fountain)==1, fountain
+          a=fountain[0]
+          assert a['path']=='assets/justicia_fountain_v2.PNG'
+          assert (a['width'],a['height'])==(1254,1254)
+          assert a['requireAlpha'] is True
+          assert a['cache']=={'strategy':'query','key':'art','value':'502'}
+          assert Path(a['path']).exists(), a['path']
+
+          policy=json.loads(Path('src/environment/png-validation-policy.json').read_text())
+          archived=[x for x in policy['excludedFromWorldContract'] if x.get('path')=='assets/fuentekelo-runtime.PNG']
+          assert len(archived)==1, archived
+          assert archived[0]['scope']=='superseded-archive', archived[0]
+
+          missing=[asset['path'] for asset in manifest['assets'] if not Path(asset['path']).exists()]
+          assert not missing, missing
+          print('PASS current Justicia fountain + historical fountain source/archive contract')
+          PY
+
+      - name: Authored world CI scope guard
+        run: |
+          grep -q "window.KELO_WORLD_DECORATION_RESET=true" index.html
+          grep -q "const DECORATION_RESET=false" src/environment/environment-layer-stack.js

@@ -1,0 +1,64 @@
+name: PvP Cast Movement Live CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/abilities/ability-action-timeline.js'
+      - 'src/core/kelo-runtime-bootstrap.js'
+      - 'src/systems/pvp-combat-runtime-loader.js'
+      - 'src/systems/pvp-ability-movement-prediction.js'
+      - 'scripts/audit-pvp-cast-movement-parity.js'
+      - 'scripts/live-pvp-cast-movement-judge.mjs'
+      - '.github/workflows/pvp-cast-movement-live-ci.yml'
+  pull_request:
+    paths:
+      - 'src/abilities/ability-action-timeline.js'
+      - 'src/core/kelo-runtime-bootstrap.js'
+      - 'src/systems/pvp-combat-runtime-loader.js'
+      - 'src/systems/pvp-ability-movement-prediction.js'
+      - 'scripts/audit-pvp-cast-movement-parity.js'
+      - 'scripts/live-pvp-cast-movement-judge.mjs'
+      - '.github/workflows/pvp-cast-movement-live-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  live-cast-movement:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install repo dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium for repo Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Start local Kelo World
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/kelo-cast-http.log 2>&1 &
+          python3 - <<'PY'
+          import time, urllib.request
+          for _ in range(50):
+              try:
+                  r=urllib.request.urlopen('http://127.0.0.1:8000/index.html',timeout=1)
+                  if r.status == 200:
+                      print('Kelo checkout server ready')
+                      raise SystemExit(0)
+              except Exception:
+                  time.sleep(.2)
+          raise SystemExit('Kelo checkout server did not start')
+          PY
+      - name: Deterministic cast movement parity
+        run: node scripts/audit-pvp-cast-movement-parity.js
+      - name: Live mobile and desktop cast movement feel
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+        run: node scripts/live-pvp-cast-movement-judge.mjs
+      - name: Foundation architecture
+        run: npm run audit:foundation
+      - name: Performance Foundation
+        run: npm run audit:performance

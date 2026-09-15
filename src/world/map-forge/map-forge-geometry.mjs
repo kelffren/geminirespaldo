@@ -1,0 +1,24 @@
+/* KELO-INDEX
+ * area: WORLD / MAP FORGE
+ * owner: KeloMapForge geometry primitives
+ * purpose: deterministic spatial primitives reused by layout, roads, parcels, decoration and scoring
+ * public-api: regionAnchor, pointOnBoundary, relaxPoints, weightedVoronoiField, delaunayEdges, mst, curvedPolyline, geometry helpers
+ * state-owned: none
+ * do-not: no gameplay, renderer, collision-owner writes or random source creation
+ */
+import {clamp,round,dist} from './map-forge-prng.mjs';
+const REGION_ANCHORS=Object.freeze({center:[.5,.5],north:[.5,.20],south:[.5,.80],east:[.80,.5],west:[.20,.5],northeast:[.78,.22],northwest:[.22,.22],southeast:[.78,.78],southwest:[.22,.78]});
+export function regionAnchor(region){return REGION_ANCHORS[String(region||'center').toLowerCase()]||REGION_ANCHORS.center;}
+export function pointOnBoundary(direction,bounds,inset=72){const d=String(direction||'south').toLowerCase(),x0=bounds.x+inset,y0=bounds.y+inset,x1=bounds.x+bounds.w-inset,y1=bounds.y+bounds.h-inset;switch(d){case'north':return{x:(x0+x1)/2,y:y0};case'south':return{x:(x0+x1)/2,y:y1};case'east':return{x:x1,y:(y0+y1)/2};case'west':return{x:x0,y:(y0+y1)/2};case'northeast':return{x:x1,y:y0};case'northwest':return{x:x0,y:y0};case'southeast':return{x:x1,y:y1};case'southwest':return{x:x0,y:y1};default:return{x:(x0+x1)/2,y:y1};}}
+export function insideBounds(p,b,m=0){return p.x>=b.x+m&&p.y>=b.y+m&&p.x<=b.x+b.w-m&&p.y<=b.y+b.h-m;}
+export function rectInside(r,b){return r.x>=b.x&&r.y>=b.y&&r.x+r.w<=b.x+b.w&&r.y+r.h<=b.y+b.h;}
+export function rectOverlap(a,b,pad=0){return a.x-pad<b.x+b.w&&a.x+a.w+pad>b.x&&a.y-pad<b.y+b.h&&a.y+a.h+pad>b.y;}
+export function pointSegmentDistance(p,a,b){const vx=b.x-a.x,vy=b.y-a.y,wx=p.x-a.x,wy=p.y-a.y,c2=vx*vx+vy*vy||1,t=clamp((wx*vx+wy*vy)/c2,0,1);return Math.hypot(p.x-(a.x+t*vx),p.y-(a.y+t*vy));}
+export function relaxPoints(points,bounds,minSep,iterations=8){const margin=160;for(let pass=0;pass<iterations;pass++){for(let i=0;i<points.length;i++)for(let j=i+1;j<points.length;j++){const a=points[i],b=points[j];let dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||.001;if(d>=minSep)continue;const push=(minSep-d)*.5;dx/=d;dy/=d;a.x-=dx*push;a.y-=dy*push;b.x+=dx*push;b.y+=dy*push;}for(const p of points){p.x=clamp(p.x,bounds.x+margin,bounds.x+bounds.w-margin);p.y=clamp(p.y,bounds.y+margin,bounds.y+bounds.h-margin);}}}
+export function weightedVoronoiField(districts,bounds,cellSize=256){const cells=[];for(let y=bounds.y+cellSize/2;y<bounds.y+bounds.h;y+=cellSize)for(let x=bounds.x+cellSize/2;x<bounds.x+bounds.w;x+=cellSize){let best=null,bestCost=Infinity;for(const d of districts){const dx=x-d.center.x,dy=y-d.center.y,power=(dx*dx+dy*dy)/Math.max(.2,d.weight);if(power<bestCost){bestCost=power;best=d;}}cells.push({x:round(x,1),y:round(y,1),district:best.id});}return cells;}
+function circumcircle(a,b,c){const d=2*(a.x*(b.y-c.y)+b.x*(c.y-a.y)+c.x*(a.y-b.y));if(Math.abs(d)<1e-7)return null;const aa=a.x*a.x+a.y*a.y,bb=b.x*b.x+b.y*b.y,cc=c.x*c.x+c.y*c.y,ux=(aa*(b.y-c.y)+bb*(c.y-a.y)+cc*(a.y-b.y))/d,uy=(aa*(c.x-b.x)+bb*(a.x-c.x)+cc*(b.x-a.x))/d;return{x:ux,y:uy,r2:(ux-a.x)**2+(uy-a.y)**2};}
+export function delaunayEdges(points){const edgeMap=new Map();for(let i=0;i<points.length-2;i++)for(let j=i+1;j<points.length-1;j++)for(let k=j+1;k<points.length;k++){const cc=circumcircle(points[i],points[j],points[k]);if(!cc)continue;let empty=true;for(let q=0;q<points.length;q++){if(q===i||q===j||q===k)continue;const p=points[q];if((p.x-cc.x)**2+(p.y-cc.y)**2<cc.r2-1e-5){empty=false;break;}}if(!empty)continue;for(const [u,v] of [[i,j],[j,k],[k,i]]){const a=Math.min(u,v),b=Math.max(u,v),key=`${a}:${b}`;if(!edgeMap.has(key))edgeMap.set(key,{a,b,d:dist(points[a],points[b])});}}if(!edgeMap.size&&points.length>1)for(let i=1;i<points.length;i++)edgeMap.set(`0:${i}`,{a:0,b:i,d:dist(points[0],points[i])});return [...edgeMap.values()];}
+export function mst(edges,count){const parent=Array.from({length:count},(_,i)=>i),find=x=>parent[x]===x?x:(parent[x]=find(parent[x])),out=[];for(const e of [...edges].sort((a,b)=>a.d-b.d)){const ra=find(e.a),rb=find(e.b);if(ra===rb)continue;parent[ra]=rb;out.push(e);if(out.length===count-1)break;}return out;}
+export function edgeKey(e){return `${Math.min(e.a,e.b)}:${Math.max(e.a,e.b)}`;}
+export function curvedPolyline(a,b,amount,rng){const mx=(a.x+b.x)/2,my=(a.y+b.y)/2,dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,off=rng.float(-1,1)*len*.16*amount;return[{x:round(a.x,1),y:round(a.y,1)},{x:round(mx+nx*off,1),y:round(my+ny*off,1)},{x:round(b.x,1),y:round(b.y,1)}];}
+export function nearestRoadDistance(p,roads){let best=Infinity;for(const r of roads){const points=r.polyline||[];if(points.length===1)best=Math.min(best,dist(p,points[0]));for(let i=1;i<points.length;i++)best=Math.min(best,pointSegmentDistance(p,points[i-1],points[i]));}return best;}

@@ -1,0 +1,12 @@
+{
+  "id": "./",
+  "name": "KELO WORLD",
+  "short_name": "KELO WORLD",
+  "description": "KELO WORLD",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#05070a",
+  "theme_color": "#05070a"
+}

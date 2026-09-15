@@ -1,0 +1,35 @@
+name: Generic Prefab LIVE audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'engine-l.js'
+      - 'src/environment/environment-layer-stack.js'
+      - 'src/environment/prefab-contract.js'
+      - 'src/environment/generic-prefabs.js'
+      - 'src/environment/luxe-kiosk-atlas.js'
+      - 'scripts/live-prefab-audit.mjs'
+      - '.github/workflows/live-prefab.yml'
+  workflow_dispatch:
+jobs:
+  live-prefab:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-save playwright@1.55.0
+      - name: Audit generic prefab LIVE mobile
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+          EXPECTED_TITLE: Kelo World — V6.24
+        run: node scripts/live-prefab-audit.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: generic-prefab-live
+          path: artifacts/
+          if-no-files-found: error

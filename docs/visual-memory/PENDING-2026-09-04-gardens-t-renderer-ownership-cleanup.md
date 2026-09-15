@@ -1,0 +1,9 @@
+## Validated 2026-09-04 — Gardens T-junction renderer ownership cleanup
+
+- Public-reference takeaway: modern 32x32 top-down packs reinforce complete modular families, consistent palettes, explicit autotile metadata, and automated seam/placement validation. Pixadom remains a density/legibility/cross-device reference only; no art or layout is copied.
+- `src/environment/world-map.js` is now `world-v1.18` and no longer contains the dead `HEDGE_T_NWS` special-case. T-junction visuals remain exclusively owned by the first-class `gardensTJunctions` TileRegistry atlas plus `gardens-junction-overlay-v3`.
+- `KELO_WORLD_AUDIT.legacyTJunctionSpecialCase === false` is part of the runtime contract, and Gardens placement CI now fails if `HEDGE_T_NWS` returns to `world-map.js`.
+- Declared Gardens placement validation remains 41/41 renderable with 0 conflicts and 0 duplicates.
+- Mobile LIVE at 390x844 CSS / 780x1688 physical passed after reframing the evidence capture: `junctionGreen=962`, `junctionGold=35`, `dark=2464`, with no console, failed-request, or HTTP errors. The inspected capture keeps the T-junction visibly connected, preserves marble circulation, and avoids the large outside-world void found during QA.
+- A cleanup regression in the first edit (`bounds().maxY` accidentally using `camera.x`) was caught and corrected before certification. Two intermediate LIVE framings were also rejected because they either hid the T-junction or exposed insufficient visual evidence.
+- Next bottleneck: the authored T family is registry-owned, but it still renders through a late dedicated overlay wrapper. The next safe architectural improvement is to promote these authored junctions into the normal environment layer ordering so props/joins share one explicit render-layer contract rather than adding more density.

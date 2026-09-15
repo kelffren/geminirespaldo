@@ -1,0 +1,38 @@
+name: Studio Explorer Range Selection CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/studio/input/studio-explorer-range-selection-controller.mjs'
+      - 'src/studio/input/studio-explorer-reveal-controller.mjs'
+      - 'src/studio/input/studio-nudge-controller.mjs'
+      - 'scripts/studio-explorer-range-selection-audit.mjs'
+      - '.github/workflows/studio-explorer-range-selection-ci.yml'
+  pull_request:
+    paths:
+      - 'src/studio/input/studio-explorer-range-selection-controller.mjs'
+      - 'src/studio/input/studio-explorer-reveal-controller.mjs'
+      - 'src/studio/input/studio-nudge-controller.mjs'
+      - 'scripts/studio-explorer-range-selection-audit.mjs'
+      - '.github/workflows/studio-explorer-range-selection-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Syntax
+        run: |
+          node --check src/studio/input/studio-explorer-range-selection-controller.mjs
+          node --check src/studio/input/studio-explorer-reveal-controller.mjs
+          node --check src/studio/input/studio-nudge-controller.mjs
+          node --check scripts/studio-explorer-range-selection-audit.mjs
+      - name: Explorer range and keyboard selection audit
+        run: node scripts/studio-explorer-range-selection-audit.mjs

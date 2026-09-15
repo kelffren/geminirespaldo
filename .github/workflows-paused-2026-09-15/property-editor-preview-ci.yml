@@ -1,0 +1,76 @@
+name: Property editor mobile browser audit
+
+on:
+  push:
+    branches: [ feature/map-editor-parcels-v1 ]
+    paths:
+      - 'index.html'
+      - 'src/property/**'
+      - 'src/ui/property-editor*.js'
+      - 'scripts/property-editor-*.js'
+      - 'scripts/property-editor-*.mjs'
+      - '.github/workflows/property-editor-preview-ci.yml'
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'src/property/**'
+      - 'src/ui/property-editor*.js'
+      - 'scripts/property-editor-*.js'
+      - 'scripts/property-editor-*.mjs'
+      - '.github/workflows/property-editor-preview-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  property-editor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax and unit audit
+        run: |
+          node --check src/property/property-asset-catalog.js
+          node --check src/property/property-system.js
+          node --check src/ui/property-editor.js
+          node --check src/ui/property-editor-enhancements.js
+          node --check scripts/property-editor-audit.js
+          node --check scripts/property-editor-browser-audit.mjs
+          node scripts/property-editor-audit.js
+      - name: Runtime activation contract
+        id: runtime
+        run: |
+          mkdir -p artifacts
+          if grep -q 'src/ui/property-editor.js?v=' index.html; then
+            echo 'active=true' >> "$GITHUB_OUTPUT"
+            printf '{"status":"live","browserAuditRequired":true}\n' > artifacts/property-editor-runtime-status.json
+          else
+            echo 'active=false' >> "$GITHUB_OUTPUT"
+            printf '{"status":"dormant","browserAuditRequired":false,"reason":"property-editor.js is not booted by index.html"}\n' > artifacts/property-editor-runtime-status.json
+            echo 'Property editor is DORMANT in the current Foundation runtime; unit contract passed and browser smoke is not applicable.'
+          fi
+      - name: Install Playwright browser package
+        if: steps.runtime.outputs.active == 'true'
+        run: npm install --no-save playwright@1.55.0
+      - name: Serve branch locally
+        if: steps.runtime.outputs.active == 'true'
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/kelo-property-http.log 2>&1 &
+          echo $! > /tmp/kelo-property-http.pid
+          for i in {1..20}; do curl -fsS http://127.0.0.1:8000/index.html >/dev/null && exit 0; sleep 1; done
+          cat /tmp/kelo-property-http.log
+          exit 1
+      - name: Mobile and desktop browser audit
+        if: steps.runtime.outputs.active == 'true'
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/property-editor-browser-audit.mjs
+      - name: Upload visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: property-editor-browser-audit
+          path: artifacts/property-editor-*
+          if-no-files-found: error

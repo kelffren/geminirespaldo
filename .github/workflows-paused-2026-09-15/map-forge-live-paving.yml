@@ -1,0 +1,41 @@
+# KELO-INDEX
+# area: QA / MAP FORGE / LIVE PAVING
+# owner: Map Forge visual convergence lab
+name: Map Forge Live Paving
+
+on:
+  workflow_run:
+    workflows: ["pages build and deployment"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-paving:
+    if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install Playwright
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Verify semantic paving in deployed Map Forge
+        env:
+          KELO_PAGES: https://kelffren.github.io/gemini/
+        run: npx playwright test tests/map-forge-paving-visual.spec.js --project=chromium
+      - name: Upload LIVE mobile and desktop evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: map-forge-live-paving-${{ github.run_id }}
+          path: |
+            test-results/**
+            playwright-report.json
+          if-no-files-found: ignore

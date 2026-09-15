@@ -1,0 +1,27 @@
+name: Studio Property Enter Navigation CI
+
+on:
+  pull_request:
+    paths:
+      - 'src/studio/input/studio-property-commit-controller.mjs'
+      - 'scripts/studio-property-enter-navigation-audit.mjs'
+      - '.github/workflows/studio-property-enter-navigation-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/studio/input/studio-property-commit-controller.mjs'
+      - 'scripts/studio-property-enter-navigation-audit.mjs'
+      - '.github/workflows/studio-property-enter-navigation-ci.yml'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax check
+        run: node --check src/studio/input/studio-property-commit-controller.mjs
+      - name: Property Enter navigation contract
+        run: node scripts/studio-property-enter-navigation-audit.mjs

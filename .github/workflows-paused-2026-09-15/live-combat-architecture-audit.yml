@@ -1,0 +1,63 @@
+name: Live Combat Architecture Audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/core/events/**'
+      - 'src/core/kelo-runtime-bootstrap.js'
+      - 'src/systems/combat/**'
+      - 'src/systems/effects/**'
+      - 'src/systems/melee/**'
+      - 'src/systems/pvp-world.js'
+      - 'src/visuals/combat-presentation-bridge.js'
+      - 'src/ui/profile-panel-close.js'
+      - 'scripts/live-combat-architecture-audit.mjs'
+      - '.github/workflows/live-combat-architecture-audit.yml'
+  workflow_dispatch:
+
+jobs:
+  live-mobile-combat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Wait for exact architecture on Pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 42); do
+            profile="$(curl -fsSL --retry 2 --retry-delay 1 "https://kelffren.github.io/gemini/src/ui/profile-panel-close.js?combat-deploy=${GITHUB_SHA}-${i}" || true)"
+            pvp="$(curl -fsSL --retry 2 --retry-delay 1 "https://kelffren.github.io/gemini/src/systems/pvp-world.js?v=5&combat-deploy=${GITHUB_SHA}-${i}" || true)"
+            bootstrap="$(curl -fsSL --retry 2 --retry-delay 1 "https://kelffren.github.io/gemini/src/core/kelo-runtime-bootstrap.js?combat-deploy=${GITHUB_SHA}-${i}" || true)"
+            if printf '%s' "$profile" | grep -q 'kelo-runtime-bootstrap.js?v=1' \
+              && printf '%s' "$pvp" | grep -q "pvp-world-v1.8" \
+              && printf '%s' "$bootstrap" | grep -q 'combat-engine.js?v=1' \
+              && printf '%s' "$bootstrap" | grep -q 'melee-engine.js?v=1' \
+              && printf '%s' "$bootstrap" | grep -q 'combat-presentation-bridge.js?v=1'; then
+              echo "Exact reusable combat architecture is live"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Exact reusable combat architecture did not appear on Pages"
+          exit 1
+      - name: Live mobile combat architecture audit
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+        run: node scripts/live-combat-architecture-audit.mjs
+      - name: Upload combat architecture evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-combat-architecture-audit
+          path: artifacts/combat-architecture-live/
+          if-no-files-found: warn
+          retention-days: 14

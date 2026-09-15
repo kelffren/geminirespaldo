@@ -1,0 +1,37 @@
+name: Studio Asset Keyboard CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/studio/input/studio-asset-keyboard-controller.mjs'
+      - 'src/studio/studio-entry.mjs'
+      - 'scripts/studio-asset-keyboard-audit.mjs'
+      - 'package.json'
+      - '.github/workflows/studio-asset-keyboard-ci.yml'
+  pull_request:
+    paths:
+      - 'src/studio/input/studio-asset-keyboard-controller.mjs'
+      - 'src/studio/studio-entry.mjs'
+      - 'scripts/studio-asset-keyboard-audit.mjs'
+      - 'package.json'
+      - '.github/workflows/studio-asset-keyboard-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  asset-keyboard-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax
+        run: |
+          node --check src/studio/input/studio-asset-keyboard-controller.mjs
+          node --check scripts/studio-asset-keyboard-audit.mjs
+      - name: Asset keyboard contract
+        run: npm run audit:studio:asset-keyboard

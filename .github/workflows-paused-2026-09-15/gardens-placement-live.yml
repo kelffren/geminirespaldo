@@ -1,0 +1,42 @@
+name: Gardens placement LIVE audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/environment/terrain-contract.js'
+      - 'src/environment/world-map.js'
+      - 'scripts/validate-gardens-placements.mjs'
+      - 'scripts/live-gardens-audit.mjs'
+      - '.github/workflows/gardens-placement-ci.yml'
+      - '.github/workflows/gardens-placement-live.yml'
+  workflow_dispatch:
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate authored Gardens placements
+        run: node scripts/validate-gardens-placements.mjs
+      - name: Syntax
+        run: |
+          node --check src/environment/terrain-contract.js
+          node --check src/environment/world-map.js
+          node --check scripts/live-gardens-audit.mjs
+      - name: Install Playwright
+        run: npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund playwright@1.55.0
+      - name: Audit deployed Gardens on mobile
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/live-gardens-audit.mjs
+      - name: Upload Gardens evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gardens-placement-live
+          path: artifacts/
+          if-no-files-found: error

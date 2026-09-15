@@ -1,0 +1,33 @@
+<!-- KELO-INDEX
+  area: LAB / MICRO CORE
+  owner: near-zero runtime experiment
+  purpose: probar movimiento real con un núcleo mínimo compatible sin engine-a/b/c
+  do-not: NO producción; NO world/environment/UI heavy modules
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#071013">
+<title>Kelo World · MicroCore Lab</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}html,body{width:100%;height:100%;overflow:hidden;background:#071013}#game-canvas{width:100%;height:100%;display:block;touch-action:none}.mc{position:fixed;z-index:100;left:8px;right:8px;top:max(8px,env(safe-area-inset-top));padding:9px 11px;border-radius:14px;background:rgba(5,12,15,.86);border:1px solid rgba(231,197,106,.42);color:#fff;font:11px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;pointer-events:none}.mc b{color:#f0d27d}.mc span{margin-right:10px;color:#b8c9c3}</style>
+</head>
+<body>
+<canvas id="game-canvas"></canvas>
+<div class="mc"><b>MICROCORE LAB</b> · mueve el personaje <div><span id="mc-files">archivos --</span><span id="mc-net">red --</span><span id="mc-js">decoded --</span></div></div>
+<script>window.KELO_MICRO_CORE_LAB=true;window.KELO_HIDE_MINIMAP=true;document.documentElement.setAttribute('data-kelo-auth-gate','off');</script>
+<script src="src/core/input-lock-system.js?v=micro-1"></script>
+<script src="src/core/movement-profile.js?v=micro-1"></script>
+<script src="src/physics/collision-utils.js?v=micro-1"></script>
+<script src="src/core/micro-core-runtime.js?v=1"></script>
+<script src="src/core/player-state-system.js?v=1"></script>
+<script>try{window.KELO_COLLISION.attachLegacyObstacleArray(obstacles,{adoptExistingOwner:'micro-core'});}catch(e){console.error(e);}</script>
+<script src="src/core/input-system.js?v=micro-1"></script>
+<script src="src/core/movement-system.js?v=micro-1"></script>
+<script>
+(function(){
+function fmt(n){return (Number(n||0)/1024).toFixed(1)+' KB';}
+function update(){var entries=performance.getEntriesByType('resource').filter(function(e){return /(?:micro-core-runtime|input-lock-system|movement-profile|collision-utils|player-state-system|input-system|movement-system)\.js/.test(e.name);});var transfer=entries.reduce(function(n,e){return n+(Number(e.transferSize)||0);},0);var decoded=entries.reduce(function(n,e){return n+(Number(e.decodedBodySize)||0);},0);document.getElementById('mc-files').textContent='archivos '+entries.length;document.getElementById('mc-net').textContent='red '+fmt(transfer);document.getElementById('mc-js').textContent='decoded '+fmt(decoded);window.KELO_MICRO_CORE_LAB_METRICS=Object.freeze({files:entries.length,transferSize:transfer,decodedBodySize:decoded,inputOwner:!!window.KeloInput,movementOwner:!!window.KeloMovement,playerStateOwner:!!window.KeloPlayerState});}
+if(document.readyState==='complete')update();else addEventListener('load',update,{once:true});
+})();
+</script>
+</body></html>

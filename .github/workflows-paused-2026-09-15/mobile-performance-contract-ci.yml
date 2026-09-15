@@ -1,0 +1,38 @@
+name: Mobile Performance Contract CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/environment/mobile-performance-contract.js'
+      - 'src/environment/atlas-contract.js'
+      - 'src/environment/world-map.js'
+      - 'engine-h.js'
+      - 'index.html'
+      - 'scripts/validate-mobile-performance-contract.mjs'
+      - '.github/workflows/mobile-performance-contract-ci.yml'
+  pull_request:
+    paths:
+      - 'src/environment/mobile-performance-contract.js'
+      - 'src/environment/atlas-contract.js'
+      - 'src/environment/world-map.js'
+      - 'engine-h.js'
+      - 'index.html'
+      - 'scripts/validate-mobile-performance-contract.mjs'
+      - '.github/workflows/mobile-performance-contract-ci.yml'
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax
+        run: |
+          node --check src/environment/mobile-performance-contract.js
+          node --check src/environment/atlas-contract.js
+          node --check src/environment/world-map.js
+          node --check engine-h.js
+          node --check scripts/validate-mobile-performance-contract.mjs
+      - name: Validate mobile art budgets
+        run: node scripts/validate-mobile-performance-contract.mjs

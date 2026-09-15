@@ -1,0 +1,84 @@
+name: Bug Prevention
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'assets/**'
+      - 'index.html'
+      - 'sw.js'
+      - 'package.json'
+      - 'bugs/RISK_MAP.json'
+      - '.github/workflows/bug-prevention.yml'
+      - '.github/workflows/bug-self-learning.yml'
+      - '.github/workflows/bug-learning-feedback.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'assets/**'
+      - 'index.html'
+      - 'sw.js'
+      - 'package.json'
+      - 'bugs/RISK_MAP.json'
+      - '.github/workflows/bug-prevention.yml'
+      - '.github/workflows/bug-self-learning.yml'
+      - '.github/workflows/bug-learning-feedback.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  prevent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+      HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Syntax-check self-learning scripts
+        run: |
+          node --check scripts/bug-learning-autopilot.mjs
+          node --check scripts/bug-learning-observe.mjs
+          node --check scripts/bug-learning-audit.mjs
+          node --check scripts/bug-prevention.mjs
+          node --check scripts/bug-risk.mjs
+
+      - name: Dry-run learner against canonical evidence
+        run: node scripts/bug-learning-autopilot.mjs --json
+
+      - name: Audit learned memory bounds
+        run: node scripts/bug-learning-audit.mjs
+
+      - name: Resolve prevention diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${BASE_SHA:-}" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            BASE_SHA="$(git rev-parse HEAD~1)"
+            echo "BASE_SHA=$BASE_SHA" >> "$GITHUB_ENV"
+          fi
+          echo "Preventing regressions across $BASE_SHA..$HEAD_SHA"
+          git cat-file -e "$BASE_SHA^{commit}"
+          git cat-file -e "$HEAD_SHA^{commit}"
+
+      - name: Score static plus learned regression risk
+        run: node scripts/bug-risk.mjs "$BASE_SHA" "$HEAD_SHA"
+
+      - name: Execute bounded preventive audits
+        run: node scripts/bug-prevention.mjs "$BASE_SHA" "$HEAD_SHA"
+
+      - name: Inspect reverse-dependency blast radius
+        run: node scripts/bug-impact.mjs --diff "$BASE_SHA" "$HEAD_SHA" --depth=2

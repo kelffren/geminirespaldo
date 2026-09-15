@@ -1,0 +1,71 @@
+name: Integrate Kelo Fountain
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'assets/fuentekelo.PNG'
+      - 'scripts/integrate_fuentekelo.py'
+      - 'scripts/finalize_fuentekelo_reset.py'
+      - 'scripts/cleanup_reset_asset_loads.py'
+      - 'scripts/dedupe_fuentekelo_contract.py'
+      - '.github/workflows/integrate-fuentekelo.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install image tooling
+        run: python -m pip install --disable-pip-version-check pillow numpy
+      - name: Integrate fuentekelo
+        run: |
+          python scripts/integrate_fuentekelo.py
+          python scripts/finalize_fuentekelo_reset.py
+          python scripts/cleanup_reset_asset_loads.py
+          python scripts/dedupe_fuentekelo_contract.py
+      - name: Syntax checks
+        run: |
+          node --check engine-l.js
+          node --check engine-o.js
+          node --check engine-p.js
+          node --check src/characters/character-appearance.js
+          node --check src/environment/tile-registry.js
+          node --check src/environment/world-map.js
+          node --check src/environment/environment-layer-stack.js
+          node --check src/environment/prop-contract.js
+          node --check src/environment/generic-props.js
+          node --check src/environment/plaza-depth.js
+          node --check scripts/live-fountain-audit.mjs
+          node scripts/validate-asset-integrity.mjs
+          test "$(grep -c "plazaFountainKelo:Object.freeze" src/environment/prop-contract.js)" -eq 1
+          git diff --check
+      - name: Verify runtime PNG alpha
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          p='assets/fuentekelo-runtime.PNG'
+          im=Image.open(p)
+          assert im.size==(1312,1199), im.size
+          assert im.mode=='RGBA', im.mode
+          assert im.getchannel('A').getextrema()==(0,255), im.getchannel('A').getextrema()
+          print('PASS',p,im.size,im.mode,im.getchannel('A').getextrema())
+          PY
+      - name: Commit integration
+        run: |
+          if git diff --quiet && git diff --cached --quiet; then
+            echo 'No changes to commit'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -- .github/workflows/ci.yml
+          git add -A assets/fuentekelo-runtime.PNG engine-l.js engine-o.js engine-p.js src/characters/character-appearance.js src/environment/tile-registry.js src/environment/world-map.js src/environment/prop-contract.js src/environment/environment-layer-stack.js src/environment/generic-props.js src/environment/plaza-depth.js src/environment/art-asset-manifest.json src/environment/png-validation-policy.json scripts/live-fountain-audit.mjs index.html
+          git commit -m 'Finalize fuentekelo on blank Plaza'
+          git push origin HEAD:main

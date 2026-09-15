@@ -1,0 +1,74 @@
+name: Gardens mobile LIVE audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'assets/gardens-t-junctions-v1.svg'
+      - 'src/environment/gardens-joins.js'
+      - 'src/environment/gardens-t-junction-registry.js'
+      - 'src/environment/gardens-compositions.js'
+      - 'src/environment/environment-layer-stack.js'
+      - 'src/environment/gardens-junction-overlay.js'
+      - 'src/environment/gardens-landmark.js'
+      - 'src/environment/world-map.js'
+      - 'index.html'
+      - 'scripts/validate-gardens-placements.mjs'
+      - 'scripts/live-gardens-variants-audit.mjs'
+      - '.github/workflows/live-gardens-audit.yml'
+  workflow_dispatch:
+jobs:
+  audit-gardens:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax and contract
+        run: |
+          node --check src/environment/gardens-atlas.js
+          node --check src/environment/gardens-joins.js
+          node --check src/environment/gardens-t-junction-registry.js
+          node --check src/environment/gardens-compositions.js
+          node --check src/environment/environment-layer-stack.js
+          node --check src/environment/gardens-junction-overlay.js
+          node --check src/environment/gardens-landmark.js
+          node --check src/environment/world-map.js
+          node --check scripts/validate-gardens-placements.mjs
+          node --check scripts/live-gardens-variants-audit.mjs
+          grep -q 'width="128" height="32"' assets/gardens-t-junctions-v1.svg
+          grep -q "gardens-joins-v5" src/environment/gardens-joins.js
+          grep -q "virtualTiles:Object.freeze({})" src/environment/gardens-joins.js
+          grep -q "gardens-t-junction-registry-v1" src/environment/gardens-t-junction-registry.js
+          grep -q "firstClassRegistryAtlas:true" src/environment/gardens-t-junction-registry.js
+          grep -q "gardens-compositions-v20" src/environment/gardens-compositions.js
+          grep -q "tJunctionRegistryOwned:true" src/environment/gardens-compositions.js
+          grep -q "environment-layer-stack-v2" src/environment/environment-layer-stack.js
+          grep -q "formal-pre-post-actor-layer-order-v1" src/environment/environment-layer-stack.js
+          grep -q "phase-priority-id-v1" src/environment/environment-layer-stack.js
+          grep -q "priorityTieCount" src/environment/environment-layer-stack.js
+          grep -q "orderIndex" src/environment/environment-layer-stack.js
+          grep -q "'props_back'" src/environment/environment-layer-stack.js
+          grep -q "gardens-junction-layer-v4" src/environment/gardens-junction-overlay.js
+          grep -q "formal-props-back-t-junction-layer-v1" src/environment/gardens-junction-overlay.js
+          grep -q "ownership:'tile-registry-formal-layer-v1'" src/environment/gardens-junction-overlay.js
+          grep -q "phase:'props_back'" src/environment/gardens-junction-overlay.js
+          grep -q "environment-layer-stack.js?v=2" index.html
+          grep -q "gardens-junction-overlay.js?v=5" index.html
+      - name: Validate declared Gardens placement visibility
+        run: node scripts/validate-gardens-placements.mjs
+      - name: Install Playwright
+        run: npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund playwright@1.55.0
+      - name: Audit deployed Gardens on mobile
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/live-gardens-variants-audit.mjs
+      - name: Upload Gardens evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-gardens-audit
+          path: artifacts/
+          if-no-files-found: error

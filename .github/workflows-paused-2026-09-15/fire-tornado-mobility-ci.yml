@@ -1,0 +1,34 @@
+# KELO-INDEX
+# area: CI / PVP / ABILITY
+# owner: GitHub Actions audit
+# keys: FIRE TORNADO MOVEMENT CAST FEEL FOUNDATION PARITY
+# purpose: valida el tuning de movilidad del Tornado Ígneo y la paridad cast existente
+# online: prueba contratos compartidos cliente/server; no autoridad
+name: Fire Tornado Mobility CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/abilities/abilityData.js'
+      - 'src/abilities/ability-action-timeline.js'
+      - 'src/systems/pvp-ability-movement-prediction.js'
+      - 'scripts/audit-fire-tornado-mobility.js'
+      - 'scripts/audit-pvp-cast-movement-parity.js'
+      - '.github/workflows/fire-tornado-mobility-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  feel-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Fire Tornado mobility A/B
+        run: node scripts/audit-fire-tornado-mobility.js
+      - name: Cast movement client/server parity
+        run: node scripts/audit-pvp-cast-movement-parity.js
+      - name: Foundation architecture
+        run: npm run audit:foundation

@@ -1,0 +1,16 @@
+<!doctype html><!-- KELO-INDEX
+area: QA / FRAME SURGERY / BROWSER USER
+owner: mobile browser acceptance harness
+keys: FRAME SURGERY MOBILE PLAYWRIGHT RAW EXACT CANVAS
+purpose: boot the production Frame Surgery workspace for end-to-end mobile acceptance without owning runtime behavior
+--><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="icon" href="data:,"><title>Kelo Frame Surgery User Audit</title></head><body><script type="module">
+import{openAvatarQuickImport}from'./src/creators/ui/avatar-frame-surgery-workspace.mjs';
+const audit={booted:false,imports:[],errors:[]};
+addEventListener('error',e=>audit.errors.push(String(e.error?.stack||e.message||e)));
+addEventListener('unhandledrejection',e=>audit.errors.push(String(e.reason?.stack||e.reason||e)));
+const avatarQuick={
+ async hydrateActive(){return null},
+ async importAndUse(file,config,{onProgress}={}){onProgress?.({stage:'audit-use',message:'AUDIT · activando avatar exacto'});const s=globalThis.__KELO_AVATAR_SURGERY_TEST__,runtime={frameWidth:s?.compiled?.frameWidth,frameHeight:s?.compiled?.frameHeight,width:s?.compiled?.width,height:s?.compiled?.height,exactCanvas:s?.compiled?.exactCanvas};audit.imports.push({name:file.name,config:config?.exactCanvas,runtime});return{manifest:{displayName:'Audit Avatar',payload:{avatarRuntime:runtime}}}}
+};
+try{await openAvatarQuickImport({root:globalThis,avatarQuick});audit.booted=true}catch(error){audit.errors.push(String(error?.stack||error))}globalThis.__KELO_FRAME_SURGERY_USER_AUDIT__=audit;
+</script></body></html>

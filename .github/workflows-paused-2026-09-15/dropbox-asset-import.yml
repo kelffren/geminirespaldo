@@ -1,0 +1,96 @@
+name: Import generated asset from Dropbox
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'asset-import-requests/*.json'
+      - '.github/workflows/dropbox-asset-import.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kelo-asset-import
+  cancel-in-progress: false
+
+jobs:
+  import-assets:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Import pending PNG assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          requests=(asset-import-requests/*.json)
+          if [ ${#requests[@]} -eq 0 ]; then
+            echo 'No pending asset requests.'
+            exit 0
+          fi
+
+          python3 - <<'PY'
+          import json, pathlib, subprocess, sys
+
+          root = pathlib.Path('.')
+          req_dir = root / 'asset-import-requests'
+          requests = sorted(req_dir.glob('*.json'))
+          imported = []
+
+          for req in requests:
+              data = json.loads(req.read_text(encoding='utf-8'))
+              url = data.get('url', '').strip()
+              dest = data.get('destination', '').strip()
+              if not url.startswith('https://'):
+                  raise SystemExit(f'Invalid URL in {req}: must be https://')
+              if not dest.startswith('assets/') or not dest.lower().endswith('.png'):
+                  raise SystemExit(f'Invalid destination in {req}: must be assets/**/*.png')
+
+              out = root / dest
+              out.parent.mkdir(parents=True, exist_ok=True)
+              tmp = out.with_suffix(out.suffix + '.download')
+              print(f'Downloading {req.name} -> {dest}')
+              subprocess.run([
+                  'curl', '--fail', '--location', '--silent', '--show-error',
+                  '--retry', '2', '--retry-delay', '1',
+                  '--output', str(tmp), url
+              ], check=True)
+
+              with tmp.open('rb') as fh:
+                  sig = fh.read(8)
+              if sig != b'\x89PNG\r\n\x1a\n':
+                  tmp.unlink(missing_ok=True)
+                  raise SystemExit(f'Downloaded file for {req} is not a PNG')
+
+              if tmp.stat().st_size == 0:
+                  tmp.unlink(missing_ok=True)
+                  raise SystemExit(f'Downloaded file for {req} is empty')
+
+              tmp.replace(out)
+              req.unlink()
+              imported.append((dest, out.stat().st_size))
+
+          for dest, size in imported:
+              print(f'IMPORTED {dest} ({size} bytes)')
+          PY
+
+      - name: Commit imported assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- assets asset-import-requests; then
+            echo 'Nothing to commit.'
+            exit 0
+          fi
+          git config user.name 'kelo-asset-bot'
+          git config user.email '68343904+kelffren@users.noreply.github.com'
+          git add assets asset-import-requests
+          git commit -m 'asset: import generated PNG'
+          git pull --rebase origin main
+          git push origin HEAD:main

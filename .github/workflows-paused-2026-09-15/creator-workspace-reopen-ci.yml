@@ -1,0 +1,27 @@
+name: Creator Workspace Reopen CI
+
+on:
+  push:
+    paths:
+      - 'src/creators/core/workspace-registry.mjs'
+      - 'src/creators/workspaces/avatar-workspace.mjs'
+      - 'src/creators/workspaces/sprite-ability-workspace.mjs'
+      - 'scripts/creator-workspace-reopen-audit.mjs'
+      - '.github/workflows/creator-workspace-reopen-ci.yml'
+  pull_request:
+    paths:
+      - 'src/creators/core/workspace-registry.mjs'
+      - 'src/creators/workspaces/avatar-workspace.mjs'
+      - 'src/creators/workspaces/sprite-ability-workspace.mjs'
+      - 'scripts/creator-workspace-reopen-audit.mjs'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Workspace reopen recovery audit
+        run: node scripts/creator-workspace-reopen-audit.mjs

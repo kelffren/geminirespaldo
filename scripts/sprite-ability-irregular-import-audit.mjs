@@ -1,0 +1,14 @@
+import { detectAlphaRegions,splitRegion,mergeRegions,sortRegionsReadingOrder } from '../src/creators/sprite-ability/sprite-ability-irregular-import.mjs';
+const width=240,height=140,data=new Uint8ClampedArray(width*height*4);
+const fill=(x,y,w,h)=>{for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++)data[(yy*width+xx)*4+3]=255;};
+fill(8,12,34,52);fill(82,5,42,61);fill(172,18,50,44);fill(20,86,48,38);fill(116,78,36,50);fill(188,88,39,37);
+const regions=detectAlphaRegions(data,width,height,{tileSize:2,mergeGap:2,minArea:50});
+if(regions.length!==6)throw new Error(`IRREGULAR_REGION_COUNT:${regions.length}`);
+const ordered=sortRegionsReadingOrder([...regions].reverse());
+if(ordered.length!==6||ordered[0].x>ordered[1].x||ordered[3].x>ordered[4].x)throw new Error('IRREGULAR_READING_ORDER_FAILED');
+const [a,b]=splitRegion(regions[0],'vertical');
+if(a.width+b.width!==regions[0].width||a.x!==regions[0].x||b.x!==regions[0].x+a.width)throw new Error('IRREGULAR_SPLIT_FAILED');
+const joined=mergeRegions(a,b);
+if(joined.x!==regions[0].x||joined.y!==regions[0].y||joined.width!==regions[0].width||joined.height!==regions[0].height)throw new Error('IRREGULAR_MERGE_FAILED');
+console.log('SPRITE ABILITY IRREGULAR IMPORT AUDIT: PASS');
+console.log(JSON.stringify({regions:regions.length,first:regions[0],split:[a,b],merged:joined},null,2));

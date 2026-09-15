@@ -1,0 +1,47 @@
+name: World Editor Live Smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/creators/adapters/world-creator-adapter.mjs'
+      - 'src/creators/workspaces/world-workspace.mjs'
+      - 'src/world/world-draft-store.js'
+      - 'src/world/world-revision-system.js'
+      - 'src/world/world-edit-authority.js'
+      - 'src/world/authorities/local-world-edit-authority.js'
+      - 'tests/world-editor-live-open.spec.js'
+      - '.github/workflows/world-editor-live-smoke.yml'
+  workflow_run:
+    workflows: ["pages build and deployment"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-world-editor-smoke:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+      - name: Run World editor live Chromium smoke
+        env:
+          KELO_PAGES: https://kelffren.github.io/gemini/
+        run: npx playwright test tests/world-editor-live-open.spec.js --project=chromium --reporter=list
+      - name: Upload screenshot on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-editor-live-smoke
+          path: test-results/
+          if-no-files-found: ignore

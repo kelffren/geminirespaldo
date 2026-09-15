@@ -1,0 +1,121 @@
+name: Kelo Recovery Lab
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Diagnose current HEAD or binary-search a regression"
+        required: true
+        default: "current"
+        type: choice
+        options: [current, bisect]
+      profile:
+        description: "Recovery profile"
+        required: true
+        default: "world"
+        type: choice
+        options: [boot, movement, world, full]
+      good_sha:
+        description: "Known-good commit for bisect mode"
+        required: false
+        type: string
+      bad_sha:
+        description: "Known-bad commit for bisect mode (default HEAD)"
+        required: false
+        default: "HEAD"
+        type: string
+      bug_id:
+        description: "Optional canonical bug ID for artifact labeling"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      KELO_RECOVERY_PROFILE: ${{ inputs.profile }}
+      KELO_RECOVERY_ARTIFACTS: recovery-artifacts
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Install Chromium for deterministic cloud profiling
+        run: npx playwright install --with-deps chromium
+
+      - name: Recovery architecture audit
+        run: node scripts/recovery-mesh-audit.mjs
+
+      - name: Record run context
+        shell: bash
+        env:
+          BUG_INPUT: ${{ inputs.bug_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p recovery-artifacts
+          printf 'mode=%s\nprofile=%s\nsha=%s\nbug=%s\n' \
+            '${{ inputs.mode }}' '${{ inputs.profile }}' "$(git rev-parse HEAD)" "$BUG_INPUT" \
+            > recovery-artifacts/context.txt
+          git log -20 --oneline --decorate > recovery-artifacts/recent-commits.txt
+
+      - name: Current checkout recovery profile
+        if: inputs.mode == 'current'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --bind 127.0.0.1 > recovery-artifacts/http-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid 2>/dev/null || true' EXIT
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep .25
+          done
+          node scripts/recovery-profile-runner.mjs \
+            --profile='${{ inputs.profile }}' \
+            --base=http://127.0.0.1:4173/ \
+            --artifacts=recovery-artifacts
+
+      - name: Validate bisect inputs
+        if: inputs.mode == 'bisect'
+        shell: bash
+        env:
+          GOOD_SHA: ${{ inputs.good_sha }}
+          BAD_SHA: ${{ inputs.bad_sha }}
+        run: |
+          set -euo pipefail
+          [[ "$GOOD_SHA" =~ ^[0-9a-fA-F]{7,40}$ ]] || { echo 'good_sha must be a commit SHA'; exit 2; }
+          [[ "$BAD_SHA" == 'HEAD' || "$BAD_SHA" =~ ^[0-9a-fA-F]{7,40}$ ]] || { echo 'bad_sha must be HEAD or a commit SHA'; exit 2; }
+          git cat-file -e "$GOOD_SHA^{commit}"
+          git cat-file -e "$BAD_SHA^{commit}"
+
+      - name: Automatic regression bisect
+        if: inputs.mode == 'bisect'
+        run: >-
+          node scripts/recovery-bisect.mjs
+          --good='${{ inputs.good_sha }}'
+          --bad='${{ inputs.bad_sha }}'
+          --profile='${{ inputs.profile }}'
+          --artifacts=recovery-artifacts
+
+      - name: Preserve recovery evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: recovery-${{ inputs.mode }}-${{ inputs.profile }}-${{ github.run_id }}
+          path: recovery-artifacts/
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,52 @@
+name: Forge CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/systems/equipment-system.js'
+      - 'src/systems/forge-system.js'
+      - 'src/systems/armor-aura.js'
+      - 'src/systems/illumination.js'
+      - 'engine-net.js'
+      - 'server/index.js'
+      - 'server/forge-store.js'
+      - 'scripts/server-forge-audit.js'
+      - 'supabase/migrations/20260903_forge.sql'
+      - 'index.html'
+      - '.github/workflows/forge-ci.yml'
+  workflow_dispatch:
+jobs:
+  forge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Required files
+        run: |
+          test -f src/systems/equipment-system.js
+          test -f src/systems/forge-system.js
+          test -f src/systems/armor-aura.js
+          test -f server/forge-store.js
+          test -f scripts/server-forge-audit.js
+          test -f supabase/migrations/20260903_forge.sql
+          grep -Eq 'Kelo World — V6\.' index.html
+          grep -q 'src/systems/equipment-system.js?v=' index.html
+          grep -q 'src/systems/forge-system.js?v=' index.html
+          grep -q 'src/systems/armor-aura.js?v=' index.html
+          grep -q "forge-v1.0" src/systems/forge-system.js
+          grep -q "equipment-v1.1.2" src/systems/equipment-system.js
+          grep -q "armor-aura-v1.1" src/systems/armor-aura.js
+          grep -q "crypto.randomInt" server/forge-store.js
+          grep -q "forge:attempt" server/index.js
+          grep -q "crystalLimit:25" src/systems/forge-system.js
+      - name: Syntax
+        run: |
+          node --check src/systems/equipment-system.js
+          node --check src/systems/forge-system.js
+          node --check src/systems/armor-aura.js
+          node --check src/systems/illumination.js
+          node --check engine-net.js
+          node --check server/index.js
+          node --check server/forge-store.js
+          node --check scripts/server-forge-audit.js
+      - name: Authoritative forge mechanics
+        run: node scripts/server-forge-audit.js

@@ -1,0 +1,66 @@
+name: World Placement Functional Gate
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/creators/**'
+      - 'src/studio/**'
+      - 'src/world/**'
+      - 'tests/world-placement-functional.spec.js'
+      - 'playwright.config.js'
+      - '.github/workflows/world-placement-functional.yml'
+
+jobs:
+  place-real-asset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      KELO_PAGES: http://127.0.0.1:4173/
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Serve exact commit
+        shell: bash
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/kelo-world-placement-http.log 2>&1 &
+          echo $! > /tmp/kelo-world-placement-http.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then
+              echo 'Local KELO WORLD ready'
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/kelo-world-placement-http.log || true
+          exit 1
+
+      - name: Open World and place asset
+        run: npx playwright test tests/world-placement-functional.spec.js --workers=1
+
+      - name: Upload placement evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-placement-functional-evidence
+          if-no-files-found: ignore
+          path: |
+            test-results/world-placement-functional.png
+            test-results/world-placement-functional.json
+            playwright-report.json
+            test-results/

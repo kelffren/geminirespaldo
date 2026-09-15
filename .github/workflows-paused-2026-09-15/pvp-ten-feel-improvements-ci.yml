@@ -1,0 +1,34 @@
+name: PvP Ten Feel Improvements CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/abilities/abilityData.js'
+      - 'src/systems/melee/melee-weapon-profiles.js'
+      - 'scripts/audit-pvp-ten-feel-improvements.mjs'
+      - '.github/workflows/pvp-ten-feel-improvements-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate-ten-pvp-feel-changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install repo dependencies
+        run: npm install --no-audit --no-fund
+      - name: Agent B deterministic feel evaluation
+        run: node scripts/audit-pvp-ten-feel-improvements.mjs
+      - name: Cast movement server parity
+        run: node scripts/audit-pvp-cast-movement-parity.js
+      - name: Foundation architecture
+        run: npm run audit:foundation
+      - name: Documentation integrity
+        run: npm run audit:docs

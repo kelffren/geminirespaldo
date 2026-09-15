@@ -1,0 +1,52 @@
+name: Extract Plaza tree from uploaded asset pack
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'assets/Arboleskelo1.PNG'
+      - 'scripts/extract_plaza_tree.py'
+      - '.github/workflows/extract-plaza-tree.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Upload source pack for visual audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: arboleskelo1-source
+          path: assets/Arboleskelo1.PNG
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install image tooling
+        run: pip install pillow numpy opencv-python-headless
+      - name: Extract exact tree asset
+        run: python3 scripts/extract_plaza_tree.py
+      - name: Upload extracted preview
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plaza-tree-extraction-preview
+          path: assets/plaza-tree-large-v1.png
+          if-no-files-found: ignore
+      - name: Commit extracted PNG
+        run: |
+          git config user.name 'kelo-art-bot'
+          git config user.email '68343904+kelffren@users.noreply.github.com'
+          git add assets/plaza-tree-large-v1.png
+          if git diff --cached --quiet; then
+            echo 'tree asset already current'
+            exit 0
+          fi
+          git commit -m 'Extract authored Plaza tree from uploaded asset pack'
+          git push origin HEAD:main

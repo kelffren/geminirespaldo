@@ -1,0 +1,47 @@
+name: Asset Repairer CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/studio/ui/studio-asset-repairer.mjs'
+      - 'src/studio/ui/studio-asset-repairer-v2.mjs'
+      - '.github/workflows/asset-repairer-ci.yml'
+  pull_request:
+    paths:
+      - 'src/studio/ui/studio-asset-repairer.mjs'
+      - 'src/studio/ui/studio-asset-repairer-v2.mjs'
+  workflow_dispatch:
+
+jobs:
+  asset-repairer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax
+        run: |
+          node --check src/studio/ui/studio-asset-repairer.mjs
+          node --check src/studio/ui/studio-asset-repairer-v2.mjs
+      - name: Bottom-center frame alignment contract
+        run: |
+          node --input-type=module <<'NODE'
+          import { planUniformFrameAlignment } from './src/studio/ui/studio-asset-repairer-v2.mjs';
+          const frames=[
+            {width:32,height:48,bounds:{empty:false,minX:5,minY:8,width:20,height:36}},
+            {width:40,height:52,bounds:{empty:false,minX:9,minY:4,width:22,height:45}}
+          ];
+          const plan=planUniformFrameAlignment(frames,{padding:2});
+          if(plan.targetWidth!==40||plan.targetHeight!==52)throw new Error(`unexpected canvas ${plan.targetWidth}x${plan.targetHeight}`);
+          const feet=plan.placements.map((p,i)=>p.dy+frames[i].bounds.minY+frames[i].bounds.height);
+          if(new Set(feet).size!==1)throw new Error(`frame feet are not aligned: ${feet.join(',')}`);
+          if(feet[0]!==50)throw new Error(`unexpected bottom anchor ${feet[0]}`);
+          console.log('PASS Asset Repairer bottom-center alignment',JSON.stringify({canvas:[plan.targetWidth,plan.targetHeight],feet}));
+          NODE
+      - name: UI contract
+        run: |
+          grep -q 'ALIGN FRAMES' src/studio/ui/studio-asset-repairer-v2.mjs
+          grep -q 'FEET LOCKED' src/studio/ui/studio-asset-repairer-v2.mjs
+          grep -q "asset-repairer-v2.0.0-frame-anchor" src/studio/ui/studio-asset-repairer-v2.mjs
+          grep -q "studio-asset-repairer-v2.mjs" src/studio/ui/studio-asset-repairer.mjs

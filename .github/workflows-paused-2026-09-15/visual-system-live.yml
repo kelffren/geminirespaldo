@@ -1,0 +1,61 @@
+name: Visual System LIVE
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'engine-c.js'
+      - 'engine-net.js'
+      - 'server/index.js'
+      - 'src/abilities/abilityData.js'
+      - 'src/visuals/**'
+      - 'scripts/live-visual-system-audit.mjs'
+      - '.github/workflows/visual-system-live.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: visual-system-live-main
+  cancel-in-progress: true
+
+jobs:
+  visual-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright
+        run: npm install --no-save playwright@1.55.0
+      - name: Wait for current Pages build
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+        run: |
+          python3 - <<'PY'
+          import time, urllib.request
+          url='https://kelffren.github.io/gemini/'
+          for attempt in range(18):
+              try:
+                  body=urllib.request.urlopen(url+'?visual-version-check='+str(time.time()), timeout=15).read().decode('utf-8','ignore')
+                  if 'Kelo World — V' in body and 'src/visuals/visual-integration.js?v=1' in body and 'src/visuals/visual-lab.js' in body:
+                      print('Current Kelo visual runtime visible on Pages')
+                      break
+              except Exception as exc:
+                  print('Pages check', attempt+1, exc)
+              time.sleep(5)
+          else:
+              raise SystemExit('Pages did not expose the current modular visual runtime in validation window')
+          PY
+      - name: Audit modular visual runtime on mobile
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/live-visual-system-audit.mjs
+      - name: Upload visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-system-live
+          path: artifacts/
+          if-no-files-found: error

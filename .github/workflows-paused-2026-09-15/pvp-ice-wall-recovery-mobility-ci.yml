@@ -1,0 +1,62 @@
+name: PvP Ice Wall Recovery Mobility CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/abilities/abilityData.js'
+      - 'src/abilities/ability-action-timeline.js'
+      - 'src/systems/pvp-ability-movement-prediction.js'
+      - 'server/pvp-authority.js'
+      - 'scripts/audit-ice-wall-recovery-mobility.mjs'
+      - 'scripts/live-ice-wall-recovery-mobility-judge.mjs'
+      - 'scripts/audit-pvp-cast-movement-parity.js'
+      - '.github/workflows/pvp-ice-wall-recovery-mobility-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ice-wall-recovery-mobility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install repo dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Start local Kelo World
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/kelo-ice-wall-recovery-http.log 2>&1 &
+          python3 - <<'PY'
+          import time, urllib.request
+          for _ in range(50):
+              try:
+                  r=urllib.request.urlopen('http://127.0.0.1:8000/index.html',timeout=1)
+                  if r.status == 200: raise SystemExit(0)
+              except Exception: time.sleep(.2)
+          raise SystemExit('Kelo checkout server did not start')
+          PY
+      - name: Deterministic 60 90 120 A B
+        run: node scripts/audit-ice-wall-recovery-mobility.mjs
+      - name: Live mobile and desktop trace
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+        run: node scripts/live-ice-wall-recovery-mobility-judge.mjs
+      - name: Cast movement server parity
+        run: node scripts/audit-pvp-cast-movement-parity.js
+      - name: Foundation architecture
+        run: npm run audit:foundation
+      - name: Documentation integrity
+        run: npm run audit:docs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ice-wall-recovery-trace
+          path: audit-artifacts/ice-wall-recovery-*.json
+          if-no-files-found: ignore

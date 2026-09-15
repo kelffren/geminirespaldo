@@ -1,0 +1,64 @@
+name: Equipment Abilities CI
+
+on:
+  push:
+    branches: [main, 'feature/**']
+    paths:
+      - 'src/abilities/kelo-ability-boot.js'
+      - 'src/abilities/ability-source-cast.js'
+      - 'src/abilities/equipment-ability-data.js'
+      - 'src/abilities/equipment-ability-channel.js'
+      - 'src/systems/equipment-system.js'
+      - 'src/mounts/mount-ability-channel.js'
+      - 'src/ui/equipment-action-bar.js'
+      - 'src/ui/backpack-ui.js'
+      - 'scripts/ability-source-native-cast-audit.mjs'
+      - 'scripts/equipment-ability-audit.mjs'
+      - 'scripts/equipment-weapon-loadout-audit.js'
+      - 'scripts/mount-foundation-audit.mjs'
+      - 'docs/systems/EQUIPMENT_ABILITY_SYSTEM.md'
+      - 'docs/system-catalog.json'
+      - 'guide.html'
+      - 'index.html'
+      - 'package.json'
+      - '.github/workflows/equipment-abilities-ci.yml'
+  pull_request:
+    paths:
+      - 'src/abilities/kelo-ability-boot.js'
+      - 'src/abilities/ability-source-cast.js'
+      - 'src/abilities/equipment-ability-data.js'
+      - 'src/abilities/equipment-ability-channel.js'
+      - 'src/systems/equipment-system.js'
+      - 'src/mounts/mount-ability-channel.js'
+      - 'src/ui/equipment-action-bar.js'
+      - 'src/ui/backpack-ui.js'
+      - 'scripts/ability-source-native-cast-audit.mjs'
+      - 'scripts/equipment-ability-audit.mjs'
+      - 'scripts/equipment-weapon-loadout-audit.js'
+      - 'scripts/mount-foundation-audit.mjs'
+      - 'docs/systems/EQUIPMENT_ABILITY_SYSTEM.md'
+      - 'docs/system-catalog.json'
+      - 'guide.html'
+      - 'index.html'
+      - 'package.json'
+      - '.github/workflows/equipment-abilities-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  equipment-ability-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm run audit:ability-source-native
+      - run: npm run audit:equipment-abilities
+      - run: node scripts/equipment-weapon-loadout-audit.js
+      - run: npm run audit:mounts
+      - run: npm run audit:stones
+      - run: npm run audit:docs
+      - run: npm run audit:foundation

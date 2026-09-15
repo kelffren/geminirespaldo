@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="768" viewBox="0 0 512 768" shape-rendering="crispEdges">
+  <defs>
+    <symbol id="down" viewBox="0 0 128 192">
+      <path fill="#123c3b" d="M42 76h44l7 12-7 36H42l-7-36z"/>
+      <path fill="#0a2428" d="M42 76h9l6 48H42l-7-36zm44 0h-9l-6 48h15l7-36z"/>
+      <path fill="#d8b85d" d="M61 76h6v48h-6zM42 76h44v4H42z"/>
+      <path fill="#7fb6a5" d="M39 85h6v19h-6zm44 0h6v19h-6z"/>
+    </symbol>
+    <symbol id="left" viewBox="0 0 128 192">
+      <path fill="#123c3b" d="M45 77h38l6 11-7 36H43l-5-36z"/>
+      <path fill="#0a2428" d="M43 78h11l3 46H43l-5-36z"/>
+      <path fill="#d8b85d" d="M54 78h5v46h-5zM44 78h39v4H44z"/>
+      <path fill="#7fb6a5" d="M38 87h6v18h-6z"/>
+    </symbol>
+    <symbol id="right" viewBox="0 0 128 192">
+      <path fill="#123c3b" d="M45 77h38l6 11-5 36H45l-7-36z"/>
+      <path fill="#0a2428" d="M74 78h10l5 10-5 36H70z"/>
+      <path fill="#d8b85d" d="M69 78h5v46h-5zM45 78h39v4H45z"/>
+      <path fill="#7fb6a5" d="M84 87h6v18h-6z"/>
+    </symbol>
+    <symbol id="up" viewBox="0 0 128 192">
+      <path fill="#102f32" d="M42 77h44l7 11-7 36H42l-7-36z"/>
+      <path fill="#164948" d="M49 78h30v46H49z"/>
+      <path fill="#d8b85d" d="M42 78h44v4H42zM61 82h6v42h-6z"/>
+      <path fill="#0a2428" d="M35 88h8v25h-8zm50 0h8v25h-8z"/>
+    </symbol>
+  </defs>
+  <g>
+    <use href="#down" x="0" y="0" width="128" height="192"/><use href="#down" x="128" y="0" width="128" height="192"/><use href="#down" x="256" y="0" width="128" height="192"/><use href="#down" x="384" y="0" width="128" height="192"/>
+    <use href="#left" x="0" y="192" width="128" height="192"/><use href="#left" x="128" y="192" width="128" height="192"/><use href="#left" x="256" y="192" width="128" height="192"/><use href="#left" x="384" y="192" width="128" height="192"/>
+    <use href="#right" x="0" y="384" width="128" height="192"/><use href="#right" x="128" y="384" width="128" height="192"/><use href="#right" x="256" y="384" width="128" height="192"/><use href="#right" x="384" y="384" width="128" height="192"/>
+    <use href="#up" x="0" y="576" width="128" height="192"/><use href="#up" x="128" y="576" width="128" height="192"/><use href="#up" x="256" y="576" width="128" height="192"/><use href="#up" x="384" y="576" width="128" height="192"/>
+  </g>
+</svg>

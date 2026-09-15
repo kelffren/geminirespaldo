@@ -1,0 +1,38 @@
+name: Sword Swap teleport + return LIVE audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/visuals/sword-swap-pvp-visuals.js'
+      - 'scripts/live-sword-swap-vfx-audit.mjs'
+      - '.github/workflows/live-sword-swap-vfx-audit.yml'
+      - 'index.html'
+  workflow_dispatch:
+jobs:
+  sword-swap-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Syntax
+        run: |
+          node --check src/visuals/sword-swap-pvp-visuals.js
+          node --check scripts/live-sword-swap-vfx-audit.mjs
+      - name: Audit real mobile Sword Swap VFX
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: |
+          set -o pipefail
+          mkdir -p artifacts
+          node scripts/live-sword-swap-vfx-audit.mjs 2>&1 | tee artifacts/sword-swap-vfx-audit.log
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-sword-swap-vfx-audit
+          path: artifacts/
+          if-no-files-found: error

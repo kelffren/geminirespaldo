@@ -1,0 +1,161 @@
+name: Strict PvP Quality Judge
+
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'engine-*.js'
+      - 'src/core/**'
+      - 'src/systems/pvp-world.js'
+      - 'src/systems/pvp-visual-competitive-pass.js'
+      - 'src/systems/melee/**'
+      - 'src/ui/pvp-social-touch-guard.js'
+      - 'src/visuals/**'
+      - 'src/abilities/**'
+      - 'scripts/live-pvp-quality-judge.mjs'
+      - '.github/workflows/strict-pvp-quality-judge.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'engine-*.js'
+      - 'src/core/**'
+      - 'src/systems/pvp-world.js'
+      - 'src/systems/pvp-visual-competitive-pass.js'
+      - 'src/systems/melee/**'
+      - 'src/ui/pvp-social-touch-guard.js'
+      - 'src/visuals/**'
+      - 'src/abilities/**'
+      - 'scripts/live-pvp-quality-judge.mjs'
+      - '.github/workflows/strict-pvp-quality-judge.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: strict-pvp-quality-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  syntax-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Judge syntax
+        run: node --check scripts/live-pvp-quality-judge.mjs
+      - name: Strict policy is present
+        run: |
+          grep -q "PVP_QUALITY_THRESHOLD || 96" scripts/live-pvp-quality-judge.mjs
+          grep -q "hardBlockerCount" scripts/live-pvp-quality-judge.mjs
+          grep -q "requiredForFinalPass: true" scripts/live-pvp-quality-judge.mjs
+          grep -q "minimumHumanOrVisionScore: 8.5" scripts/live-pvp-quality-judge.mjs
+
+  local-mobile-quality:
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Serve exact PR checkout
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/kelo-strict-judge-http.log 2>&1 &
+          echo $! >/tmp/kelo-strict-judge-http.pid
+          python3 - <<'PY'
+          import time, urllib.request
+          for _ in range(50):
+              try:
+                  r=urllib.request.urlopen('http://127.0.0.1:4173/index.html',timeout=1)
+                  if r.status == 200:
+                      print('PR checkout server ready')
+                      raise SystemExit(0)
+              except Exception:
+                  time.sleep(.2)
+          raise SystemExit('PR checkout server did not start')
+          PY
+      - name: Judge actual mobile PvP from PR checkout
+        env:
+          AUDIT_URL: http://127.0.0.1:4173/
+          PVP_QUALITY_THRESHOLD: '96'
+          PVP_QUALITY_OUT: artifacts/pvp-quality-judge-local
+        run: node scripts/live-pvp-quality-judge.mjs
+      - name: Upload strict local evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: strict-pvp-quality-local
+          path: artifacts/pvp-quality-judge-local/
+          if-no-files-found: error
+          retention-days: 14
+
+  live-mobile-quality:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Wait for exact PvP runtime on Pages
+        run: |
+          python3 - <<'PY'
+          import hashlib, pathlib, time, urllib.request
+          base='https://kelffren.github.io/gemini/'
+          targets=[
+              'index.html',
+              'engine-c.js',
+              'src/core/input-system.js',
+              'src/core/movement-system.js',
+              'src/core/kelo-runtime-bootstrap.js',
+              'src/systems/pvp-world.js',
+              'src/systems/pvp-visual-competitive-pass.js',
+              'src/systems/melee/melee-engine.js',
+              'src/systems/melee/melee-weapon-profiles.js',
+              'src/ui/pvp-social-touch-guard.js',
+              'src/visuals/melee-visual-manifest.js',
+              'src/visuals/melee-combat-visuals.js',
+              'src/visuals/combat-presentation-bridge.js',
+          ]
+          expected={p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in targets}
+          for attempt in range(60):
+              mismatches=[]
+              for path in targets:
+                  try:
+                      body=urllib.request.urlopen(base+path+'?strict-deploy='+str(time.time_ns()),timeout=15).read()
+                      actual=hashlib.sha256(body).hexdigest()
+                      if actual != expected[path]: mismatches.append((path, expected[path][:10], actual[:10]))
+                  except Exception as exc:
+                      mismatches.append((path, 'fetch', str(exc)[:40]))
+              if not mismatches:
+                  print('Exact strict-PvP runtime is live on Pages')
+                  raise SystemExit(0)
+              print('Pages not exact yet', attempt+1, mismatches)
+              time.sleep(10)
+          raise SystemExit('Exact strict-PvP runtime did not appear on Pages')
+          PY
+      - name: Judge deployed mobile PvP
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          PVP_QUALITY_THRESHOLD: '96'
+          PVP_QUALITY_OUT: artifacts/pvp-quality-judge-live
+        run: node scripts/live-pvp-quality-judge.mjs
+      - name: Upload strict LIVE evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: strict-pvp-quality-live
+          path: artifacts/pvp-quality-judge-live/
+          if-no-files-found: error
+          retention-days: 14

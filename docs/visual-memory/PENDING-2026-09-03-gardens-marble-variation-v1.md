@@ -1,0 +1,8 @@
+## Validated 2026-09-03 — Gardens modular marble variation v1
+
+- LIVE mobile evidence at 390×844 validates a dedicated 128×64 transparent marble-variation atlas with eight 32×32 low-contrast variants layered only over Gardens roads. The long ivory promenade now has restrained internal material cadence without sacrificing path readability or adding prop clutter.
+- Preserve the render order `marble base → subtle marble variation overlay → grass↔marble transition`; this keeps the existing ivory palette and 16-mask transition contract intact while letting surface detail evolve independently.
+- Validated contract: `assets/marble-variation-v1.png?art=143`, base TileRegistry `1.10.26` (runtime extended registry `1.11.1`), `world-v1.11`, style `authored-eight-variant-overlay-v1`, eight deterministic overlay cells, Gardens-only scope.
+- Dedicated LIVE validation must probe layered fountain depth separately from a promenade screenshot: moving the actor away from the fountain correctly makes `frontOcclusionActive=false`, so oclusion and material framing are distinct audit conditions.
+- Final LIVE report: 390×844 CSS / 780×1688 canvas, `marbleVariationAssetLoaded=true`, `marbleVariationCount=8`, layered fountain probe `frontOcclusionActive=true`, `consoleErrors=[]`, `failedRequests=[]`, `httpErrors=[]`.
+- Next visual bottleneck: Gardens now has better ground material cadence, but its large green fields still read flatter and more synthetic than the authored marble corridor; the next safe pass should improve medium-scale vegetation grouping/grass-to-prop rhythm without filling navigation space or adding another landmark.

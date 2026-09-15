@@ -1,0 +1,71 @@
+name: Avatar Frame Surgery Guardian
+
+on:
+  pull_request:
+    paths:
+      - 'src/creators/avatar/**'
+      - 'src/creators/sprite-compiler/**'
+      - 'src/creators/ui/avatar-frame-surgery-*.mjs'
+      - 'src/creators/workspaces/avatar-workspace.mjs'
+      - 'scripts/avatar-frame-surgery-*.mjs'
+      - 'avatar-frame-surgery-user-audit.html'
+      - '.github/workflows/avatar-frame-surgery-guardian.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frame-surgery-guardian:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install test dependency without mutating the repo
+        run: npm install --no-package-lock --ignore-scripts
+      - name: Syntax gate
+        run: |
+          node --check src/creators/ui/avatar-frame-surgery-workspace.mjs
+          node --check src/creators/ui/avatar-frame-surgery-editor.mjs
+          node --check src/creators/ui/avatar-frame-surgery-ui-kit.mjs
+          node --check src/creators/sprite-compiler/sprite-frame-surgery-model.mjs
+          node --check src/creators/sprite-compiler/sprite-frame-surgery-selection.mjs
+          node --check src/creators/sprite-compiler/sprite-exact-canvas.mjs
+          node --check src/creators/sprite-compiler/sprite-frame-normalizer.mjs
+          node --check src/creators/avatar/kelo-universal-asset-compiler.mjs
+          node --check src/creators/avatar/raw-single-frame-analysis.mjs
+          node --check src/creators/avatar/raw-image-intent-gate.mjs
+          node --check src/creators/avatar/avatar-quick-import-service.mjs
+          node --check scripts/avatar-frame-surgery-supervisor-audit.mjs
+          node --check scripts/avatar-frame-surgery-research-audit.mjs
+          node --check scripts/avatar-frame-surgery-user-browser-audit.mjs
+      - name: 35-of-35 behavior-first Frame Surgery supervisor + exact canvas gates
+        run: node scripts/avatar-frame-surgery-supervisor-audit.mjs
+      - name: Advanced research adversary
+        run: node scripts/avatar-frame-surgery-research-audit.mjs
+      - name: Existing adversarial ingestion corpus
+        run: npm run audit:sprite-ingestion
+      - name: Existing Frame Doctor audit
+        run: npm run audit:sprite-frame-doctor
+      - name: Existing Avatar Quick Import audit
+        run: npm run audit:avatar-quick
+      - name: Mobile user browser acceptance — upload, exact size, touch gestures, raw fallback, use
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/frame-surgery-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill ${server_pid} >/dev/null 2>&1 || true' EXIT
+          for i in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:4173/avatar-frame-surgery-user-audit.html >/dev/null; then break; fi
+            sleep 1
+          done
+          AUDIT_URL=http://127.0.0.1:4173 CHROME_BIN=/usr/bin/google-chrome SURGERY_AUDIT_OUTPUT=artifacts/frame-surgery-user node scripts/avatar-frame-surgery-user-browser-audit.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frame-surgery-mobile-user-proof
+          path: artifacts/frame-surgery-user
+          if-no-files-found: warn

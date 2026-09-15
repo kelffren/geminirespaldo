@@ -1,0 +1,7 @@
+## Validated Plaza Fountain Alignment — V6.05 / Fountain v1.6 / 2026-09-03
+- The authored fountain remains exactly the existing `assets/plaza-fountain-back.PNG` and `assets/plaza-fountain-front.PNG`; neither source image was regenerated or replaced.
+- Manual review of the previous LIVE composition found the root visual defect: drawing the front PNG at the same 200x200 placement as the already-complete back fountain made the front rim cut across the center instead of reading as the lower foreground edge.
+- Validated placement keeps the back at world `{x:1340,y:1420,w:200,h:200}` and renders the front layer centered and reduced to 74% at `{x:1366,y:1508,w:148,h:148}`. Depth crossover is `baseY=1592`; gameplay collision remains unchanged at `{x:1390,y:1492,w:100,h:60}`.
+- LIVE mobile inspection confirms the two authored PNGs now read as one coherent circular fountain: the lower rim and planters align with the back structure instead of slicing across the basin, while actors correctly pass behind the front layer and redraw in front after crossing its base-Y.
+- Focused mobile LIVE audit validated `plaza-fountain-v1.6`, `alignmentMode='scaled-centered-lower-rim-v1'`, both 1254x1254 PNG sources loaded, and `consoleErrors=[]`, `failedRequests=[]`, `httpErrors=[]`.
+- QA decision: fountain-specific validation must be runnable independently of unrelated district audits so an unrelated failure cannot prevent inspection of a changed focal asset. The full global zero-error gate remains unchanged and separate.

@@ -1,0 +1,29 @@
+name: Map Forge Road Distance CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/world/map-forge/**'
+      - 'scripts/map-forge-road-distance-audit.mjs'
+      - '.github/workflows/map-forge-road-distance-ci.yml'
+  pull_request:
+    paths:
+      - 'src/world/map-forge/**'
+      - 'scripts/map-forge-road-distance-audit.mjs'
+      - '.github/workflows/map-forge-road-distance-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax
+        run: |
+          node --check src/world/map-forge/map-forge-geometry.mjs
+          node --check scripts/map-forge-road-distance-audit.mjs
+      - name: Segment-aware road clearance across 300 maps
+        run: node scripts/map-forge-road-distance-audit.mjs

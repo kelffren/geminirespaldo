@@ -1,0 +1,44 @@
+name: Prefab Contract CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'src/environment/tile-registry.js'
+      - 'src/environment/prefab-contract.js'
+      - 'src/environment/generic-prefabs.js'
+      - 'src/environment/luxe-kiosk-atlas.js'
+      - 'scripts/validate-prefab-contract.mjs'
+      - '.github/workflows/prefab-contract.yml'
+  pull_request:
+  workflow_dispatch:
+jobs:
+  prefab-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax
+        run: |
+          node --check src/environment/prefab-contract.js
+          node --check src/environment/generic-prefabs.js
+          node --check src/environment/luxe-kiosk-atlas.js
+          node --check scripts/validate-prefab-contract.mjs
+      - name: Contract extension proof
+        run: node scripts/validate-prefab-contract.mjs
+      - name: Live contract and dormant compatibility proof
+        run: |
+          if grep -Eq 'new Image\(|drawImage|LAYERS?\.register\(' src/environment/luxe-kiosk-atlas.js; then
+            echo 'Luxe compatibility adapter owns rendering/layer registration'
+            exit 1
+          fi
+          grep -q "mode:'generic-prefab-contract-v1'" src/environment/luxe-kiosk-atlas.js
+          grep -q "rendererMode:'data-driven-prefabs-v2'" src/environment/generic-prefabs.js
+          grep -q "version:'1.1.0'" src/environment/prefab-contract.js
+          grep -q "renderParts:true" src/environment/prefab-contract.js
+          grep -q "splitAssets:true" src/environment/prefab-contract.js
+          grep -q "frameSelection:true" src/environment/prefab-contract.js
+          grep -q 'src/environment/prefab-contract.js?v=' index.html
+          if grep -q 'src/environment/generic-prefabs.js?v=' index.html; then
+            echo 'generic-prefabs.js is classified dormant in Foundation; update architecture contract before booting it'
+            exit 1
+          fi

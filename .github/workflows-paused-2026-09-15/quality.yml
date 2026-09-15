@@ -1,0 +1,33 @@
+name: Kelo Quality Ratchet
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history for diff-based guards
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Incremental code quality ratchet
+        run: node scripts/quality-ratchet.mjs
+
+      - name: Foundation architecture guard
+        run: node scripts/foundation-architecture-audit.js
+
+      - name: Runtime boot order contract
+        run: node scripts/runtime-boot-order-audit.mjs

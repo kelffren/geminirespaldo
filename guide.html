@@ -1,0 +1,314 @@
+<!-- KELO-INDEX
+  area: PLAYER DOCS
+  owner: Documentation / Foundation
+  keys: GUIDE MECHANICS PLAYER DOCS PUBLIC CHARACTER CUSTOMIZATION MENU HUD NOBILITY TITLES COMMERCE MARKET TRADE MOUNTS APPEARANCE ARENA RANKED EQUIPMENT WEAPON Q W E
+  purpose: guía pública de mecánicas de Kelo World para jugadores
+  public-api: página estática guide.html
+  consumes: comportamiento LIVE validado y docs/system-catalog.json
+  state-owned: ninguno
+  extension-points: añadir secciones player-visible por sistema
+  reuse: documentación pública de mecánicas
+  legacy: N/A
+  do-not: no publicar secretos, claves ni internals explotables
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Kelo World — Guía de Mecánicas</title>
+  <meta name="description" content="Guía oficial de mecánicas, controles y sistemas de Kelo World.">
+  <style>
+    :root{--bg:#071014;--panel:#0d191d;--panel2:#122328;--gold:#e7c56a;--text:#eef3ef;--muted:#8da19b;--line:rgba(231,197,106,.22)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 50% 0,#17352f 0,#071014 42%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.55}
+    a{color:var(--gold)}.wrap{width:min(920px,calc(100% - 28px));margin:auto;padding:24px 0 70px}.top{display:flex;align-items:center;gap:12px;margin-bottom:28px}.back{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 14px;border:1px solid var(--line);border-radius:12px;background:rgba(9,19,22,.9);text-decoration:none;font-weight:800}.brand{margin-left:auto;color:var(--gold);font:800 13px Georgia,serif;letter-spacing:.12em}
+    .hero{padding:26px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(145deg,rgba(23,63,54,.82),rgba(8,17,21,.96));box-shadow:0 20px 60px rgba(0,0,0,.24)}h1{margin:0;color:#f5dda0;font:800 clamp(30px,7vw,52px) Georgia,serif}.lead{max-width:700px;color:#c8d5cf;margin:10px 0 0}.notice{margin-top:16px;padding:12px 14px;border-left:3px solid var(--gold);background:rgba(231,197,106,.07);color:#cfdbd5;font-size:13px}
+    .toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:9px;margin:18px 0 30px}.toc a{padding:13px 14px;border:1px solid rgba(255,255,255,.08);border-radius:13px;background:rgba(255,255,255,.035);text-decoration:none;color:#e9eee9;font-size:13px;font-weight:750}.toc small{display:block;color:var(--muted);font-weight:500;margin-top:3px}
+    section{margin:18px 0;padding:21px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:linear-gradient(180deg,rgba(13,25,29,.96),rgba(8,17,21,.96))}h2{margin:0 0 8px;color:var(--gold);font-size:21px}h3{margin:18px 0 6px;font-size:15px;color:#f0e4ba}p{margin:7px 0;color:#cbd6d1}ul{padding-left:20px;color:#cbd6d1}.tag{display:inline-block;margin-bottom:10px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;color:var(--gold);font-size:10px;font-weight:900;letter-spacing:.08em}.example{padding:12px;border-radius:12px;background:#091216;color:#abbdb5;font-size:13px}.footer{margin-top:30px;color:#758a82;font-size:12px;text-align:center}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <div class="top"><a class="back" href="./">← Volver al juego</a><div class="brand">KELO WORLD</div></div>
+  <header class="hero">
+    <span class="tag">GUÍA OFICIAL</span>
+    <h1>Mecánicas de Kelo World</h1>
+    <p class="lead">Aquí se explica cómo funciona el juego desde el punto de vista del jugador. Esta guía crecerá junto al juego: cada sistema visible nuevo debe publicar aquí sus reglas, controles, límites y ejemplos.</p>
+    <div class="notice">La guía describe comportamiento validado o, cuando se indica, foundations todavía en prueba. Mecánicas en pruebas pueden cambiar antes de considerarse definitivas.</div>
+  </header>
+
+  <nav class="toc" aria-label="Índice de mecánicas">
+    <a href="#movimiento">Movimiento<small>Caminar, correr y soltar</small></a>
+    <a href="#controles-y-bloqueos-de-interfaz">Controles e interfaces<small>Paneles y control</small></a>
+    <a href="#menu-principal">HUD y menú<small>Perfil rápido, GUÍA y accesos</small></a>
+    <a href="#personalizacion-de-personaje">Personaje<small>Apariencia, ropa y guardados</small></a>
+    <a href="#atuendos-y-apariencia">Atuendos<small>Cosméticos separados de stats</small></a>
+    <a href="#camara-y-pantalla">Cámara y pantalla<small>Zoom, giro y fullscreen</small></a>
+    <a href="#habilidades">Habilidades<small>5 piedras + Q/W/E del arma</small></a>
+    <a href="#monturas">Monturas<small>Equipo, movimiento y M1–M3</small></a>
+    <a href="#mochila">Mochila<small>Objetos y equipo</small></a>
+    <a href="#mercado-comercio-y-trade">Mercado y trade<small>Puestos, alfombras y doble confirmación</small></a>
+    <a href="#nobleza-y-titulos">Nobleza y títulos<small>Rango automático y prestigio equipado</small></a>
+    <a href="#pvp">PvP<small>Combate de mundo</small></a>
+    <a href="#arena-ranked">Arena Ranked<small>3v3 Control y bots transparentes</small></a>
+  </nav>
+
+  <section id="movimiento">
+    <span class="tag">MOVIMIENTO</span>
+    <h2>Caminar y correr</h2>
+    <p>La velocidad del personaje responde a la intensidad de la dirección que estás marcando. En móvil, desplazar poco el joystick produce un movimiento más suave; al llevarlo más lejos, el personaje pasa de caminar a correr.</p>
+    <ul>
+      <li>Sin intención de movimiento, el personaje debe detenerse.</li>
+      <li>Con una dirección suave, el personaje camina.</li>
+      <li>Con una dirección fuerte, entra progresivamente en carrera.</li>
+      <li>Las paredes y objetos sólidos limitan el desplazamiento físico; no deberías atravesarlos por mantener el joystick pulsado.</li>
+      <li>La animación de pasos avanza usando la distancia realmente recorrida, para que los pies no sigan caminando cuando un obstáculo impide avanzar.</li>
+    </ul>
+    <div class="example"><strong>Ejemplo:</strong> empujas el joystick ligeramente → caminas; lo llevas más lejos → aceleras hacia carrera; lo sueltas → el personaje se planta y se detiene.</div>
+  </section>
+
+  <section id="controles-y-bloqueos-de-interfaz">
+    <span class="tag">CONTROLES</span>
+    <h2>Movimiento e interfaces</h2>
+    <p>El mundo se controla directamente desde el joystick táctil o los controles disponibles en tu dispositivo. Algunos paneles necesitan tu atención exclusiva para que un toque destinado a la interfaz no se convierta también en movimiento o una acción dentro del mundo.</p>
+    <h3>¿Qué ocurre cuando abres un panel?</h3>
+    <ul>
+      <li>Paneles modales como inventario, personalización u otras interfaces pueden reclamar temporalmente el control.</li>
+      <li>Mientras ese panel tenga el control, las acciones del mundo que podrían activarse accidentalmente deben quedar bloqueadas.</li>
+      <li>Al cerrar el panel, el control normal debe regresar automáticamente.</li>
+      <li>Un panel no debe cancelar silenciosamente el control reclamado por otro panel todavía abierto.</li>
+    </ul>
+    <div class="example"><strong>Ejemplo:</strong> abres la Mochila → interactúas con objetos sin mover al personaje → cierras la Mochila → vuelves a caminar normalmente.</div>
+    <h3>Si no puedes moverte</h3>
+    <p>Cierra cualquier panel abierto primero. Si la pantalla ya está libre y el personaje continúa sin responder, eso se considera un problema del juego y no una mecánica intencional.</p>
+  </section>
+
+  <section id="menu-principal">
+    <span class="tag">HUD + MENÚ</span>
+    <h2>Perfil rápido y menú principal</h2>
+    <p>La esquina superior izquierda reúne la información principal de tu héroe en un solo panel. El objetivo es que puedas reconocer tu identidad, prestigio y recursos sin tener varios contadores superpuestos.</p>
+    <h3>Panel del héroe</h3>
+    <ul>
+      <li><strong>Nombre e ID:</strong> muestran tu identidad actual; el ID puede copiarse desde el propio panel.</li>
+      <li><strong>Clan:</strong> aparece debajo de la foto. Si tu personaje todavía no pertenece a un clan, verás <em>Sin clan</em>.</li>
+      <li><strong>Nobleza:</strong> es el dato de prestigio que más destaca visualmente y muestra el rango calculado por el sistema de Nobleza.</li>
+      <li><strong>Título:</strong> muestra únicamente el título personal que tengas equipado; no es lo mismo que la Nobleza.</li>
+      <li><strong>Vida:</strong> muestra tus HP actuales y máximos con una barra roja.</li>
+      <li><strong>Maná:</strong> solo muestra números y barra cuando el personaje dispone de una fuente real de maná. Mientras el prototipo no exponga ese recurso, verás <strong>— / —</strong> en vez de una cifra inventada.</li>
+      <li><strong>Oro:</strong> aparece integrado dentro del mismo panel y representa el mismo saldo usado por el resto del juego.</li>
+    </ul>
+    <p>Justo debajo está el botón <strong>GUÍA</strong>, que abre esta página. La foto del personaje puede reutilizar el acceso al perfil cuando ese panel está disponible.</p>
+    <div class="example"><strong>Ejemplo:</strong> tu Nobleza puede ser Duque y, al mismo tiempo, tu título equipado puede ser 《Asesino》. Los dos aparecen separados porque representan progresos diferentes.</div>
+    <h3>Menú principal</h3>
+    <p>El botón <strong>MENÚ</strong> abre el panel principal del juego. En móvil se presenta como una cuadrícula de accesos grandes para que puedas entrar a cada sistema sin buscar opciones escondidas.</p>
+    <ul>
+      <li><strong>Mochila</strong> abre tu inventario y equipo.</li>
+      <li><strong>Habilidades</strong> abre el panel de piedras y habilidades.</li>
+      <li><strong>Apariencia</strong> abre directamente el editor de personaje.</li>
+      <li><strong>Perfil</strong> muestra la información del personaje.</li>
+      <li><strong>Mercado</strong> te transporta al Mercado Central, donde están los puestos, alfombras de venta y comercio entre jugadores.</li>
+      <li><strong>Chat</strong> abre la conversación rápida del HUD.</li>
+      <li><strong>Propiedades</strong> abre tu flujo de casa/parcela.</li>
+      <li><strong>Nobleza</strong> abre donaciones, rango de Nobleza y la colección de títulos personales desbloqueables.</li>
+      <li><strong>Burlas</strong> abre tus emotes y gestos equipados.</li>
+    </ul>
+    <h3>Creators</h3>
+    <p>Las herramientas <strong>Creators</strong> solo aparecen cuando tu cuenta tiene permiso para usarlas. No todos los jugadores ven ese acceso.</p>
+    <h3>Opciones todavía no publicadas como pantalla</h3>
+    <p>Una opción no aparece en el menú solo por existir como idea o prototipo. Por ejemplo, Misiones o Ajustes se mostrarán como acceso propio cuando tengan una pantalla funcional del juego; esto evita botones que parezcan activos pero solo enseñen un mensaje temporal.</p>
+    <div class="example"><strong>Flujo rápido:</strong> MENÚ → Apariencia para editar tu personaje; MENÚ → Mercado para viajar a la zona comercial; MENÚ → Nobleza para revisar tu rango o equipar un título.</div>
+  </section>
+
+  <section id="personalizacion-de-personaje">
+    <span class="tag">PERSONAJE</span>
+    <h2>Crea y cambia tu apariencia</h2>
+    <p>El editor de personaje separa la apariencia en piezas. Puedes cambiar piel, rostro, ojos, cejas, nariz, boca, pelo y barba; además existen secciones independientes para ropa, equipo y cosméticos.</p>
+    <ul>
+      <li>Los <strong>presets</strong> son puntos de partida: después puedes cambiar cualquier pieza individualmente.</li>
+      <li>Los colores disponibles para piel, pelo u ojos cambian la paleta de esa pieza sin obligarte a elegir un sprite duplicado.</li>
+      <li>El preview puede mirar abajo, izquierda, derecha o arriba y alternar entre quieto y caminar para comprobar cómo encajan las capas.</li>
+      <li><strong>Aleatorio</strong> puede cambiar una categoría o todo el personaje. Usa el candado de una pieza para conservarla mientras aleatorizas lo demás.</li>
+      <li>Deshacer y rehacer te permiten experimentar sin perder inmediatamente la apariencia anterior.</li>
+    </ul>
+    <h3>Ropa, equipo y cosméticos</h3>
+    <p>La ropa se combina por partes; un traje es un conjunto modular y no convierte al personaje en una única imagen. Casco, armas, accesorios, auras y otros elementos pueden seguir viviendo en sus propias capas.</p>
+    <h3>Guardar personajes</h3>
+    <p>Puedes conservar hasta cinco configuraciones visuales en los slots del editor y recuperarlas más tarde. Los guardados del creador contienen apariencia visual: no reemplazan tu inventario, HP, estadísticas ni progreso de combate.</p>
+    <h3>Compartir un personaje</h3>
+    <p>El editor puede exportar un código de personaje e importar uno compatible. Si el código está dañado o hace referencia a contenido que tu versión del juego no reconoce, el editor lo rechaza o conserva un fallback seguro en vez de ejecutar datos desconocidos.</p>
+    <div class="example"><strong>Flujo rápido:</strong> abre Personaje → elige un preset → bloquea el pelo que te gusta → pulsa Aleatorio en Apariencia → prueba la vista ↑ y Caminar → guarda la configuración → pulsa Listo para volver al mundo.</div>
+  </section>
+
+  <section id="atuendos-y-apariencia">
+    <span class="tag">APARIENCIA · FOUNDATION EN PRUEBAS</span>
+    <h2>Atuendos y cosméticos</h2>
+    <p>Kelo World separa la apariencia visual del equipo que modifica estadísticas. Un atuendo puede cambiar cómo se ve un personaje o una montura sin cambiar automáticamente su ataque, defensa, HP o velocidad.</p>
+    <ul>
+      <li>Los atuendos se organizan por slots y perfiles compatibles.</li>
+      <li>Personajes y monturas comparten la misma base de apariencia, aunque cada tipo puede tener slots y posiciones diferentes.</li>
+      <li>Una corona de caballo, por ejemplo, solo se puede aplicar a perfiles donde ese slot sea compatible.</li>
+      <li>El equipo de gameplay puede tener una apariencia asociada, pero sus stats siguen perteneciendo al equipo, no al cosmético.</li>
+    </ul>
+    <div class="example"><strong>Ejemplo:</strong> cambias la corona o el aura de una montura → cambia su apariencia; las estadísticas permanecen iguales salvo que equipes también una pieza de equipo con bonus propios.</div>
+  </section>
+
+  <section id="camara-y-pantalla">
+    <span class="tag">CÁMARA</span>
+    <h2>Cámara, zoom y pantalla</h2>
+    <p>La cámara sigue al personaje de forma suave y adapta lo que ves al tamaño y orientación de tu pantalla. El movimiento del personaje y el movimiento visual de la cámara son cosas distintas: la cámara puede tardar una fracción de segundo en acompañarte sin cambiar tu posición real.</p>
+    <ul>
+      <li>El seguimiento usa suavizado y una zona muerta para evitar que la imagen tiemble con cada pequeño movimiento.</li>
+      <li>El zoom tiene varios niveles y mantiene una referencia coherente al girar entre vertical y horizontal.</li>
+      <li>En horizontal se ajusta el zoom efectivo para conservar aproximadamente el mismo campo de visión vertical que en vertical.</li>
+      <li>La resolución interna del juego se adapta a la densidad de píxeles del dispositivo dentro de límites de rendimiento.</li>
+      <li>En móvil, el botón <strong>PANTALLA COMPLETA</strong> intenta usar el máximo espacio disponible del navegador. Algunos navegadores, especialmente en iPhone/iPad, pueden limitar fullscreen u orientation lock.</li>
+    </ul>
+    <h3>Girar el teléfono</h3>
+    <p>Kelo World detecta vertical y horizontal y vuelve a calcular el viewport. Girar el teléfono no debería teletransportar al personaje ni cambiar tu zoom base elegido; únicamente cambia cómo se encuadra el mundo en la nueva pantalla.</p>
+    <h3>Zoom</h3>
+    <p>Los niveles actuales de referencia son 0.70, 0.82 y 1.00. En horizontal el valor efectivo puede verse distinto internamente porque el juego compensa la proporción de la pantalla.</p>
+    <div class="example"><strong>Ejemplo:</strong> eliges un zoom en vertical → giras a horizontal → ves una cantidad vertical de mundo equivalente → vuelves a vertical → recuperas el mismo zoom base.</div>
+    <h3>Comportamientos normales</h3>
+    <ul>
+      <li>La cámara puede continuar suavemente hacia su objetivo después de que el personaje se detenga.</li>
+      <li>Entrar en una zona, viajar o iniciar PvP puede cambiar el objetivo de cámara.</li>
+      <li>Si el navegador no permite bloquear orientación, el juego te pedirá girar físicamente el dispositivo.</li>
+      <li>Si fullscreen no está permitido, el juego sigue funcionando usando el máximo viewport disponible.</li>
+    </ul>
+  </section>
+
+  <section id="habilidades">
+    <span class="tag">COMBATE</span>
+    <h2>Habilidades, piedras y arma</h2>
+    <p>Kelo World conserva <strong>cinco slots de piedras</strong> como loadout principal y añade identidad de combate al arma equipada. A pie, un arma compatible desbloquea una segunda fila compacta con exactamente <strong>Q, W y E</strong>. Cambiar de familia de arma puede cambiar esas tres técnicas sin cambiar tus piedras.</p>
+    <ul>
+      <li>Los cinco Stone slots permanecen intactos: cuatro habilidades normales y una Ultimate.</li>
+      <li>Q/W/E pertenecen al arma equipada y no ocupan ni sustituyen una piedra.</li>
+      <li>El arma inicial usa <strong>Corte de Vanguardia</strong> en Q, <strong>Paso del Duelista</strong> en W y <strong>Ruptura Real</strong> en E.</li>
+      <li>Q/W/E tienen sus propios cooldowns, coste, targeting y alcance, pero reutilizan el mismo runtime de habilidades que las piedras.</li>
+      <li>Casco, pecho, botas y otras piezas siguen aportando sus stats o pasivas a través del sistema de Equipo; no necesitan otro motor de habilidades.</li>
+      <li>Un slot vacío no puede lanzar una habilidad y una habilidad en cooldown debe esperar antes de reutilizarse.</li>
+      <li>Algunas habilidades apuntan una dirección, una posición, un objetivo o al propio jugador.</li>
+      <li>El coste de recursos y las reglas de alcance se validan antes de ejecutar el efecto.</li>
+    </ul>
+    <h3>Cuando montas</h3>
+    <p>La fila Q/W/E del arma se oculta y su lugar lo ocupa M1/M2/M3 de la montura. Las cinco piedras siguen visibles e intactas. Por eso el máximo diseñado es <strong>8 habilidades activas visibles</strong>: 5 Stone + 3 del arma a pie, o 5 Stone + 3 de montura montado.</p>
+    <h3>En móvil</h3>
+    <p>Q/W/E usa una barra compacta táctil. Las habilidades direccionales o de posición aceptan el mismo gesto de apuntado por arrastre que el resto del combate.</p>
+    <div class="example"><strong>Ejemplo:</strong> llevas Hoja de Vanguardia → conservas tus cinco piedras → aparecen Q/W/E → montas → Q/W/E desaparece y aparecen M1/M2/M3 → desmontas → recuperas inmediatamente el kit del arma.</div>
+  </section>
+
+  <section id="monturas">
+    <span class="tag">MONTURAS · FOUNDATION EN PRUEBAS</span>
+    <h2>Monturas, equipo y habilidades exclusivas</h2>
+    <p>Una montura puede estar <strong>equipada</strong> sin que estés montado sobre ella. Al pulsar montar, cambia tu perfil de desplazamiento y la fila de tres técnicas del arma se sustituye por tres habilidades exclusivas de esa montura.</p>
+    <ul>
+      <li>Tus cinco slots normales de piedras permanecen separados e intactos.</li>
+      <li>Al montar, <strong>Q/W/E se sustituye por M1/M2/M3</strong>; no se apilan seis botones adicionales.</li>
+      <li>M1–M3 pertenecen a la montura; cambiar de montura cambia ese kit.</li>
+      <li>Al desmontar, M1–M3 dejan de estar activos y vuelve Q/W/E del arma equipada.</li>
+      <li>Cada especie puede tener un perfil de movimiento diferente definido por datos.</li>
+      <li>La montura puede llevar equipo propio, como silla, armadura, herraduras, bolsas u otros slots compatibles.</li>
+      <li>Algunas piezas pueden dar bonus a la propia montura y también al personaje mientras está montado.</li>
+    </ul>
+    <h3>Equipo y atuendo no son lo mismo</h3>
+    <p>El equipo puede modificar estadísticas. El atuendo es visual. Por eso puedes cambiar una apariencia sin perder o duplicar los bonus de tu equipo real.</p>
+    <h3>En móvil</h3>
+    <p>La barra M1–M3 ocupa la misma zona compacta que Q/W/E y permanece separada de las cinco piedras. El panel Montura permite equipar, montar/desmontar y gestionar slots compatibles.</p>
+    <div class="example"><strong>Ejemplo:</strong> a pie tienes 5 Stone + Q/W/E → montas → pasas a 5 Stone + M1/M2/M3 → desmontas → vuelves a 5 Stone + Q/W/E sin alterar el loadout de piedras.</div>
+    <p><strong>Nota de prueba:</strong> la Foundation de datos, equipo y habilidades puede probarse antes de que los sprites finales de monturas estén disponibles. La apariencia visual final no se considera aprobada hasta validar los assets reales.</p>
+  </section>
+
+  <section id="mochila">
+    <span class="tag">INVENTARIO</span>
+    <h2>Mochila y equipo</h2>
+    <p>La Mochila contiene los objetos portátiles del jugador. Desde ella puedes inspeccionar objetos y, según el tipo, moverlos, dividir stacks, descartarlos o equiparlos.</p>
+    <ul>
+      <li>Los objetos equipados usan el sistema de Equipo.</li>
+      <li>Los stacks pueden dividirse solo cuando hay espacio libre.</li>
+      <li>Los objetos vinculados pueden tener restricciones adicionales.</li>
+      <li>Acciones como Mercado o Almacén usan sus propios contratos para mover objetos de forma segura.</li>
+    </ul>
+  </section>
+
+  <section id="mercado-comercio-y-trade">
+    <span class="tag">COMERCIO</span>
+    <h2>Mercado Central, puestos y trade</h2>
+    <p>El Mercado Central es una zona separada dedicada a comprar, vender y negociar. Desde <strong>MENÚ → Mercado</strong> entras al área comercial y puedes caminar entre los puestos.</p>
+    <h3>Puestos y alfombras</h3>
+    <ul>
+      <li>Toca la alfombra de un puesto para ver lo que vende.</li>
+      <li>Si una alfombra está libre, puedes reclamar ese puesto para ti.</li>
+      <li>En tu puesto puedes escribir un mensaje corto y publicar objetos de tu Mochila indicando su precio en Oro.</li>
+      <li>Al activar <strong>Ponerme a vender</strong>, tu personaje se coloca detrás del puesto y queda quieto hasta que dejas de vender.</li>
+      <li>Puedes cancelar una publicación y el objeto vuelve a tu Mochila si hay espacio disponible.</li>
+    </ul>
+    <h3>Comprar</h3>
+    <p>Al comprar, el Oro y el objeto se transfieren como una sola operación. Si la compra no puede completarse correctamente, no debería quedarse a medias.</p>
+    <h3>Trade directo</h3>
+    <p>El trade permite que dos jugadores preparen un intercambio de objetos y Oro antes de ejecutarlo.</p>
+    <ul>
+      <li>Cada jugador añade lo que quiere entregar.</li>
+      <li>Modificar un objeto o la cantidad de Oro reinicia las confirmaciones de ambos jugadores.</li>
+      <li>Primero ambos deben marcarse como <strong>Listo</strong>.</li>
+      <li>Después aparece una revisión final: los dos deben aceptar una segunda vez.</li>
+      <li>El intercambio solo se completa cuando existen las dos confirmaciones finales.</li>
+      <li>Si cancelas antes de completar, tus objetos ofrecidos regresan a tu Mochila.</li>
+    </ul>
+    <div class="example"><strong>Prueba offline:</strong> entra al Mercado → toca una alfombra libre y reclámala → publica un objeto → abre Trade Demo → añade un objeto y Oro → marca Listo en ambos lados → confirma las dos aceptaciones finales.</div>
+    <p>En la prueba offline aparecen mercaderes y un rival de trade de demostración para poder recorrer todo el flujo sin otros jugadores conectados. Cuando el modo online use la autoridad del servidor, la misma interfaz se utilizará con jugadores y publicaciones reales.</p>
+  </section>
+
+  <section id="nobleza-y-titulos">
+    <span class="tag">PRESTIGIO</span>
+    <h2>Nobleza y títulos personales</h2>
+    <p>Tu <strong>rango de Nobleza</strong> y tu <strong>título personal</strong> son dos cosas distintas y pueden mostrarse al mismo tiempo sobre el personaje y en el panel del héroe.</p>
+    <ul>
+      <li>La Nobleza se calcula automáticamente con las reglas de donación y ranking. No eliges manualmente ser Caballero, Barón, Conde, Duque, Príncipe o Rey.</li>
+      <li>Los títulos personales se desbloquean al cumplir logros y puedes elegir cuál de los desbloqueados mostrar.</li>
+      <li>Puedes desequipar tu título personal y mostrar solamente tu nombre y, si corresponde, tu Nobleza.</li>
+      <li>En multijugador, el progreso valioso y el equipamiento de títulos se validan en el servidor.</li>
+    </ul>
+    <h3>Títulos PvP iniciales</h3>
+    <p>Las bajas válidas de <strong>PvP de Mundo Abierto</strong> desbloquean una primera cadena de prestigio: Combatiente (10), Cazador (50), Asesino (200), Verdugo (500) y Azote del Reino (1.000).</p>
+    <p>NPCs, dummies, entrenamiento, arena, self-kills y muertes no confirmadas no avanzan el contador de Mundo Abierto.</p>
+    <h3>Equipar un título</h3>
+    <p>Abre <strong>MENÚ → Nobleza → Títulos</strong>. Ahí verás el título equipado, los ya desbloqueados y el progreso de los que faltan. Pulsa <strong>Equipar</strong> sobre uno desbloqueado o <strong>Desequipar</strong> para no mostrar ninguno.</p>
+    <div class="example"><strong>Ejemplo:</strong> alcanzas 200 bajas válidas de Mundo Abierto → desbloqueas 《Asesino》 → lo equipas en Nobleza → otros jugadores pueden verlo bajo tu nombre y tu propio HUD lo muestra como título activo.</div>
+  </section>
+
+  <section id="pvp">
+    <span class="tag">PVP</span>
+    <h2>Mundo PvP</h2>
+    <p>El modo PvP cambia el contexto del jugador desde social a combate. El sistema valida el estado del combate antes de aceptar ataques y habilidades.</p>
+    <ul>
+      <li>Los ataques básicos usan acción direccional, ventanas de ataque y recursos propios.</li>
+      <li>Las habilidades conservan sus reglas de targeting, costes, cooldowns y geometría.</li>
+      <li>Salir del PvP devuelve al jugador al contexto social correspondiente.</li>
+    </ul>
+  </section>
+
+  <section id="arena-ranked">
+    <span class="tag">ARENA RANKED · PROTOTIPO JUGABLE</span>
+    <h2>3v3 Control incluso cuando hay pocos jugadores</h2>
+    <p>La primera Arena competitiva de Kelo World utiliza una sola cola y un único modo principal: <strong>3v3 Control</strong>. El objetivo es mantener la Arena jugable desde el comienzo sin repartir una comunidad pequeña entre muchas colas vacías.</p>
+    <ul>
+      <li>Los dos equipos tienen tres plazas.</li>
+      <li>Control se gana capturando y manteniendo la zona central hasta alcanzar la puntuación objetivo.</li>
+      <li>Si faltan personas en la prueba actual, los huecos pueden cubrirse con combatientes marcados claramente como <strong>[Bot]</strong>.</li>
+      <li>Los bots participan en el mismo espacio de combate y pueden atacar, recibir daño, morir, reaparecer y disputar el objetivo.</li>
+      <li>La Arena normaliza temporalmente los recursos básicos de combate del prototipo para reducir ventajas brutas de progresión.</li>
+      <li>El sistema conserva un rango visible y progreso de RP separado del rating interno de matchmaking.</li>
+      <li>Una partida formada principalmente por bots tiene menor calidad competitiva y, por ello, mueve mucho menos el progreso de rango que una partida humana completa.</li>
+    </ul>
+    <h3>Rangos iniciales</h3>
+    <p>La progresión visible está preparada como: Bronce → Plata → Oro → Platino → Esmeralda → Diamante → Mithril → Adamantita → Etéreo.</p>
+    <h3>Cómo entrar</h3>
+    <p>Pulsa el botón <strong>PVP</strong> del rail. Desde la nueva superficie puedes buscar <strong>Arena Ranked</strong> o entrar al Mundo PvP normal. Al comenzar Arena aparece un marcador superior con el score de ambos equipos, tiempo restante y calidad de la partida.</p>
+    <div class="example"><strong>Importante:</strong> el modo con bots, ranking local y stats normalizados ya sirve como prototipo jugable. El matchmaking, rating persistente y resultado competitivo online definitivo todavía requieren autoridad del servidor antes de considerarse Ranked de producción.</div>
+  </section>
+
+  <div class="footer">Kelo World · Guía de mecánicas viva · actualizada junto al runtime validado.</div>
+</main>
+</body>
+</html>

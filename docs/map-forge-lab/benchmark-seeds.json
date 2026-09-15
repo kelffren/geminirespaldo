@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-10",
+  "groups": {
+    "canary": [
+      {"recipeId": "KELO_ROYAL_CAPITAL_V1", "seed": 68, "defects": ["PAVING_BLOB"]},
+      {"recipeId": "KELO_VILLAGE_V1", "seed": 2, "defects": ["PAVING_BLOB"]}
+    ],
+    "development": {
+      "KELO_ROYAL_CAPITAL_V1": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "KELO_VILLAGE_V1": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "KELO_FOREST_V1": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    },
+    "holdout": {
+      "generation": 1,
+      "usedThroughCycle": 1,
+      "KELO_ROYAL_CAPITAL_V1": [10001, 10002, 10003, 10004, 10005, 10006, 10007, 10008, 10009, 10010],
+      "KELO_VILLAGE_V1": [11001, 11002, 11003, 11004, 11005, 11006, 11007, 11008, 11009, 11010],
+      "KELO_FOREST_V1": [12001, 12002, 12003, 12004, 12005, 12006, 12007, 12008, 12009, 12010]
+    }
+  }
+}

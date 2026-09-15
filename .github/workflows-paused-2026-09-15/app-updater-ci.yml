@@ -1,0 +1,68 @@
+name: App Updater CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - index.html
+      - manifest.webmanifest
+      - version.json
+      - sw.js
+      - src/core/update-system.js
+      - src/core/update-delta-core.js
+      - src/core/update-watch.js
+      - src/ui/update-ui.js
+      - src/ui/luxe-shell.js
+      - scripts/updater-audit.mjs
+      - tests/updater-delta.test.cjs
+      - tests/update-center-contract.test.mjs
+      - docs/systems/APP_UPDATE_SYSTEM.md
+      - docs/system-catalog.json
+      - package.json
+      - .github/workflows/app-updater-ci.yml
+  pull_request:
+    paths:
+      - index.html
+      - manifest.webmanifest
+      - version.json
+      - sw.js
+      - src/core/update-system.js
+      - src/core/update-delta-core.js
+      - src/core/update-watch.js
+      - src/ui/update-ui.js
+      - src/ui/luxe-shell.js
+      - scripts/updater-audit.mjs
+      - tests/updater-delta.test.cjs
+      - tests/update-center-contract.test.mjs
+      - docs/systems/APP_UPDATE_SYSTEM.md
+      - docs/system-catalog.json
+      - package.json
+      - .github/workflows/app-updater-ci.yml
+
+permissions:
+  contents: read
+
+jobs:
+  updater-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Syntax check Turbo V3 runtime
+        run: |
+          node --check src/core/update-delta-core.js
+          node --check src/core/update-system.js
+          node --check src/core/update-watch.js
+          node --check src/ui/update-ui.js
+          node --check sw.js
+      - name: Prove zero-byte and one-file delta invariants
+        run: node tests/updater-delta.test.cjs
+      - name: Prove silent Menu update center contract
+        run: node tests/update-center-contract.test.mjs
+      - name: Audit updater contract
+        run: npm run audit:updater
+      - name: Audit system documentation
+        run: npm run audit:docs

@@ -1,0 +1,38 @@
+name: MY PROFILE LIVE touch audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/ui/self-profile-touch-hotfix.js'
+      - 'scripts/live-my-profile-touch-audit.mjs'
+      - '.github/workflows/live-my-profile-touch-audit.yml'
+      - 'index.html'
+  workflow_dispatch:
+jobs:
+  my-profile-touch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Syntax
+        run: |
+          node --check src/ui/self-profile-touch-hotfix.js
+          node --check scripts/live-my-profile-touch-audit.mjs
+      - name: Audit real mobile MY PROFILE touch
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: |
+          set -o pipefail
+          mkdir -p artifacts
+          node scripts/live-my-profile-touch-audit.mjs 2>&1 | tee artifacts/my-profile-touch-audit.log
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-my-profile-touch-audit
+          path: artifacts/
+          if-no-files-found: error

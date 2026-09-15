@@ -1,0 +1,23 @@
+import fs from 'node:fs';
+import { createRequire } from 'node:module';
+const require=createRequire(import.meta.url);
+const data=require('../src/abilities/abilityData.js');
+const boot=fs.readFileSync('src/abilities/kelo-ability-boot.js','utf8');
+const engineA=fs.readFileSync('engine-a.js','utf8');
+const engineC=fs.readFileSync('engine-c.js','utf8');
+const implemented=['projectile','self_aoe','chain','dash','blink','instant','persistent_area','wall','trap','aura'];
+const pending=['swap_sword'];
+const declared=[...new Set(data.ABILITIES.map(a=>a.delivery.type))].sort();
+const classified=[...new Set([...implemented,...pending])].sort();
+if(JSON.stringify(declared)!==JSON.stringify(classified))throw new Error(`delivery contract drift declared=${declared} classified=${classified}`);
+const marker='const deliveryHandlers=Object.freeze({';
+const start=boot.indexOf(marker),end=start>=0?boot.indexOf('});',start):-1;
+if(start<0||end<0)throw new Error('deliveryHandlers registry missing');
+const deliveryBlock=boot.slice(start,end+3);
+for(const type of implemented){if(!new RegExp(`\\b${type}\\s*:`).test(deliveryBlock))throw new Error(`missing runtime delivery handler: ${type}`);}
+if(!/\bpendingDeliveryTypes\s*=\s*Object\.freeze\(\s*\['swap_sword'\]\s*\)/.test(boot))throw new Error('swap_sword must remain explicitly pending until gameplay contract is complete');
+if(!/reason\s*:\s*'UNSUPPORTED_DELIVERY'/.test(boot))throw new Error('unsupported delivery preflight missing');
+if(/obstacles\.length\s*=\s*0/.test(engineC))throw new Error('render still clears physics registry');
+if(!engineA.includes('b.blocksMovement === false'))throw new Error('movement policy is not explicit');
+if(!/blocksProjectiles\s*===\s*false/.test(boot)&&!/blocksProjectiles\s*!==\s*false/.test(boot))throw new Error('projectile policy is not explicit');
+console.log('PASS ability/runtime/collider ownership contract', {declared,implemented,pending});

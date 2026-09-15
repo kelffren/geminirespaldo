@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="768" viewBox="0 0 512 768" shape-rendering="crispEdges">
+  <defs>
+    <symbol id="down" viewBox="0 0 128 192"><path fill="#0c292c" d="M45 47h38l5 17-8 13H48l-8-13z"/><path fill="#d8b85d" d="M47 47h34l3 5H44zM48 63h32v5H48z"/><path fill="#85b9a8" d="M58 41h12l5 8H53z"/><path fill="#071519" d="M52 68h24v6H52z"/></symbol>
+    <symbol id="left" viewBox="0 0 128 192"><path fill="#0c292c" d="M47 47h35l5 17-8 13H49l-7-13z"/><path fill="#d8b85d" d="M48 47h32l3 5H45zM49 63h30v5H49z"/><path fill="#85b9a8" d="M57 41h11l5 8H52z"/></symbol>
+    <symbol id="right" viewBox="0 0 128 192"><path fill="#0c292c" d="M46 47h35l7 17-7 13H51l-8-13z"/><path fill="#d8b85d" d="M48 47h32l3 5H45zM50 63h30v5H50z"/><path fill="#85b9a8" d="M60 41h11l5 8H55z"/></symbol>
+    <symbol id="up" viewBox="0 0 128 192"><path fill="#0a2428" d="M45 48h38l5 16-8 14H48l-8-14z"/><path fill="#d8b85d" d="M47 48h34l3 5H44zM48 65h32v4H48z"/><path fill="#123c3b" d="M53 53h22v20H53z"/></symbol>
+  </defs>
+  <use href="#down" x="0" y="0" width="128" height="192"/><use href="#down" x="128" y="0" width="128" height="192"/><use href="#down" x="256" y="0" width="128" height="192"/><use href="#down" x="384" y="0" width="128" height="192"/>
+  <use href="#left" x="0" y="192" width="128" height="192"/><use href="#left" x="128" y="192" width="128" height="192"/><use href="#left" x="256" y="192" width="128" height="192"/><use href="#left" x="384" y="192" width="128" height="192"/>
+  <use href="#right" x="0" y="384" width="128" height="192"/><use href="#right" x="128" y="384" width="128" height="192"/><use href="#right" x="256" y="384" width="128" height="192"/><use href="#right" x="384" y="384" width="128" height="192"/>
+  <use href="#up" x="0" y="576" width="128" height="192"/><use href="#up" x="128" y="576" width="128" height="192"/><use href="#up" x="256" y="576" width="128" height="192"/><use href="#up" x="384" y="576" width="128" height="192"/>
+</svg>

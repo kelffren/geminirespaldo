@@ -1,0 +1,29 @@
+name: Studio Transform Candidate Cache CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/studio/tools/transform-tool.mjs'
+      - 'scripts/studio-transform-candidate-cache-audit.mjs'
+      - 'package.json'
+      - '.github/workflows/studio-transform-candidate-cache-ci.yml'
+  pull_request:
+    paths:
+      - 'src/studio/tools/transform-tool.mjs'
+      - 'scripts/studio-transform-candidate-cache-audit.mjs'
+      - 'package.json'
+      - '.github/workflows/studio-transform-candidate-cache-ci.yml'
+
+jobs:
+  candidate-cache:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax
+        run: node --check src/studio/tools/transform-tool.mjs && node --check scripts/studio-transform-candidate-cache-audit.mjs
+      - name: Candidate cache audit
+        run: npm run audit:studio:transform-candidate-cache

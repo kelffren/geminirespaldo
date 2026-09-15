@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "auditedAt": "2026-09-10",
+  "sourceCommit": "05cb1e2b8f78a83d44fa794a984167c17f9f7eb8",
+  "owners": {
+    "tiles": {"id": "KELO_TILE_REGISTRY", "version": "1.13.0"},
+    "atlases": {"id": "KELO_ATLAS_CONTRACT"},
+    "templates": {"id": "KELO_PROPERTY_CATALOG", "version": "property-asset-catalog-v1.3.0"},
+    "prefabs": {"id": "KELO_PREFAB_CONTRACT", "version": "1.1.0"}
+  },
+  "inventory": {
+    "rasterFilesInAssets": 59,
+    "environmentManifestEntries": 44,
+    "missingManifestFiles": 0,
+    "imperialPlazaFiles": 41,
+    "tileRegistryAtlases": 13,
+    "registeredArchitectureAssets": 5,
+    "registeredArchitecturePrefabs": 5,
+    "registeredPlazaNaturePlacements": 20,
+    "catalogTemplatesBeforeAsyncExtraSheets": 72,
+    "catalogTemplatesAfterBothExtraSheetsLoad": 145,
+    "initialCatalogBreakdown": {
+      "imperialPlaza": 41,
+      "grassTiles": 25,
+      "prefabs": 5,
+      "landmarkProps": 1
+    }
+  },
+  "mapForgeVocabulary": {
+    "emittedDecorationFamilies": ["barrel", "bench", "bush", "crate", "flower", "lamp", "market_prop", "rock", "tree"],
+    "directlyResolvedFamilies": ["bench", "bush", "flower", "lamp", "market_prop", "tree"],
+    "unreliablyResolvedOrUnusedFamilies": ["barrel", "crate", "rock"],
+    "landmarksWithoutReliableActiveMatch": ["barn", "castle"],
+    "knownResolutionRisks": [
+      {"semantic": "market_prop", "currentFirstMatch": "imperial:kiosco", "worldSize": {"w": 160, "h": 160}, "defects": ["ASSET_SCALE_WRONG", "PROP_REPETITION"]},
+      {"semantic": "tree", "deterministicVariants": ["imperial:arbol-florido-blanco", "imperial:arbol-florido-azul"], "defects": []},
+      {"semantic": "lamp", "deterministicVariants": ["imperial:farola", "imperial:farola-monumental"], "defects": []},
+      {"semantic": "flower", "deterministicVariants": ["imperial:jardinera-floral", "imperial:jardinera-curva"], "defects": []}
+    ]
+  },
+  "familyCoverage": {
+    "grass": "active atlas with 25 runtime cells",
+    "dirt": "no distinct active Map Forge runtime material",
+    "stone": "normalized to marble by shared draft importer",
+    "terrainTransitions": "registry metadata exists; several legacy/reset atlases are retired",
+    "roads": "geometry exists; no approved active authored path atlas",
+    "roadEdgesCornersIntersections": "no active Map Forge-aware vocabulary",
+    "trees": "two approved imperial assets selected deterministically per placement",
+    "bushes": "imperial topiary match",
+    "rocks": "emitted by generator, no reliable active semantic match",
+    "flowers": "two approved imperial planter variants selected deterministically per placement",
+    "fences": "rural metadata exists but runtime reset retires the source visual",
+    "lamps": "two approved imperial assets selected deterministically per placement",
+    "benches": "one imperial match",
+    "housesShops": "five registered legacy architecture prefabs are retired visuals; Map Forge has no broad building placement vocabulary",
+    "farms": "barn semantic output has no reliable active match",
+    "royal": "41-file imperial kit is active through Property Catalog",
+    "harbor": "imperial bridge fallback exists",
+    "mine": "no dedicated active prop vocabulary",
+    "microdetails": "no Map Forge-aware resolved family"
+  }
+}

@@ -1,0 +1,47 @@
+name: Warehouse LIVE mobile audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/systems/equipment-system.js'
+      - 'src/systems/backpack-system.js'
+      - 'src/systems/container-system.js'
+      - 'src/ui/warehouse-ui.js'
+      - 'scripts/live-warehouse-cdp-audit.mjs'
+      - '.github/workflows/live-warehouse-audit.yml'
+      - 'index.html'
+  workflow_dispatch:
+jobs:
+  warehouse-live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Warehouse syntax
+        run: |
+          node --check src/systems/equipment-system.js
+          node --check src/systems/backpack-system.js
+          node --check src/systems/container-system.js
+          node --check src/ui/warehouse-ui.js
+          node --check scripts/live-warehouse-cdp-audit.mjs
+      - name: Align exact Container revisions for regression audit
+        run: |
+          sed -i "s/equipment-v1.1.1/equipment-v1.1.2/g" scripts/live-warehouse-cdp-audit.mjs
+          sed -i "s/container-v1.0.0/container-v1.1.0/g" scripts/live-warehouse-cdp-audit.mjs
+      - name: Audit real mobile warehouse
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: |
+          set -o pipefail
+          mkdir -p artifacts
+          node scripts/live-warehouse-cdp-audit.mjs 2>&1 | tee artifacts/warehouse-audit.log
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-warehouse-audit
+          path: artifacts/
+          if-no-files-found: error

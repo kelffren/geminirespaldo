@@ -1,0 +1,44 @@
+name: Movement live audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'engine-ac.js'
+      - 'engine-ah.js'
+      - 'scripts/live-movement-audit.mjs'
+      - '.github/workflows/movement-live-audit.yml'
+
+concurrency:
+  group: movement-live-audit-main
+  cancel-in-progress: true
+
+jobs:
+  audit-movement-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright package
+        run: npm install --no-save playwright@1.55.0
+      - name: Audit lateral reversal on live Pages
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/live-movement-audit.mjs
+      - name: Upload movement audit artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: movement-live-audit
+          path: |
+            artifacts/movement-live-audit.json
+            artifacts/movement-mobile.png
+            artifacts/movement-desktop.png
+          if-no-files-found: warn

@@ -1,0 +1,145 @@
+<!-- KELO-INDEX
+  area: RUNTIME / UI BOOT
+  owner: index.html load order
+  purpose: plaza first. heavy owners after first frame. recovery diagnostics load only by explicit query flag.
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#05070a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="KELO WORLD">
+  <title>Kelo World — V6.69</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="src/ui/responsive-foundation.css?v=1">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none}
+    html,body{width:100%;height:100%;overflow:hidden;background:#05070a}
+    #game-canvas{width:100%;height:100%;display:block;touch-action:none}
+    #ui-layer{position:absolute;inset:0;pointer-events:none;z-index:10}
+    body.social-mode #action-bar-container,body.social-mode #equipment-action-bar-container,body.social-mode #mount-action-bar-container{display:none!important}
+    html[data-kelo-auth-gate="off"] #kelo-account-auth,html[data-kelo-guest-play="1"] #kelo-account-auth{display:none!important}
+    #kw-live-minimap,#kelo-minimap,#minimap,.lx-mark{display:none!important;visibility:hidden!important;pointer-events:none!important}
+    #lx-chat-drawer.kc-premium,#lx-chat-tab.kc-chat-tab{display:none!important;transform:translate3d(0,110%,0)!important;pointer-events:none!important}
+    #kelo-module-loader{position:fixed;left:50%;bottom:max(14px,calc(env(safe-area-inset-bottom) + 8px));transform:translateX(-50%);z-index:2147483600;pointer-events:none;min-width:168px;max-width:78vw;padding:8px 12px 9px;border-radius:16px;background:rgba(7,10,12,.88);border:1px solid rgba(229,189,98,.38);box-shadow:0 10px 28px rgba(0,0,0,.4);color:#e7c56a;font:700 11px/1.25 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.04em;text-align:center}
+    #kelo-module-loader[hidden]{display:none!important}
+    #kelo-module-loader .kelo-ml-track{margin-top:6px;height:3px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+    #kelo-module-loader .kelo-ml-bar{display:block;height:100%;width:0;background:linear-gradient(90deg,#c9a227,#f0d48a);transition:width .25s linear}
+  </style>
+</head>
+<body class="social-mode">
+<canvas id="game-canvas"></canvas>
+<div id="ui-layer"><div class="action-bar" id="action-bar-container" aria-label="Barra de habilidades"></div></div>
+<div id="kelo-module-loader" hidden><span id="kelo-ml-text">Cargando módulos…</span><div class="kelo-ml-track"><i class="kelo-ml-bar" id="kelo-ml-bar"></i></div></div>
+<script>
+(function(){
+  try{
+    if(sessionStorage.getItem('kelo.world.updater.pendingBuild.v5')&&!window.__KELO_UPDATE_EARLY_HEALTH__){
+      var health={errors:[],startedAt:Date.now(),stop:null};
+      var record=function(type,message){
+        if(health.errors.length>=10)health.errors.shift();
+        health.errors.push({type:type,message:String(message||type),at:Date.now()});
+      };
+      var onEarlyError=function(event){record('error',event&&event.message||'early_error');};
+      var onEarlyReject=function(event){var reason=event&&event.reason;record('unhandledrejection',reason&&reason.message||reason||'early_rejection');};
+      health.stop=function(){window.removeEventListener('error',onEarlyError);window.removeEventListener('unhandledrejection',onEarlyReject);};
+      window.addEventListener('error',onEarlyError);
+      window.addEventListener('unhandledrejection',onEarlyReject);
+      window.__KELO_UPDATE_EARLY_HEALTH__=health;
+    }
+  }catch(e){}
+  window.KELO_WORLD_DECORATION_RESET=true;
+  window.KELO_HIDE_MINIMAP=true;
+  window.__keloHoldGameLoop=true;
+  try{
+    var q=new URLSearchParams(location.search);
+    if(q.get('guest')==='1'||q.get('aiGuest')==='1'){
+      document.documentElement.setAttribute('data-kelo-auth-gate','off');
+      document.documentElement.setAttribute('data-kelo-guest-play','1');
+      sessionStorage.setItem('kelo_local_guest_play_v1','1');
+      localStorage.setItem('kelo_local_guest_play_v1','1');
+    }
+    var freeze=q.get('freezeLab')==='1'||q.get('freeze')==='1'||q.get('debugFreeze')==='1';
+    var recovery=q.get('recoveryLab')==='1'||q.get('debugRecovery')==='1'||freeze;
+    if(recovery){
+      window.__keloRecoveryMeshPromise=import('./src/core/bug-observability.mjs?v=recovery-mesh-1').then(function(mod){
+        var flow=q.get('recoveryFlow')||(freeze?'world-open':'runtime');
+        var bug=q.get('bug')||(freeze?'BUG-0003':null);
+        var mesh=mod.installRecoveryMesh({root:window,flow:flow,bugId:bug,force:true,version:'V6.69-recovery-mesh'});
+        if(freeze){
+          window.__keloFreezeLocatorPromise=Promise.resolve(mod.installFreezeLocator({root:window,flow:'world-open',bugId:bug||'BUG-0003',force:true,version:'V6.69-freeze-locator'}));
+        }
+        return mesh;
+      }).catch(function(error){console.error('[Kelo Recovery Mesh boot]',error);return null;});
+    }
+  }catch(e){}
+})();
+</script>
+<script src="src/core/events/event-bus.js?v=1"></script>
+<script src="src/core/input-lock-system.js?v=1"></script>
+<script src="src/core/movement-profile.js?v=1"></script>
+<script src="src/core/kelo-runtime-bootstrap.js?v=3-player-vitals"></script>
+<script src="src/physics/collision-utils.js?v=2"></script>
+<script src="engine-a.js?v=151"></script>
+<script src="src/core/player-state-system.js?v=1"></script>
+<script src="src/core/player-position-system.js?v=1-transition-owner"></script>
+<script>window.KELO_COLLISION.attachLegacyObstacleArray(obstacles,{adoptExistingOwner:'core-static'});</script>
+<script src="src/core/input-system.js?v=2-zero-copy"></script>
+<script src="src/core/movement-system.js?v=3-zero-garbage"></script>
+<script src="engine-b.js?v=95-boot-ready"></script>
+<script src="engine-c.js?v=232-position-owner"></script>
+<script src="src/core/camera-follow-shadow.js?v=1"></script>
+<script src="src/core/camera-system.js?v=1"></script>
+<script src="src/core/viewport-system.js?v=1"></script>
+<script src="src/core/avatar-render-system.js?v=2-base-zoo-authority"></script>
+<script src="src/core/render-extension-system.js?v=4-render-owner"></script>
+<script src="src/core/simulation-extension-system.js?v=4-sim-owner"></script>
+<script src="src/core/simulation-farm-shadow.js?v=1"></script>
+<script src="src/core/player-position-shadow.js?v=1"></script>
+<script src="engine-d.js?v=95"></script>
+<script src="engine-e.js?v=94"></script>
+<script src="engine-f.js?v=95"></script>
+<script src="engine-g.js?v=96"></script>
+<script src="src/environment/mobile-performance-contract.js?v=2-cache-working-set"></script>
+<script src="engine-h.js?v=151"></script>
+<script src="engine-i.js?v=94"></script>
+<script src="engine-j.js?v=94"></script>
+<script src="engine-k.js?v=94"></script>
+<script src="src/environment/rural-nature-atlas.js?v=200"></script>
+<script src="src/environment/gardens-atlas.js?v=2"></script>
+<script src="src/environment/gardens-joins.js?v=3"></script>
+<script src="src/environment/terrain-contract.js?v=1"></script>
+<script src="src/environment/generated/arboleskelo1-atlas.js?v=1"></script>
+<script src="src/environment/tile-registry.js?v=237"></script>
+<script src="src/environment/atlas-contract.js?v=4"></script>
+<script src="src/environment/gardens-t-junction-registry.js?v=1"></script>
+<script src="src/environment/district-decals-registry.js?v=3"></script>
+<script src="src/environment/gardens-compositions.js?v=10"></script>
+<script src="src/environment/world-map.js?v=terrain-191"></script>
+<script src="src/environment/environment-layer-stack.js?v=5-dirty-audit"></script>
+<script src="src/environment/surface-ground.js?v=1"></script>
+<script src="src/environment/prop-contract.js?v=7-map-probe"></script>
+<script src="src/environment/generic-props.js?v=9"></script>
+<script src="src/environment/prefab-contract.js?v=1"></script>
+<script src="engine-l.js?v=223"></script>
+<script src="src/ui/luxe-shell.js?v=231"></script>
+<script src="src/ui/mobile-orientation.js?v=6"></script>
+<script src="src/ui/luxe-player-hud.js?v=4-minimap-live-20260914"></script>
+<script src="src/systems/performance-governor.js?v=5-sampled-snapshots"></script>
+<script>window.__keloBootReady=true;window.dispatchEvent(new Event("kelo:boot-ready"));</script>
+<script src="src/core/feature-registry.js?v=2"></script>
+<script src="src/core/asset-registry.js?v=2-feature-registry"></script>
+<script src="src/core/module-loader.js?v=10-feature-registry"></script>
+<script>window.KELO_MODULE_LOADER&&window.KELO_MODULE_LOADER.start({build:'V6.69'});</script>
+<script src="src/ui/asset-library-launcher.js?v=1"></script>
+<script src="src/core/settings-lazy-gate.js?v=3-update-intel"></script>
+<script src="src/core/update-gate.js?v=6-live-fast-forward"></script>
+<script src="src/systems/admin-key-system.js?v=1"></script>
+<script src="src/core/admin-control-lazy-gate.js?v=2"></script>
+<script src="src/core/account-live-control-gate.js?v=2"></script>
+<script src="src/core/creators-lazy-gate.js?v=3"></script>
+</body></html>

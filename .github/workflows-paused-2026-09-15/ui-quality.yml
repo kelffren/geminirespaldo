@@ -1,0 +1,137 @@
+name: Kelo UI Quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  detect-ui:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.ui_changes.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect interface changes
+        id: ui_changes
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            before="${{ github.event.pull_request.base.sha }}"
+          else
+            before="${{ github.event.before }}"
+          fi
+
+          if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$before^{commit}" 2>/dev/null; then
+            before="$(git rev-parse HEAD^ 2>/dev/null || true)"
+          fi
+
+          if [ -z "$before" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          files="$(git diff --name-only "$before" HEAD || true)"
+          printf '%s\n' "$files"
+
+          # Canonical UI owners and quality contracts always require the full gate.
+          if printf '%s\n' "$files" | grep -Eq '^(index\.html|src/ui/|src/studio/ui/|src/creators/ui/|tests/ui-interface-runtime\.spec\.js$|playwright\.config\.js$|package\.json$|scripts/ui-quality-audit\.mjs$|docs/KELO_INTERFACE_STANDARD\.md$|\.github/workflows/ui-quality\.yml$)'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # UI exists outside canonical folders too (creator labs, system HUDs,
+          # visual/debug tools). Inspect changed source content rather than trusting
+          # directory names so those surfaces cannot escape the shared hierarchy.
+          ui_pattern="(<button|createElement\\(['\\\"]button|role=['\\\"]dialog|aria-label|position[[:space:]]*:[[:space:]]*fixed|\\.([A-Za-z0-9_-]*)(btn|button|tab|menu|card|panel|modal|drawer|sheet|dock|toolbar))"
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            case "$file" in
+              src/*.js|src/*.mjs|src/*.css|src/*.html|src/**/*.js|src/**/*.mjs|src/**/*.css|src/**/*.html)
+                if [ -f "$file" ] && grep -Eqi "$ui_pattern" "$file"; then
+                  echo "UI-producing source changed: $file"
+                  echo "changed=true" >> "$GITHUB_OUTPUT"
+                  exit 0
+                fi
+                if git cat-file -e "$before:$file" 2>/dev/null && git show "$before:$file" | grep -Eqi "$ui_pattern"; then
+                  echo "UI-producing source removed/changed: $file"
+                  echo "changed=true" >> "$GITHUB_OUTPUT"
+                  exit 0
+                fi
+                ;;
+            esac
+          done <<< "$files"
+
+          echo "changed=false" >> "$GITHUB_OUTPUT"
+
+  interface-quality:
+    needs: detect-ui
+    if: needs.detect-ui.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: kelo-ui-quality-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Shared interface contract
+        run: |
+          test -f src/ui/kelo-interface-system.css
+          test -f src/ui/kelo-interface-compat.css
+          test -f src/ui/kelo-interface-runtime.js
+          test -f docs/KELO_INTERFACE_STANDARD.md
+          test -f tests/ui-interface-runtime.spec.js
+          grep -q 'kelo-interface-system.css' index.html
+          grep -q 'kelo-interface-compat.css' index.html
+          grep -q 'kelo-interface-runtime.js' index.html
+          grep -q ':focus-visible' src/ui/kelo-interface-system.css
+          grep -q ':focus-visible' src/ui/kelo-interface-compat.css
+          grep -q 'prefers-reduced-motion' src/ui/kelo-interface-system.css
+          grep -q 'More Tools' src/ui/kelo-interface-runtime.js
+
+      - name: Interface syntax
+        run: |
+          node --check src/ui/kelo-interface-runtime.js
+          node --check scripts/ui-quality-audit.mjs
+          node --check tests/ui-interface-runtime.spec.js
+          node --check src/ui/luxe-shell.js
+          node --check src/ui/account-auth-ui.js
+          node --check src/creators/ui/creator-hub.mjs
+          node --check src/studio/ui/studio-live-shell.mjs
+          node --check src/studio/ui/studio-asset-repairer-v2.mjs
+
+      - name: Project-wide UI audit
+        run: node scripts/ui-quality-audit.mjs | tee ui-quality-report.txt
+
+      - name: Install browser contract dependencies
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Computed browser hierarchy contract
+        run: npx playwright test tests/ui-interface-runtime.spec.js --project=chromium --reporter=list
+
+      - name: Publish UI quality report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kelo-ui-quality-report
+          path: ui-quality-report.txt
+          retention-days: 14

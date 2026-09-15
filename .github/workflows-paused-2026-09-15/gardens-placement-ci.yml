@@ -1,0 +1,64 @@
+name: Gardens placement CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'assets/gardens-t-junctions-v1.svg'
+      - 'src/environment/gardens-t-junction-registry.js'
+      - 'src/environment/terrain-contract.js'
+      - 'src/environment/world-map.js'
+      - 'src/environment/gardens-compositions.js'
+      - 'src/environment/gardens-junction-overlay.js'
+      - 'scripts/validate-gardens-placements.mjs'
+      - '.github/workflows/gardens-placement-ci.yml'
+  pull_request:
+    paths:
+      - 'assets/gardens-t-junctions-v1.svg'
+      - 'src/environment/gardens-t-junction-registry.js'
+      - 'src/environment/terrain-contract.js'
+      - 'src/environment/world-map.js'
+      - 'src/environment/gardens-compositions.js'
+      - 'src/environment/gardens-junction-overlay.js'
+      - 'scripts/validate-gardens-placements.mjs'
+      - '.github/workflows/gardens-placement-ci.yml'
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax and ownership contracts
+        run: |
+          set -euo pipefail
+          require() { grep -Fq -- "$1" "$2" || { echo "Missing contract '$1' in $2" >&2; exit 1; }; }
+          node --check src/environment/terrain-contract.js
+          node --check src/environment/world-map.js
+          node --check src/environment/gardens-t-junction-registry.js
+          node --check src/environment/gardens-compositions.js
+          node --check src/environment/gardens-junction-overlay.js
+          node --check scripts/validate-gardens-placements.mjs
+          require 'width="128" height="32"' assets/gardens-t-junctions-v1.svg
+          require 'gardens-t-junction-registry-v1' src/environment/gardens-t-junction-registry.js
+          require 'gardensTJunctions' src/environment/gardens-t-junction-registry.js
+          require 'firstClassRegistryAtlas:true' src/environment/gardens-t-junction-registry.js
+          require 'gardens-compositions-v20' src/environment/gardens-compositions.js
+          require 'tJunctionRegistryOwned:true' src/environment/gardens-compositions.js
+          require 'tJunctionOrientationCount:4' src/environment/gardens-compositions.js
+          require 'gardens-junction-layer-v4' src/environment/gardens-junction-overlay.js
+          require 'registryOwned:true' src/environment/gardens-junction-overlay.js
+          require 'world-v1.27-performance' src/environment/world-map.js
+          require "districtSourceMode:'terrain-contract-district-profiles-v2'" src/environment/world-map.js
+          require "districtOverlayMode:'profile-selected-provider-v1'" src/environment/world-map.js
+          require 'legacyTJunctionSpecialCase:false' src/environment/world-map.js
+          require "atlasConsumerMode:'atlas-contract-managed-v2-lazy-district'" src/environment/world-map.js
+          require "chunkCacheMode:'lru-v1'" src/environment/world-map.js
+          if grep -Fq "d?.id==='gardens'" src/environment/world-map.js; then
+            echo 'District-specific Gardens branch returned to world-map.js' >&2
+            exit 1
+          fi
+          if grep -Fq 'HEDGE_T_NWS' src/environment/world-map.js; then
+            echo 'Legacy Gardens T-junction special-case returned to world-map.js' >&2
+            exit 1
+          fi
+      - name: Declared to renderable Gardens placements
+        run: node scripts/validate-gardens-placements.mjs

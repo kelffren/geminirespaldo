@@ -1,0 +1,128 @@
+name: Premium Main Menu CI
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'src/ui/luxe-shell.js'
+      - 'src/ui/studio-launcher.js'
+      - 'src/systems/nobility.js'
+      - 'src/ui/self-interaction-ui.js'
+      - 'src/ui/character-customizer-ui.js'
+      - 'src/abilities/kelo-ability-boot.js'
+      - 'scripts/luxe-menu-audit.mjs'
+      - 'scripts/live-luxe-menu-audit.mjs'
+      - '.github/workflows/premium-main-menu-ci.yml'
+      - 'docs/systems/MAIN_MENU_SYSTEM.md'
+      - 'docs/system-catalog.json'
+      - 'ENGINE_MAP.md'
+      - 'guide.html'
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'src/ui/luxe-shell.js'
+      - 'src/ui/studio-launcher.js'
+      - 'src/systems/nobility.js'
+      - 'src/ui/self-interaction-ui.js'
+      - 'src/ui/character-customizer-ui.js'
+      - 'src/abilities/kelo-ability-boot.js'
+      - 'scripts/luxe-menu-audit.mjs'
+      - 'scripts/live-luxe-menu-audit.mjs'
+      - '.github/workflows/premium-main-menu-ci.yml'
+      - 'docs/systems/MAIN_MENU_SYSTEM.md'
+      - 'docs/system-catalog.json'
+      - 'ENGINE_MAP.md'
+      - 'guide.html'
+  workflow_dispatch:
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax
+        run: |
+          node --check src/ui/luxe-shell.js
+          node --check src/ui/studio-launcher.js
+          node --check src/abilities/kelo-ability-boot.js
+          node --check scripts/luxe-menu-audit.mjs
+          node --check scripts/live-luxe-menu-audit.mjs
+      - name: Premium menu owner contract
+        run: node scripts/luxe-menu-audit.mjs
+      - name: Foundation architecture
+        run: npm run audit:foundation
+      - name: Documentation contract
+        run: npm run audit:docs
+
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright package
+        run: npm install --no-save playwright@1.55.0
+      - name: Audit premium menu locally
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          AUDIT_URL: http://127.0.0.1:4173/
+        run: |
+          python3 -m http.server 4173 >/tmp/kelo-premium-menu-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for i in {1..24}; do
+            curl -fsS http://127.0.0.1:4173/ >/dev/null && break
+            sleep 0.25
+          done
+          node scripts/live-luxe-menu-audit.mjs
+      - name: Upload menu evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: premium-main-menu-browser-${{ github.run_attempt }}
+          path: artifacts/
+          if-no-files-found: error
+
+  live:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [contract, browser]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright package
+        run: npm install --no-save playwright@1.55.0
+      - name: Wait for GitHub Pages revision
+        run: |
+          expected='src/ui/luxe-shell.js?v=229'
+          ready=0
+          for i in {1..48}; do
+            if curl -fsSL --max-time 12 "https://kelffren.github.io/gemini/?menuAudit=${GITHUB_SHA}" | grep -Fq "$expected"; then
+              ready=1
+              break
+            fi
+            sleep 10
+          done
+          if [ "$ready" != 1 ]; then
+            echo 'Pages did not publish the premium menu revision in time'
+            exit 1
+          fi
+      - name: Audit premium menu on LIVE Pages
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          AUDIT_OUT: artifacts-live
+        run: node scripts/live-luxe-menu-audit.mjs
+      - name: Upload LIVE menu evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: premium-main-menu-live-${{ github.run_attempt }}
+          path: artifacts-live/
+          if-no-files-found: error

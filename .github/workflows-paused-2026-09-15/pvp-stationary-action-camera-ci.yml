@@ -1,0 +1,26 @@
+name: PvP Stationary Action Camera CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/core/camera-system.js'
+      - 'scripts/audit-pvp-stationary-action-camera.mjs'
+      - 'scripts/live-pvp-camera-follow-judge.mjs'
+      - '.github/workflows/pvp-stationary-action-camera-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  certify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: 60/90/120 deterministic A/B
+        run: node scripts/audit-pvp-stationary-action-camera.mjs
+      - name: Camera contract
+        run: |
+          node --check src/core/camera-system.js
+          node scripts/camera-system-contract-audit.js

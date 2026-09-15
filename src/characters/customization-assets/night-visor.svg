@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="768" viewBox="0 0 512 768" shape-rendering="crispEdges">
+  <defs>
+    <symbol id="front" viewBox="0 0 128 192"><path fill="#080d12" d="M44 49h40l5 17-7 12H46l-7-12z"/><path fill="#1a252b" d="M48 53h32l4 11H44z"/><path fill="#6ee7d8" d="M48 62h32v5H48z"/><path fill="#d6b85e" d="M52 48h24v3H52z"/></symbol>
+    <symbol id="side" viewBox="0 0 128 192"><path fill="#080d12" d="M46 49h37l5 17-7 12H49l-7-12z"/><path fill="#1a252b" d="M49 53h30l5 11H45z"/><path fill="#6ee7d8" d="M51 61h29v5H51z"/></symbol>
+    <symbol id="back" viewBox="0 0 128 192"><path fill="#080d12" d="M44 49h40l5 17-7 12H46l-7-12z"/><path fill="#1a252b" d="M48 53h32v18H48z"/><path fill="#d6b85e" d="M49 72h30v4H49z"/></symbol>
+  </defs>
+  <use href="#front" x="0" y="0" width="128" height="192"/><use href="#front" x="128" y="0" width="128" height="192"/><use href="#front" x="256" y="0" width="128" height="192"/><use href="#front" x="384" y="0" width="128" height="192"/>
+  <use href="#side" x="0" y="192" width="128" height="192"/><use href="#side" x="128" y="192" width="128" height="192"/><use href="#side" x="256" y="192" width="128" height="192"/><use href="#side" x="384" y="192" width="128" height="192"/>
+  <use href="#side" x="0" y="384" width="128" height="192"/><use href="#side" x="128" y="384" width="128" height="192"/><use href="#side" x="256" y="384" width="128" height="192"/><use href="#side" x="384" y="384" width="128" height="192"/>
+  <use href="#back" x="0" y="576" width="128" height="192"/><use href="#back" x="128" y="576" width="128" height="192"/><use href="#back" x="256" y="576" width="128" height="192"/><use href="#back" x="384" y="576" width="128" height="192"/>
+</svg>

@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "title": "Kelo World Asset Library",
+  "description": "Runtime-selectable optional packs. Core boot assets remain locked for safety.",
+  "groups": [
+    {"id":"social","name":"Social","icon":"💬","description":"Nameplates, titles, plaza depth and profile interactions.","defaultEnabled":true,"diagnosticSafe":true},
+    {"id":"world","name":"World","icon":"🌍","description":"Optional world engines and illumination loaded on first use.","defaultEnabled":true,"diagnosticSafe":false},
+    {"id":"bag","name":"Backpack","icon":"🎒","description":"Backpack system, fantasy styling and backpack UI.","defaultEnabled":true,"diagnosticSafe":true},
+    {"id":"mounts","name":"Mounts","icon":"🐎","description":"Mount catalog, mount runtime and mount panel.","defaultEnabled":true,"diagnosticSafe":true},
+    {"id":"market","name":"Market","icon":"🏪","description":"Escrow market runtime and market UI.","defaultEnabled":true,"diagnosticSafe":true},
+    {"id":"titles","name":"Titles & Stats","icon":"🏆","description":"Title catalog, player stats and title system.","defaultEnabled":true,"diagnosticSafe":true},
+    {"id":"appearance","name":"Appearance","icon":"🧥","description":"Character customization runtime and appearance UI.","defaultEnabled":true,"diagnosticSafe":true},
+    {"id":"properties","name":"Properties","icon":"🏠","description":"Property system and house instance UI.","defaultEnabled":true,"diagnosticSafe":true}
+  ],
+  "presets": {
+    "full":{"name":"Todo activado","groups":["social","world","bag","mounts","market","titles","appearance","properties"]},
+    "light":{"name":"Ligero móvil","groups":["social","bag","titles","appearance"]},
+    "diagnostic":{"name":"Diagnóstico mínimo","groups":["social"]},
+    "worldOnly":{"name":"Prueba World","groups":["social","world"]}
+  }
+}

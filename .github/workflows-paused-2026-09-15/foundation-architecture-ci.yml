@@ -1,0 +1,87 @@
+name: Kelo Foundation Architecture CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  foundation-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Audit Foundation architecture
+        run: node scripts/foundation-architecture-audit.js
+      - name: Audit input-lock ownership contract
+        run: node scripts/input-lock-contract-audit.js
+      - name: Audit input owner contract
+        run: node scripts/input-system-contract-audit.js
+      - name: Audit movement owner contract
+        run: node scripts/movement-system-contract-audit.js
+      - name: Audit camera/viewport owner contract
+        run: node scripts/camera-system-contract-audit.js
+      - name: Audit render extension owner contract
+        run: node scripts/render-extension-contract-audit.js
+      - name: Audit simulation extension owner contract
+        run: node scripts/simulation-extension-contract-audit.js
+      - name: Audit avatar render owner contract
+        run: node scripts/avatar-render-contract-audit.js
+      - name: Audit system documentation contract
+        run: node scripts/system-documentation-audit.js
+      - name: Report current architecture debt inventory
+        run: node scripts/foundation-runtime-inventory.js
+      - name: Syntax-check Foundation primitives and migrated legacy extensions
+        run: |
+          node --check src/core/input-lock-system.js
+          node --check src/core/input-system.js
+          node --check src/core/input-gate.js
+          node --check src/core/movement-system.js
+          node --check src/core/camera-system.js
+          node --check src/core/render-extension-system.js
+          node --check src/core/simulation-extension-system.js
+          node --check src/core/avatar-render-system.js
+          node --check engine-d.js
+          node --check engine-e.js
+          node --check engine-f.js
+          node --check engine-g.js
+          node --check engine-h.js
+          node --check engine-l.js
+          node --check engine-m.js
+          node --check engine-o.js
+          node --check engine-p.js
+          node --check engine-q.js
+          node --check engine-s.js
+          node --check engine-w.js
+          node --check engine-y.js
+          node --check engine-aa.js
+          node --check engine-ab.js
+          node --check engine-ac.js
+          node --check engine-ae.js
+          node --check engine-ah.js
+          node --check engine-ai.js
+          node --check engine-net.js
+          node --check src/characters/character-appearance.js
+          node --check src/systems/pvp-world.js
+          node --check src/ui/mobile-orientation.js
+          node --check src/ui/pvp-social-touch-guard.js
+          node --check src/ui/backpack-ui.js
+          node --check src/abilities/kelo-ability-boot.js
+          node --check src/abilities/sword-swap-runtime.js
+          node --check src/systems/armor-aura.js
+          node --check src/visuals/visual-integration.js
+          node --check src/visuals/sword-swap-pvp-visuals.js
+          node --check scripts/foundation-architecture-audit.js
+          node --check scripts/input-lock-contract-audit.js
+          node --check scripts/input-system-contract-audit.js
+          node --check scripts/movement-system-contract-audit.js
+          node --check scripts/camera-system-contract-audit.js
+          node --check scripts/render-extension-contract-audit.js
+          node --check scripts/simulation-extension-contract-audit.js
+          node --check scripts/avatar-render-contract-audit.js
+          node --check scripts/system-documentation-audit.js
+          node --check scripts/foundation-runtime-inventory.js

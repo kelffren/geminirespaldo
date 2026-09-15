@@ -1,0 +1,68 @@
+name: Append validated visual memory
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/visual-memory/PENDING-*.md'
+      - '.github/workflows/append-visual-memory.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  append:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Append missing validated entries
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          memory_path = Path('docs/VISUAL_DIRECTION_MEMORY.md')
+          pending_root = Path('docs/visual-memory')
+          memory = memory_path.read_text(encoding='utf-8')
+          changed = False
+
+          for pending in sorted(pending_root.glob('PENDING-*.md')):
+              text = pending.read_text(encoding='utf-8').strip()
+              match = re.search(r'(?m)^## (Validated .+)$', text)
+              if not match:
+                  print('SKIP unstructured entry:', pending)
+                  continue
+              heading = match.group(1).strip()
+              if f'## {heading}' in memory:
+                  print('ALREADY APPENDED:', heading)
+                  continue
+              marker = '\n## Non-goals During Visual Passes\n'
+              if marker in memory:
+                  memory = memory.replace(marker, '\n\n' + text + '\n' + marker, 1)
+              else:
+                  memory = memory.rstrip() + '\n\n' + text + '\n'
+              changed = True
+              print('APPENDED:', heading)
+
+          if changed:
+              memory_path.write_text(memory, encoding='utf-8')
+          else:
+              print('No visual memory changes required')
+          PY
+      - name: Commit append-only memory update
+        run: |
+          if git diff --quiet -- docs/VISUAL_DIRECTION_MEMORY.md; then
+            echo 'visual memory already current'
+            exit 0
+          fi
+          git config user.name 'kelo-visual-memory-bot'
+          git config user.email '68343904+kelffren@users.noreply.github.com'
+          git add docs/VISUAL_DIRECTION_MEMORY.md
+          git commit -m 'Append validated visual direction memory'
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main

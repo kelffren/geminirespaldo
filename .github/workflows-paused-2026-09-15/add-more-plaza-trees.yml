@@ -1,0 +1,41 @@
+name: Add more authored Plaza trees
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/add-more-plaza-trees.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Add authored trees around Plaza
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('src/environment/tile-registry.js')
+          s=p.read_text()
+          new="""  const plazaNatureProps = Object.freeze([\n    Object.freeze({id:'plaza-tree-nw',sprite:0,x:1096,y:1196,w:144,h:192,baseY:1388}),\n    Object.freeze({id:'plaza-tree-ne',sprite:0,x:1640,y:1196,w:144,h:192,baseY:1388}),\n    Object.freeze({id:'plaza-tree-sw',sprite:0,x:1096,y:1548,w:144,h:192,baseY:1740}),\n    Object.freeze({id:'plaza-tree-se',sprite:0,x:1640,y:1548,w:144,h:192,baseY:1740}),\n    Object.freeze({id:'plaza-tree-west-1',sprite:0,x:1008,y:1336,w:132,h:176,baseY:1512}),\n    Object.freeze({id:'plaza-tree-west-2',sprite:0,x:1008,y:1504,w:132,h:176,baseY:1680}),\n    Object.freeze({id:'plaza-tree-east-1',sprite:0,x:1740,y:1336,w:132,h:176,baseY:1512}),\n    Object.freeze({id:'plaza-tree-east-2',sprite:0,x:1740,y:1504,w:132,h:176,baseY:1680}),\n    Object.freeze({id:'plaza-tree-north-west',sprite:0,x:1232,y:1112,w:128,h:170,baseY:1282}),\n    Object.freeze({id:'plaza-tree-north-east',sprite:0,x:1520,y:1112,w:128,h:170,baseY:1282}),\n    Object.freeze({id:'plaza-tree-south-west',sprite:0,x:1232,y:1736,w:128,h:170,baseY:1906}),\n    Object.freeze({id:'plaza-tree-south-east',sprite:0,x:1520,y:1736,w:128,h:170,baseY:1906})\n  ]);"""
+          pat=r"  const plazaNatureProps = Object\.freeze\(\[.*?\n  \]\);"
+          ns,n=re.subn(pat,new,s,count=1,flags=re.S)
+          if n!=1: raise SystemExit(f'expected one plazaNatureProps block, got {n}')
+          ns=ns.replace("version:'1.10.30'","version:'1.10.31'",1)
+          p.write_text(ns)
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'kelo-art-bot'
+          git config user.email '68343904+kelffren@users.noreply.github.com'
+          git add src/environment/tile-registry.js
+          git commit -m 'Populate Plaza with authored Kelo trees'
+          git push origin HEAD:main

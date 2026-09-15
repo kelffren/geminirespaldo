@@ -1,0 +1,26 @@
+# Target policy for a header-controllable static host (e.g. Cloudflare Pages).
+# GitHub Pages does not consume this file; it is migration configuration, not current-production evidence.
+
+/index.html
+  Cache-Control: no-cache, max-age=0, must-revalidate
+
+/version.json
+  Cache-Control: no-cache, max-age=0, must-revalidate
+
+/sw.js
+  Cache-Control: no-cache, max-age=0, must-revalidate
+
+/manifest.webmanifest
+  Cache-Control: no-cache, max-age=0, must-revalidate
+
+/*manifest*.json
+  Cache-Control: no-cache, max-age=0, must-revalidate
+
+/dist/turbo/*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/dist/turbo/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

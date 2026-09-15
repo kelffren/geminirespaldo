@@ -1,0 +1,138 @@
+name: Commerce CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/systems/equipment-item-catalog.js'
+      - 'src/systems/equipment-system.js'
+      - 'src/systems/backpack-system.js'
+      - 'src/systems/container-system.js'
+      - 'src/systems/market-escrow-system.js'
+      - 'src/systems/commerce-authority.js'
+      - 'src/instances/instance-system.js'
+      - 'src/instances/market-instance.js'
+      - 'src/ui/market-ui.js'
+      - 'src/ui/commerce-ui.js'
+      - 'engine-net.js'
+      - 'server/index.js'
+      - 'server/player-economy-store.js'
+      - 'server/forge-store.js'
+      - 'server/commerce-store.js'
+      - 'scripts/container-system-audit.js'
+      - 'scripts/market-escrow-audit.js'
+      - 'scripts/commerce-system-audit.js'
+      - 'scripts/server-forge-audit.js'
+      - 'scripts/server-commerce-audit.js'
+      - 'docs/systems/COMMERCE_SYSTEM.md'
+      - 'docs/systems/EQUIPMENT_ITEM_CATALOG.md'
+      - 'docs/system-catalog.json'
+      - 'guide.html'
+      - '.github/workflows/market-ci.yml'
+      - 'index.html'
+  pull_request:
+    paths:
+      - 'src/systems/equipment-item-catalog.js'
+      - 'src/systems/container-system.js'
+      - 'src/systems/market-escrow-system.js'
+      - 'src/systems/commerce-authority.js'
+      - 'src/instances/market-instance.js'
+      - 'src/ui/market-ui.js'
+      - 'src/ui/commerce-ui.js'
+      - 'engine-net.js'
+      - 'server/index.js'
+      - 'server/player-economy-store.js'
+      - 'server/forge-store.js'
+      - 'server/commerce-store.js'
+      - 'scripts/container-system-audit.js'
+      - 'scripts/market-escrow-audit.js'
+      - 'scripts/commerce-system-audit.js'
+      - 'scripts/server-forge-audit.js'
+      - 'scripts/server-commerce-audit.js'
+      - 'docs/systems/COMMERCE_SYSTEM.md'
+      - 'docs/systems/EQUIPMENT_ITEM_CATALOG.md'
+      - 'docs/system-catalog.json'
+      - 'guide.html'
+      - '.github/workflows/market-ci.yml'
+      - 'index.html'
+
+jobs:
+  commerce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Syntax
+        run: |
+          node --check src/systems/equipment-item-catalog.js
+          node --check src/systems/container-system.js
+          node --check src/systems/market-escrow-system.js
+          node --check src/systems/commerce-authority.js
+          node --check src/instances/market-instance.js
+          node --check src/ui/market-ui.js
+          node --check src/ui/commerce-ui.js
+          node --check engine-net.js
+          node --check server/index.js
+          node --check server/player-economy-store.js
+          node --check server/forge-store.js
+          node --check server/commerce-store.js
+          node --check scripts/container-system-audit.js
+          node --check scripts/market-escrow-audit.js
+          node --check scripts/commerce-system-audit.js
+          node --check scripts/server-forge-audit.js
+          node --check scripts/server-commerce-audit.js
+      - name: Container mechanics
+        run: node scripts/container-system-audit.js
+      - name: Market escrow mechanics
+        run: node scripts/market-escrow-audit.js
+      - name: Offline Commerce transactions
+        run: node scripts/commerce-system-audit.js
+      - name: Shared Forge economy regression
+        run: node scripts/server-forge-audit.js
+      - name: Server Commerce transactions
+        run: node scripts/server-commerce-audit.js
+      - name: Documentation contract
+        run: node scripts/system-documentation-audit.js
+      - name: Authority architecture contract
+        run: |
+          grep -q "tradeEscrowImplemented:true" src/systems/container-system.js
+          grep -q "checkpointTransactions:true" src/systems/container-system.js
+          grep -q "commerce-authority-v1.1.0" src/systems/commerce-authority.js
+          grep -q "equipmentCatalogMarketFixtures:true" src/systems/commerce-authority.js
+          grep -q "recoverableFixtureMerge:true" src/systems/commerce-authority.js
+          grep -q "noOnlineLocalFallback:true" src/systems/commerce-authority.js
+          grep -q "tradeDoubleConfirmation:true" src/systems/commerce-authority.js
+      - name: Market UI architecture contract
+        run: |
+          grep -q "market-instance-v1.0.1" src/instances/market-instance.js
+          grep -q "economyOwner:'KeloCommerceAuthority'" src/instances/market-instance.js
+          grep -q "commerce-ui-v1.0.0" src/ui/commerce-ui.js
+          grep -q "authorityOnly:true" src/ui/commerce-ui.js
+          grep -q "doubleConfirmation:true" src/ui/commerce-ui.js
+          ! grep -q "slots.slice(0,12)" src/ui/commerce-ui.js
+          ! grep -Eq "STATE\.(gold|inventory)[[:space:]]*=" src/ui/commerce-ui.js
+          ! grep -Eq "marketEscrow\.(items|slots)[[:space:]]*=" src/ui/commerce-ui.js
+      - name: Server commerce architecture contract
+        run: |
+          grep -q "requestCommerce" engine-net.js
+          grep -q "commerce:request" engine-net.js
+          grep -q "createPlayerEconomyStore" server/forge-store.js
+          grep -Eq "economyStore[[:space:]]*:[[:space:]]*economy" server/index.js
+          grep -q "createCommerceService" server/index.js
+          grep -q "commerce:request" server/index.js
+          grep -q "commerce:result" server/index.js
+          grep -q "commerce:event" server/index.js
+          grep -q "player-economy-store-v1.1.0" server/player-economy-store.js
+          grep -q "commerce-server-v1.1.0" server/commerce-store.js
+      - name: Boot and docs commerce contract
+        run: |
+          grep -q "src/systems/equipment-item-catalog.js" index.html
+          grep -q "src/systems/commerce-authority.js" index.html
+          grep -q "src/instances/market-instance.js" index.html
+          grep -q "src/ui/commerce-ui.js" index.html
+          grep -q '"id": "commerce"' docs/system-catalog.json
+          grep -q 'id="mercado-comercio-y-trade"' guide.html

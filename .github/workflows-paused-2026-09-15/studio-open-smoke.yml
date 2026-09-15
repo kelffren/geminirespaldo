@@ -1,0 +1,51 @@
+name: Kelo Studio LIVE open smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/studio/**'
+      - 'src/creators/**'
+      - 'src/ui/studio-launcher.js'
+      - 'src/ui/account-auth-ui.js'
+      - 'scripts/live-studio-open-smoke.mjs'
+      - '.github/workflows/studio-open-smoke.yml'
+
+jobs:
+  open-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: npm install --no-save playwright@1.55.0
+      - name: Wait for exact Studio fixes on deployed Pages
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 45); do
+            auth="$(curl --max-time 10 -fsSL "https://kelffren.github.io/gemini/src/ui/account-auth-ui.js?smoke=${GITHUB_SHA}-${i}" || true)"
+            snap="$(curl --max-time 10 -fsSL "https://kelffren.github.io/gemini/src/studio/ui/studio-context-snap-chip.mjs?smoke=${GITHUB_SHA}-${i}" || true)"
+            multi="$(curl --max-time 10 -fsSL "https://kelffren.github.io/gemini/src/studio/ui/studio-multi-align.mjs?smoke=${GITHUB_SHA}-${i}" || true)"
+            paint="$(curl --max-time 10 -fsSL "https://kelffren.github.io/gemini/src/studio/tools/paint-copies-tool.mjs?smoke=${GITHUB_SHA}-${i}" || true)"
+            if grep -q 'kelo-account-auth-ui-v1.0.1-editor-bypass' <<<"$auth" \
+              && grep -q 'mutationNeedsAttach(mutations=\[\])' <<<"$snap" \
+              && grep -q 'mutationNeedsRefresh(mutations=\[\])' <<<"$multi" \
+              && grep -q 'button.innerHTML !== nextHtml' <<<"$paint" \
+              && ! grep -q 'else syncButton();' <<<"$paint"; then
+              echo "PASS deployed Pages contains the exact World-open observer fixes including Paint Copies"
+              exit 0
+            fi
+            echo "Waiting for Pages to publish exact Studio fix ($i/45)..."
+            sleep 4
+          done
+          echo 'FAIL Pages never exposed the exact Studio fixes in time'
+          exit 1
+      - name: Open World editor in live Chrome
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/live-studio-open-smoke.mjs

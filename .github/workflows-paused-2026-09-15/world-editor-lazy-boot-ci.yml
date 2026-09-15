@@ -1,0 +1,79 @@
+name: World Editor Lazy Boot CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/creators/creator-entry.mjs'
+      - 'src/creators/adapters/world-creator-adapter.mjs'
+      - 'src/creators/workspaces/world-workspace.mjs'
+      - 'src/studio/adapters/current-world-importer.mjs'
+      - 'src/studio/integration/live-studio-controller.mjs'
+      - 'src/studio/integration/world-studio-bridge.mjs'
+      - 'src/studio/integration/studio-boot-pace.mjs'
+      - 'src/studio/studio-entry.mjs'
+      - 'src/world/world-draft-store.js'
+      - 'src/world/world-revision-system.js'
+      - 'src/world/world-edit-authority.js'
+      - 'src/world/authorities/local-world-edit-authority.js'
+      - 'scripts/world-editor-lazy-boot-audit.mjs'
+      - 'scripts/world-editor-iphone-import-audit.mjs'
+      - 'scripts/world-editor-iphone-prewarm-audit.mjs'
+      - 'scripts/world-editor-single-prewarm-owner-audit.mjs'
+      - 'scripts/world-editor-creator-boot-isolation-audit.mjs'
+      - 'scripts/world-iphone-viewport-reveal-audit.mjs'
+      - 'scripts/world-studio-provisional-shell-audit.mjs'
+      - 'scripts/world-studio-ready-yield-audit.mjs'
+      - '.github/workflows/world-editor-lazy-boot-ci.yml'
+  pull_request:
+    paths:
+      - 'src/creators/creator-entry.mjs'
+      - 'src/creators/adapters/world-creator-adapter.mjs'
+      - 'src/creators/workspaces/world-workspace.mjs'
+      - 'src/studio/adapters/current-world-importer.mjs'
+      - 'src/studio/integration/live-studio-controller.mjs'
+      - 'src/studio/integration/world-studio-bridge.mjs'
+      - 'src/studio/integration/studio-boot-pace.mjs'
+      - 'src/studio/studio-entry.mjs'
+      - 'src/world/world-draft-store.js'
+      - 'src/world/world-revision-system.js'
+      - 'src/world/world-edit-authority.js'
+      - 'src/world/authorities/local-world-edit-authority.js'
+      - 'scripts/world-editor-lazy-boot-audit.mjs'
+      - 'scripts/world-editor-iphone-import-audit.mjs'
+      - 'scripts/world-editor-iphone-prewarm-audit.mjs'
+      - 'scripts/world-editor-single-prewarm-owner-audit.mjs'
+      - 'scripts/world-editor-creator-boot-isolation-audit.mjs'
+      - 'scripts/world-iphone-viewport-reveal-audit.mjs'
+      - 'scripts/world-studio-provisional-shell-audit.mjs'
+      - 'scripts/world-studio-ready-yield-audit.mjs'
+      - '.github/workflows/world-editor-lazy-boot-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  lazy-world-editor-boot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verify World editor lazy bootstrap contract
+        run: node scripts/world-editor-lazy-boot-audit.mjs
+      - name: Verify iPhone draft import avoids persistent read
+        run: node scripts/world-editor-iphone-import-audit.mjs
+      - name: Verify iPhone Studio runtime prewarms serially
+        run: node scripts/world-editor-iphone-prewarm-audit.mjs
+      - name: Verify World open has one iPhone Studio prewarm owner
+        run: node scripts/world-editor-single-prewarm-owner-audit.mjs
+      - name: Verify Creator boot keeps Sprite Ability graph off World path
+        run: node scripts/world-editor-creator-boot-isolation-audit.mjs
+      - name: Verify hydrated Studio reveals game world viewport
+        run: node scripts/world-iphone-viewport-reveal-audit.mjs
+      - name: Verify provisional Studio shell listeners are stripped before hydrate
+        run: node scripts/world-studio-provisional-shell-audit.mjs
+      - name: Verify ready Studio shell bypasses Safari mount rAF wait
+        run: node scripts/world-studio-ready-yield-audit.mjs

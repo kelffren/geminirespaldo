@@ -1,0 +1,26 @@
+name: Temporary PvP Knockback Trace
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/tmp-pvp-knockback-trace.mjs'
+      - '.github/workflows/tmp-pvp-knockback-trace.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  trace:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Wait for exact trace script runtime commit
+        run: sleep 20
+      - name: Trace PvP knockback writes
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+        run: node scripts/tmp-pvp-knockback-trace.mjs

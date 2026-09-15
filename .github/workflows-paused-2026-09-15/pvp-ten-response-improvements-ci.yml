@@ -1,0 +1,35 @@
+name: PvP Ten Response Improvements CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/systems/melee/melee-weapon-profiles.js'
+      - 'src/abilities/abilityData.js'
+      - 'scripts/audit-pvp-ten-response-improvements.mjs'
+      - 'scripts/audit-pvp-cast-movement-parity.js'
+      - '.github/workflows/pvp-ten-response-improvements-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  agent-b-response-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install repo dependencies
+        run: npm install --no-audit --no-fund
+      - name: Agent B ten-response evaluation
+        run: node scripts/audit-pvp-ten-response-improvements.mjs
+      - name: Cast movement server parity
+        run: node scripts/audit-pvp-cast-movement-parity.js
+      - name: Foundation architecture
+        run: npm run audit:foundation
+      - name: Documentation integrity
+        run: npm run audit:docs

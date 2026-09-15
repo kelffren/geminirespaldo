@@ -1,0 +1,57 @@
+{
+  "schema_version": 2,
+  "id": "BUG-0000",
+  "title": "Short symptom-based title",
+  "status": "OPEN",
+  "severity": "medium",
+  "area": [],
+  "source": "ai",
+  "discovered_at": null,
+  "reported_by": [],
+  "reports": [],
+  "environment": {
+    "game_build": null,
+    "device": null,
+    "os": null,
+    "browser": null,
+    "surface": null
+  },
+  "reproduction": [],
+  "expected": "",
+  "actual": "",
+  "evidence": [],
+  "suspected_files": [],
+  "owner_hint": null,
+  "claimed_by": null,
+  "claim_started_at": null,
+  "research": {
+    "status": "not_started",
+    "summary": "",
+    "known_facts": [],
+    "hypotheses": [],
+    "ruled_out": [],
+    "unknowns": [],
+    "external_references": [],
+    "last_researched_at": null
+  },
+  "attempt_history": [],
+  "next_best_actions": [],
+  "fix": {
+    "status": "none",
+    "commits": [],
+    "files": [],
+    "summary": null
+  },
+  "verification": {
+    "status": "PENDING",
+    "method": null,
+    "evidence": [],
+    "verified_by": null,
+    "verified_at": null
+  },
+  "blocked_by": [],
+  "duplicate_of": null,
+  "related_bugs": [],
+  "notes": [],
+  "updated_at": null
+}

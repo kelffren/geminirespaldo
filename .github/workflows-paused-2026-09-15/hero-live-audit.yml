@@ -1,0 +1,64 @@
+name: Hero movement + scale LIVE audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'engine-ab.js'
+      - 'engine-ac.js'
+      - 'engine-ah.js'
+      - 'assets/hero.PNG'
+      - 'src/systems/armor-aura.js'
+      - 'scripts/live-hero-audit.mjs'
+      - '.github/workflows/hero-live-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hero-live-audit-main
+  cancel-in-progress: true
+
+jobs:
+  live-hero-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright
+          npx playwright install chromium --with-deps
+      - name: Wait for GitHub Pages to publish exact hero audit revision
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          URL="https://kelffren.github.io/gemini/scripts/live-hero-audit.mjs?publish-check=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          for i in $(seq 1 30); do
+            BODY="$(curl -fsSL -H 'Cache-Control: no-cache' "$URL" || true)"
+            if grep -q "assertPlantedRelease" <<<"$BODY" && grep -q "reversalFrameJumpDelta" <<<"$BODY"; then
+              echo "Hero audit revision is visible on Pages."
+              exit 0
+            fi
+            echo "Waiting for Pages hero audit revision ($i/30)..."
+            sleep 10
+          done
+          echo "Timed out waiting for current hero audit revision on Pages." >&2
+          exit 1
+      - name: Run mobile + desktop hero audit
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+        run: node scripts/live-hero-audit.mjs
+      - name: Upload hero audit artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hero-live-audit-${{ github.run_id }}
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14

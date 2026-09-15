@@ -1,0 +1,63 @@
+name: Base Zoo Main Hero LIVE audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/core/avatar-render-system.js'
+      - 'assets/base-zoo/**'
+      - 'scripts/base-zoo-main-hero-live-audit.mjs'
+      - '.github/workflows/base-zoo-main-hero-live-audit.yml'
+
+concurrency:
+  group: base-zoo-main-hero-live-main
+  cancel-in-progress: true
+
+jobs:
+  live-base-zoo-main-hero:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: npm install --no-save playwright@1.55.0
+      - name: Syntax check
+        run: |
+          node --check src/core/avatar-render-system.js
+          node --check scripts/base-zoo-main-hero-live-audit.mjs
+      - name: Verify Base Zoo source assets
+        run: |
+          test -f assets/base-zoo/Idle/rotations/north.png
+          test -f assets/base-zoo/Idle/rotations/north-east.png
+          test -f assets/base-zoo/Idle/rotations/east.png
+          test -f assets/base-zoo/Idle/rotations/south-east.png
+          test -f assets/base-zoo/Idle/rotations/south.png
+          test -f assets/base-zoo/Idle/rotations/south-west.png
+          test -f assets/base-zoo/Idle/rotations/west.png
+          test -f assets/base-zoo/Idle/rotations/north-west.png
+      - name: Wait for Base Zoo avatar owner on GitHub Pages
+        run: |
+          for i in $(seq 1 180); do
+            if curl -fsSL "https://kelffren.github.io/gemini/src/core/avatar-render-system.js?audit=${GITHUB_SHA}-${i}" | grep -q 'kelo-avatar-render-v1.2.0-base-zoo'; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo 'Timed out waiting for Base Zoo avatar deployment' >&2
+          exit 1
+      - name: Run LIVE browser audit
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/base-zoo-main-hero-live-audit.mjs
+      - name: Upload visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: base-zoo-main-hero-live-evidence
+          path: artifacts/base-zoo-main-hero-live.png
+          if-no-files-found: ignore

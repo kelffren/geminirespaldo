@@ -1,0 +1,61 @@
+name: Bug Reporting Contract CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bugs/**'
+      - 'src/bug-reporting/**'
+      - 'tests/bug-reporter-contract.test.mjs'
+      - 'docs/systems/BUG_COORDINATION_SYSTEM.md'
+      - 'docs/system-catalog.json'
+      - 'AGENTS.md'
+      - '.github/workflows/bug-reporting-ci.yml'
+  pull_request:
+    paths:
+      - 'bugs/**'
+      - 'src/bug-reporting/**'
+      - 'tests/bug-reporter-contract.test.mjs'
+      - 'docs/systems/BUG_COORDINATION_SYSTEM.md'
+      - 'docs/system-catalog.json'
+      - 'AGENTS.md'
+      - '.github/workflows/bug-reporting-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Required bug coordination files
+        run: |
+          test -f bugs/README.md
+          test -f bugs/INDEX.md
+          test -f bugs/SCHEMA.md
+          test -f bugs/AI_BRIDGE.md
+          test -f bugs/templates/BUG_TEMPLATE.json
+          test -f bugs/templates/REPORT_TEMPLATE.json
+          test -f src/bug-reporting/bug-reporter.mjs
+          test -f docs/systems/BUG_COORDINATION_SYSTEM.md
+
+      - name: Validate JSON registry
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('bugs/templates/BUG_TEMPLATE.json','utf8')); JSON.parse(require('fs').readFileSync('bugs/templates/REPORT_TEMPLATE.json','utf8'));"
+          for file in bugs/registry/BUG-*.json; do
+            node -e "const fs=require('fs'); const p=process.argv[1]; const bug=JSON.parse(fs.readFileSync(p,'utf8')); if(!/^BUG-[0-9]{4}$/.test(bug.id)) throw new Error('bad bug id: '+p); if(!bug.status) throw new Error('missing status: '+p);" "$file"
+          done
+
+      - name: Reporter syntax and contract
+        run: |
+          node --check src/bug-reporting/bug-reporter.mjs
+          node tests/bug-reporter-contract.test.mjs
+
+      - name: Guard lifecycle language
+        run: |
+          grep -q 'FIXED_PENDING_VERIFY' bugs/AI_BRIDGE.md
+          grep -q 'DETECTAR != ARREGLAR != VERIFICAR != CERRAR' AGENTS.md
+          grep -q 'bug-coordination' docs/system-catalog.json

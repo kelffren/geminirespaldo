@@ -1,0 +1,110 @@
+# KELO-INDEX
+# area: QA / EVOLUTION
+# owner: Kelo Evolution Engine CI
+name: Kelo Evolution Engine CI
+
+on:
+  pull_request:
+    paths:
+      - 'src/creators/evolution/**'
+      - 'src/world/map-forge/map-forge-evolution.mjs'
+      - 'src/world/map-forge/map-forge-golden-seeds.mjs'
+      - 'src/world/map-forge/map-forge-champion-overrides.mjs'
+      - 'src/world/map-forge/map-forge-recipes.mjs'
+      - 'scripts/kelo-evolution-*.mjs'
+      - 'scripts/kelo-code-evolution-sandbox.mjs'
+      - 'scripts/kelo-source-code-proposer-audit.mjs'
+      - 'scripts/map-forge-evolution-autopilot.mjs'
+      - 'tests/map-forge-evolution-visual.spec.js'
+      - 'docs/evolution/**'
+      - 'docs/systems/KELO_EVOLUTION_ENGINE.md'
+      - 'docs/systems/MAP_FORGE_SYSTEM.md'
+      - 'docs/system-catalog.json'
+      - 'ENGINE_MAP.md'
+      - 'package.json'
+      - '.github/workflows/kelo-evolution-ci.yml'
+      - '.github/workflows/kelo-evolution-autopilot.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/creators/evolution/**'
+      - 'src/world/map-forge/map-forge-evolution.mjs'
+      - 'src/world/map-forge/map-forge-golden-seeds.mjs'
+      - 'src/world/map-forge/map-forge-champion-overrides.mjs'
+      - 'src/world/map-forge/map-forge-recipes.mjs'
+      - 'scripts/kelo-evolution-*.mjs'
+      - 'scripts/kelo-code-evolution-sandbox.mjs'
+      - 'scripts/kelo-source-code-proposer-audit.mjs'
+      - 'scripts/map-forge-evolution-autopilot.mjs'
+      - 'tests/map-forge-evolution-visual.spec.js'
+      - 'docs/evolution/**'
+      - 'docs/systems/KELO_EVOLUTION_ENGINE.md'
+      - 'docs/systems/MAP_FORGE_SYSTEM.md'
+      - 'docs/system-catalog.json'
+      - 'ENGINE_MAP.md'
+      - 'package.json'
+      - '.github/workflows/kelo-evolution-ci.yml'
+      - '.github/workflows/kelo-evolution-autopilot.yml'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax check evolution V4 modules
+        run: |
+          node --check src/creators/evolution/evolution-engine.mjs
+          node --check src/creators/evolution/evolution-memory.mjs
+          node --check src/creators/evolution/code-patch-candidate.mjs
+          node --check src/creators/evolution/code-patch-evaluator.mjs
+          node --check src/creators/evolution/source-code-proposer.mjs
+          node --check src/world/map-forge/map-forge-golden-seeds.mjs
+          node --check src/world/map-forge/map-forge-champion-overrides.mjs
+          node --check src/world/map-forge/map-forge-evolution.mjs
+          node --check scripts/kelo-code-evolution-sandbox.mjs
+          node --check scripts/kelo-evolution-sandbox-audit.mjs
+          node --check scripts/kelo-evolution-audit.mjs
+          node --check scripts/kelo-source-code-proposer-audit.mjs
+          node --check scripts/map-forge-evolution-autopilot.mjs
+          node --check tests/map-forge-evolution-visual.spec.js
+      - name: Run evolution V3 search / holdout / Pareto / memory audit
+        run: npm run audit:evolution
+      - name: Prove autonomous source repair feedback and objective gate
+        run: node scripts/kelo-source-code-proposer-audit.mjs
+      - name: Prove detached code patch sandbox with mandatory test coverage
+        run: npm run audit:evolution:sandbox
+      - name: Verify system documentation catalog
+        run: npm run audit:docs
+
+  visual-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Serve branch checkout
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/kelo-evolution-http.log 2>&1 &
+      - name: Capture baseline versus evolved Map Forge evidence
+        env:
+          KELO_PAGES: http://127.0.0.1:4173/
+        run: npx playwright test tests/map-forge-evolution-visual.spec.js --project=chromium
+      - name: Upload evolution V3 visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kelo-evolution-v3-visual-evidence
+          path: test-results/**
+          if-no-files-found: ignore

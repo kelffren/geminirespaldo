@@ -1,0 +1,87 @@
+name: Mount Appearance Foundation CI
+
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'package.json'
+      - 'docs/system-catalog.json'
+      - 'docs/systems/MOUNT_SYSTEM.md'
+      - 'docs/systems/MOUNT_CREATOR.md'
+      - 'docs/systems/APPEARANCE_SYSTEM.md'
+      - 'docs/systems/APPEARANCE_CREATOR.md'
+      - 'docs/systems/STAT_MODIFIER_SYSTEM.md'
+      - 'src/mounts/**'
+      - 'src/appearance/**'
+      - 'src/stats/**'
+      - 'src/systems/equipment-system.js'
+      - 'src/creators/**'
+      - 'src/ui/mount-*.js'
+      - 'scripts/audit-stones.js'
+      - 'scripts/mount-*.mjs'
+      - 'scripts/appearance-foundation-audit.mjs'
+      - 'scripts/stat-modifier-audit.mjs'
+      - '.github/workflows/mount-appearance-foundation-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'package.json'
+      - 'docs/system-catalog.json'
+      - 'docs/systems/MOUNT_SYSTEM.md'
+      - 'docs/systems/MOUNT_CREATOR.md'
+      - 'docs/systems/APPEARANCE_SYSTEM.md'
+      - 'docs/systems/APPEARANCE_CREATOR.md'
+      - 'docs/systems/STAT_MODIFIER_SYSTEM.md'
+      - 'src/mounts/**'
+      - 'src/appearance/**'
+      - 'src/stats/**'
+      - 'src/systems/equipment-system.js'
+      - 'src/creators/**'
+      - 'src/ui/mount-*.js'
+      - 'scripts/audit-stones.js'
+      - 'scripts/mount-*.mjs'
+      - 'scripts/appearance-foundation-audit.mjs'
+      - 'scripts/stat-modifier-audit.mjs'
+      - '.github/workflows/mount-appearance-foundation-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax
+        run: |
+          node --check src/mounts/mount-ability-channel.js
+          node --check src/mounts/mount-ability-data.js
+          node --check src/mounts/mount-appearance-content.js
+          node --check src/mounts/mount-catalog.js
+          node --check src/mounts/mount-equipment-catalog.js
+          node --check src/mounts/mount-system.js
+          node --check src/appearance/appearance-system.js
+          node --check src/appearance/character-appearance-adapter.js
+          node --check src/stats/stat-modifier-system.js
+          node --check src/systems/equipment-system.js
+          node --check src/ui/mount-action-bar.js
+          node --check src/ui/mount-panel.js
+          node --check scripts/audit-stones.js
+          node --check scripts/mount-foundation-audit.mjs
+          node --check scripts/mount-creator-audit.mjs
+          node --check scripts/appearance-foundation-audit.mjs
+          node --check scripts/stat-modifier-audit.mjs
+      - name: Stone five-slot regression
+        run: node scripts/audit-stones.js
+      - name: Shared stat modifier contract
+        run: node scripts/stat-modifier-audit.mjs
+      - name: Appearance contract
+        run: node scripts/appearance-foundation-audit.mjs
+      - name: Mount runtime and 20k catalog stress
+        run: node scripts/mount-foundation-audit.mjs
+      - name: Mount creator contract
+        run: node scripts/mount-creator-audit.mjs
+      - name: Documentation contract
+        run: node scripts/system-documentation-audit.js

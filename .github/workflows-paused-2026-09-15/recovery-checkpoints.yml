@@ -1,0 +1,88 @@
+name: Kelo Recovery Checkpoints
+
+on:
+  workflow_run:
+    workflows: ["Kelo Quality Ratchet"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Commit SHA to preserve as a manually validated recovery point"
+        required: true
+        type: string
+      label:
+        description: "Short label such as iphone-playable or world-stable"
+        required: true
+        default: "manual-playable"
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  automatic-green:
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact green commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+      - name: Create CI-green checkpoint and retain ten
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'kelo-recovery-bot'
+          git config user.email '68343904+kelffren@users.noreply.github.com'
+          stamp="$(date -u +%Y%m%d-%H%M%S)"
+          sha="$(git rev-parse HEAD)"
+          tag="recovery-ci-green-${stamp}-${sha:0:8}"
+          git tag -a "$tag" -m "Kelo Recovery CI-green checkpoint $sha"
+          git push origin "refs/tags/$tag"
+          mapfile -t tags < <(git ls-remote --tags origin 'refs/tags/recovery-ci-green-*' | awk '{print $2}' | sed 's#refs/tags/##' | grep -v '\^{}' | sort -r)
+          if (( ${#tags[@]} > 10 )); then
+            for old in "${tags[@]:10}"; do git push origin ":refs/tags/$old"; done
+          fi
+
+  manual-checkpoint:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate requested SHA and label
+        id: validate
+        shell: bash
+        env:
+          INPUT_SHA: ${{ inputs.sha }}
+          INPUT_LABEL: ${{ inputs.label }}
+        run: |
+          set -euo pipefail
+          [[ "$INPUT_SHA" =~ ^[0-9a-fA-F]{7,40}$ ]] || { echo 'Invalid SHA'; exit 2; }
+          safe_label="$(printf '%s' "$INPUT_LABEL" | tr -cs 'A-Za-z0-9._-' '-' | sed 's/^-*//;s/-*$//' | cut -c1-40)"
+          [[ -n "$safe_label" ]] || safe_label='manual'
+          echo "sha=$INPUT_SHA" >> "$GITHUB_OUTPUT"
+          echo "label=$safe_label" >> "$GITHUB_OUTPUT"
+      - name: Checkout manually validated commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.validate.outputs.sha }}
+          fetch-depth: 0
+      - name: Preserve manual recovery point and retain ten
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'kelo-recovery-bot'
+          git config user.email '68343904+kelffren@users.noreply.github.com'
+          stamp="$(date -u +%Y%m%d-%H%M%S)"
+          sha="$(git rev-parse HEAD)"
+          label='${{ steps.validate.outputs.label }}'
+          tag="recovery-manual-${label}-${stamp}-${sha:0:8}"
+          git tag -a "$tag" -m "Manual Kelo Recovery checkpoint $label $sha"
+          git push origin "refs/tags/$tag"
+          mapfile -t tags < <(git ls-remote --tags origin 'refs/tags/recovery-manual-*' | awk '{print $2}' | sed 's#refs/tags/##' | grep -v '\^{}' | sort -r)
+          if (( ${#tags[@]} > 10 )); then
+            for old in "${tags[@]:10}"; do git push origin ":refs/tags/$old"; done
+          fi

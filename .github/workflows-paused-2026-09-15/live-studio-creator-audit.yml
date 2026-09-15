@@ -1,0 +1,31 @@
+name: Kelo Studio LIVE Creator Audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/studio/**'
+      - 'src/ui/studio-launcher.js'
+      - 'scripts/live-studio-creator-audit.mjs'
+      - '.github/workflows/live-studio-creator-audit.yml'
+
+concurrency:
+  group: live-studio-creator-main
+  cancel-in-progress: true
+
+jobs:
+  audit-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check LIVE audit
+        run: node --check scripts/live-studio-creator-audit.mjs
+      - name: Verify Kelo Studio Creator V1 on GitHub Pages
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+        run: node scripts/live-studio-creator-audit.mjs

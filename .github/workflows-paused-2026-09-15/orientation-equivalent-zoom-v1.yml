@@ -1,0 +1,42 @@
+name: Orientation Equivalent Zoom V1
+on:
+  push:
+    branches: [ feature/orientation-equivalent-zoom-v1 ]
+    paths:
+      - 'src/ui/mobile-orientation.js'
+      - 'scripts/orientation-equivalent-zoom-audit.mjs'
+      - '.github/workflows/orientation-equivalent-zoom-v1.yml'
+permissions:
+  contents: read
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax checks
+        run: |
+          node --check src/ui/mobile-orientation.js
+          node --check scripts/orientation-equivalent-zoom-audit.mjs
+      - name: Install Playwright
+        run: npm install --no-save playwright@1.55.0
+      - name: Serve candidate
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 >/tmp/orientation-zoom-http.log 2>&1 &
+          for i in {1..20}; do curl -fsS http://127.0.0.1:8000/index.html >/dev/null && exit 0; sleep 1; done
+          cat /tmp/orientation-zoom-http.log
+          exit 1
+      - name: Certify equivalent portrait framing
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+        run: node scripts/orientation-equivalent-zoom-audit.mjs
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: orientation-equivalent-zoom-v1-audit
+          path: artifacts/orientation-equivalent-zoom-*
+          if-no-files-found: warn

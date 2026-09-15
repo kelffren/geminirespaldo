@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "id": "REPORT-000001",
+  "created_at": "2026-09-14T00:37:00Z",
+  "source": "player",
+  "player_description": "hey el botón del editor se sigue quedando congelado cuando lo pulso no abre",
+  "category": "world",
+  "screenshot_ref": null,
+  "environment": {
+    "game_build": "world-unfreeze-20260913-2 then world-handoff-20260914-1; player black-screen against 5a52c6d",
+    "device": "iPhone",
+    "os": "iOS",
+    "browser": "Safari / Grok iOS webview",
+    "screen": "393x852",
+    "network": null
+  },
+  "game_context": {
+    "world": null,
+    "scene": null,
+    "position": null,
+    "ui_surface": "Create -> World",
+    "player_id_hash": null
+  },
+  "diagnostics": {
+    "recent_events": [],
+    "console_errors": [],
+    "network_errors": [],
+    "fps": null,
+    "ping_ms": null
+  },
+  "sanitized": true,
+  "triage": {
+    "status": "LINKED",
+    "bug_id": "BUG-0003",
+    "duplicate_report": true,
+    "notes": [
+      "Repeat player report after the 824a932 curtain/z-index candidate deployed on Pages.",
+      "Live QA: Hub opened, World went ABRIENDO, curtain painted, 80 Studio modules requested, Kelo Studio shell never attached within 15s.",
+      "Same live World editor freeze: Creators Hub opens, World card goes busy, Kelo Studio never mounts while Hub waits on the Studio graph.",
+      "Player follow-up 2026-09-14 22:03–22:04 iPhone 393x852: World tap showed KELO STUDIO / Abriendo World Editor… then the Safari tab went fully black with a spinner. 5a52c6d handoff is a failed verification, not CLOSED."
+    ]
+  }
+}

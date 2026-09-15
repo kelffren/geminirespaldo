@@ -1,0 +1,42 @@
+name: Populate Arboleskelo1 atlas demo
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'scripts/populate_arboleskelo1_demo.py'
+      - '.github/workflows/populate-arboleskelo1-demo.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  populate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply vegetation population
+        run: python3 scripts/populate_arboleskelo1_demo.py
+      - name: Validate asset contract
+        run: node scripts/validate-art-assets.mjs
+      - name: Structural checks
+        run: |
+          grep -q "frame:'tree_pink'" src/environment/tile-registry.js
+          grep -q "frame:'tree_medium'" src/environment/tile-registry.js
+          grep -q "frame:'tree_cypress'" src/environment/tile-registry.js
+          grep -q "frame:'tree_small'" src/environment/tile-registry.js
+          grep -q "version:'1.11.1'" src/environment/tile-registry.js
+      - name: Commit populated map
+        run: |
+          if git diff --quiet; then
+            echo 'No changes to commit'
+            exit 0
+          fi
+          git config user.name 'kelo-art-bot'
+          git config user.email '68343904+kelffren@users.noreply.github.com'
+          git add src/environment/tile-registry.js
+          git commit -m 'Populate Plaza with Arboleskelo1 atlas variants'
+          git push origin main

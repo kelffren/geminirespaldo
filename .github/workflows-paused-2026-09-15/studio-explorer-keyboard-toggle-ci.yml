@@ -1,0 +1,32 @@
+name: Studio Explorer Keyboard Toggle CI
+
+on:
+  pull_request:
+    paths:
+      - 'src/studio/input/studio-explorer-range-selection-controller.mjs'
+      - 'scripts/studio-explorer-keyboard-toggle-audit.mjs'
+      - '.github/workflows/studio-explorer-keyboard-toggle-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/studio/input/studio-explorer-range-selection-controller.mjs'
+      - 'scripts/studio-explorer-keyboard-toggle-audit.mjs'
+      - '.github/workflows/studio-explorer-keyboard-toggle-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax check
+        run: node --check src/studio/input/studio-explorer-range-selection-controller.mjs
+      - name: Keyboard toggle audit
+        run: node scripts/studio-explorer-keyboard-toggle-audit.mjs
+      - name: Visible range regression audit
+        run: node scripts/studio-explorer-visible-range-audit.mjs

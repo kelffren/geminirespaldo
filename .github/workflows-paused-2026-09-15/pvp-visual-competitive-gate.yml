@@ -1,0 +1,30 @@
+name: PvP Visual Competitive Gate
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/systems/pvp-visual-competitive-pass.js'
+      - 'src/core/kelo-runtime-bootstrap.js'
+      - 'src/systems/pvp-world.js'
+      - 'src/systems/melee/melee-weapon-profiles.js'
+      - 'scripts/audit-pvp-ten-visual-competitive-improvements.mjs'
+      - '.github/workflows/pvp-visual-competitive-gate.yml'
+  workflow_dispatch:
+jobs:
+  agent-b-visual-competitive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install repo dependencies
+        run: npm install --no-audit --no-fund
+      - name: Agent B ten visual competitive evaluation
+        run: node scripts/audit-pvp-ten-visual-competitive-improvements.mjs
+      - name: Cast movement server parity
+        run: node scripts/audit-pvp-cast-movement-parity.js
+      - name: Foundation architecture
+        run: npm run audit:foundation
+      - name: Documentation integrity
+        run: npm run audit:docs

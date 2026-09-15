@@ -1,0 +1,132 @@
+{
+  "version": 11,
+  "defaultMode": "LEGACY",
+  "allowedModes": ["LEGACY", "SHADOW", "NEW"],
+  "domains": {
+    "input": {
+      "mode": "LEGACY",
+      "owner": "InputSystem",
+      "legacy": ["engine-a.js", "engine-c.js"],
+      "contracts": ["processInput"],
+      "activationGate": "characterization-pass"
+    },
+    "movement": {
+      "mode": "LEGACY",
+      "owner": "MovementSystem",
+      "legacy": ["engine-a.js", "engine-c.js"],
+      "contracts": ["localPlayer.x", "localPlayer.y", "updateMovement"],
+      "activationGate": "shadow-parity"
+    },
+    "playerPositionTransitions": {
+      "mode": "NEW",
+      "owner": "KeloPlayerPosition",
+      "legacy": [],
+      "contracts": ["positionTransition.teleport", "positionTransition.restore"],
+      "activationGate": "transition-owner-audit",
+      "authority": "single-transition-api",
+      "scope": "transition-only",
+      "migratedCallers": ["engine-c.js", "src/ui/builder-parcel-meta.js", "src/instances/instance-runtime-bridge.js", "src/instances/market-instance.js", "src/ui/builder-ux-v2.js"],
+      "compatibility": "continuous movement, clamps, dash and online reconciliation remain outside this owner"
+    },
+    "playerPositionShadow": {
+      "mode": "SHADOW",
+      "owner": "KeloPlayerPositionShadow",
+      "legacy": ["engine-a.js", "engine-ai.js", "engine-b.js", "engine-f.js", "engine-g.js", "engine-net.js", "src/abilities/kelo-ability-boot.js", "src/instances/instance-runtime-bridge.js", "src/instances/market-instance.js", "src/systems/pvp-world.js", "src/ui/property-editor.js"],
+      "contracts": ["localPlayer.x", "localPlayer.y"],
+      "activationGate": "read-only-position-observability-audit",
+      "authority": "legacy-only",
+      "scope": "diagnostic-only",
+      "shadowEvidence": "KELO_PLAYER_POSITION_SHADOW_AUDIT"
+    },
+    "camera": {
+      "mode": "LEGACY",
+      "owner": "KeloCamera",
+      "legacy": ["engine-a.js", "engine-c.js"],
+      "contracts": ["cameraX", "cameraY"],
+      "activationGate": "shadow-parity"
+    },
+    "cameraFollow": {
+      "mode": "SHADOW",
+      "owner": "KeloCameraFollowShadow",
+      "legacy": ["engine-a.js"],
+      "contracts": ["camera.lookOffsetX", "camera.lookOffsetY", "camera.targetX", "camera.targetY", "camera.x", "camera.y"],
+      "activationGate": "runtime-shadow-parity",
+      "authority": "legacy-only",
+      "shadowEvidence": "KELO_CAMERA_FOLLOW_SHADOW_AUDIT"
+    },
+    "playerState": {
+      "mode": "NEW",
+      "owner": "KeloPlayerState",
+      "legacy": ["engine-b.js", "engine-net.js", "src/systems/arena-system.js", "src/systems/pvp-world.js", "src/systems/combat/damage-resolver.js"],
+      "contracts": ["localPlayer.hp", "localPlayer.maxHp"],
+      "activationGate": "accessor-boundary-runtime-audit",
+      "authority": "single-accessor-boundary",
+      "scope": "local-player-vitals-only",
+      "compatibility": "legacy direct and aliased writes are routed through KeloPlayerState accessors"
+    },
+    "collision": {
+      "mode": "LEGACY",
+      "owner": "KELO_COLLISION",
+      "legacy": ["engine-a.js", "engine-c.js"],
+      "contracts": ["obstacles"],
+      "activationGate": "single-writer"
+    },
+    "collisionEnvironmentPrefabs": {
+      "mode": "NEW",
+      "owner": "KELO_COLLISION",
+      "legacy": ["src/environment/generic-prefabs.js", "src/environment/luxe-kiosk-atlas.js"],
+      "contracts": ["collisionOwner.environment:generic-prefabs"],
+      "activationGate": "owner-registry-audit",
+      "authority": "collision-owner-registry"
+    },
+    "collisionLegacyMutators": {
+      "mode": "NEW",
+      "owner": "KELO_COLLISION",
+      "legacy": ["engine-ae.js", "engine-aj.js", "engine-l.js"],
+      "contracts": ["collisionMutation.registry-only"],
+      "activationGate": "single-bootstrap-writer-audit",
+      "authority": "collision-owner-registry"
+    },
+    "render": {
+      "mode": "NEW",
+      "owner": "KeloRender",
+      "legacy": ["engine-c.js", "src/environment/gardens-landmark.js"],
+      "contracts": ["render"],
+      "activationGate": "single-writer-render-audit",
+      "authority": "single-global-wrapper",
+      "scope": "frame-orchestration-only",
+      "compatibility": "engine-c exposes KELO_LEGACY_RENDER_BRIDGE; visual extensions register through KeloRender hooks"
+    },
+    "simulation": {
+      "mode": "LEGACY",
+      "owner": "SimulationSystem",
+      "legacy": ["engine-a.js"],
+      "contracts": ["simulationBase.legacy"],
+      "activationGate": "slice-migration"
+    },
+    "simulationLoopOwner": {
+      "mode": "NEW",
+      "owner": "SimulationSystem",
+      "legacy": ["engine-c.js"],
+      "contracts": ["updateSimulation"],
+      "activationGate": "single-writer-audit",
+      "authority": "single-global-wrapper"
+    },
+    "simulationFarmTick": {
+      "mode": "SHADOW",
+      "owner": "SimulationFarmShadow",
+      "legacy": ["engine-c.js"],
+      "contracts": ["STATE.farm.coop.ready", "STATE.silo.eggs", "STATE.farm.pen.ready", "STATE.silo.pork"],
+      "activationGate": "shadow-parity",
+      "authority": "legacy-only",
+      "shadowEvidence": "KELO_SIMULATION_FARM_SHADOW_AUDIT"
+    },
+    "world": {
+      "mode": "LEGACY",
+      "owner": "WorldSystem",
+      "legacy": ["engine-a.js", "engine-c.js"],
+      "contracts": ["worldMap"],
+      "activationGate": "world-load-baseline"
+    }
+  }
+}

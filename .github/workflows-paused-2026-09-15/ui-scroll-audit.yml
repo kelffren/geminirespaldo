@@ -1,0 +1,39 @@
+name: Mobile UI scroll audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'index.html'
+      - 'src/systems/nobility.js'
+      - 'src/ui/**'
+      - 'scripts/live-ui-scroll-audit.mjs'
+      - '.github/workflows/ui-scroll-audit.yml'
+
+jobs:
+  ui-scroll-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax
+        run: node --check scripts/live-ui-scroll-audit.mjs
+      - name: Install Playwright
+        run: npm install --no-save playwright@1.55.0
+      - name: Audit real mobile panel scrolling
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          EXPECTED_TITLE: Kelo World — V6.20
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/live-ui-scroll-audit.mjs
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-ui-scroll-audit
+          path: artifacts/
+          if-no-files-found: error

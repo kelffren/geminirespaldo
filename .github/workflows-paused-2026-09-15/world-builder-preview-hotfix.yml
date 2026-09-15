@@ -1,0 +1,52 @@
+name: World Builder Preview Hotfix
+on:
+  workflow_dispatch:
+  push:
+    branches: [ hotfix/world-builder-preview-v1, main ]
+    paths:
+      - 'src/ui/world-builder-preview-hotfix.js'
+      - 'src/systems/admin-key-system.js'
+      - 'scripts/world-builder-preview-hotfix-audit.mjs'
+      - '.github/workflows/world-builder-preview-hotfix.yml'
+permissions:
+  contents: read
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax and preview boundary
+        run: |
+          node --check src/ui/world-builder-preview-hotfix.js
+          node --check src/systems/admin-key-system.js
+          node --check scripts/world-builder-preview-hotfix-audit.mjs
+          node - <<'NODE'
+          const fs=require('fs');
+          const src=fs.readFileSync('src/ui/world-builder-preview-hotfix.js','utf8');
+          if(/localStorage|indexedDB|fetch\s*\(|WebSocket/.test(src)) throw new Error('Preview hotfix bypasses World Edit authority');
+          if(!src.includes("world:preview:enter")||!src.includes("world:preview:exit")||!src.includes('KELO_WORLD_EDIT')) throw new Error('Preview authority contract missing');
+          NODE
+      - name: Install browser audit dependency
+        run: npm install --no-save playwright@1.55.0
+      - name: Serve candidate
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 >/tmp/preview-http.log 2>&1 &
+          for i in {1..20}; do curl -fsS http://127.0.0.1:8000/index.html >/dev/null && exit 0; sleep 1; done
+          cat /tmp/preview-http.log
+          exit 1
+      - name: Certify real mobile preview enter and exit
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/world-builder-preview-hotfix-audit.mjs
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-builder-preview-hotfix-audit
+          path: artifacts/world-builder-preview-*
+          if-no-files-found: warn

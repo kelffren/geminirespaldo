@@ -1,0 +1,38 @@
+name: PvP Dodge Live CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/systems/pvp-world.js'
+      - 'src/systems/pvp-combat-runtime-loader.js'
+      - 'src/abilities/kelo-ability-boot.js'
+      - 'server/pvp-authority.js'
+      - 'tests/pvp-dodge-live.spec.js'
+      - 'scripts/audit-pvp-dodge-timing.js'
+      - '.github/workflows/pvp-dodge-live-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  dodge-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Deterministic dodge timing 60 90 120 Hz
+        run: node scripts/audit-pvp-dodge-timing.js
+      - name: Serve exact checkout
+        run: |
+          python3 -m http.server 4173 >/tmp/kelo-http.log 2>&1 &
+          for i in {1..30}; do curl -fsS http://127.0.0.1:4173/index.html >/dev/null && exit 0; sleep 1; done
+          cat /tmp/kelo-http.log
+          exit 1
+      - name: Live dodge mobile + desktop
+        run: npx playwright test tests/pvp-dodge-live.spec.js --project=chromium --workers=1
+      - name: Foundation architecture
+        run: npm run audit:foundation

@@ -1,0 +1,78 @@
+name: Creator Platform
+on:
+  push:
+    paths:
+      - 'src/creators/**'
+      - 'src/ui/studio-launcher.js'
+      - 'scripts/creator-platform-audit.mjs'
+      - 'scripts/live-studio-click-audit.mjs'
+      - 'scripts/creators-direct-launch-audit.mjs'
+      - 'docs/KELO_CREATORS_*.md'
+      - 'index.html'
+      - '.github/workflows/creator-platform.yml'
+  pull_request:
+    paths:
+      - 'src/creators/**'
+      - 'src/ui/studio-launcher.js'
+      - 'scripts/creator-platform-audit.mjs'
+      - 'scripts/live-studio-click-audit.mjs'
+      - 'scripts/creators-direct-launch-audit.mjs'
+      - 'docs/KELO_CREATORS_*.md'
+      - 'index.html'
+      - '.github/workflows/creator-platform.yml'
+
+jobs:
+  creator-platform:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax — Creator modules
+        run: find src/creators -type f -name '*.mjs' -print0 | xargs -0 -n1 node --check
+      - name: Syntax — launcher and audits
+        run: |
+          node --check src/ui/studio-launcher.js
+          node --check scripts/creator-platform-audit.mjs
+          node --check scripts/live-studio-click-audit.mjs
+          node --check scripts/creators-direct-launch-audit.mjs
+      - name: Creator Platform audit
+        run: node scripts/creator-platform-audit.mjs
+      - name: Lazy boot contract
+        shell: bash
+        run: |
+          ! grep -Eq 'src/studio/|src/creators/|creator-hub\.mjs' index.html
+          grep -q 'src/ui/studio-launcher.js' index.html
+          grep -Fq "import('./../creators/ui/creator-hub.mjs')" src/ui/studio-launcher.js
+          ! grep -Fq "import('./../studio/" src/ui/studio-launcher.js
+          grep -Fq "import('../../studio/integration/live-studio-controller.mjs')" src/creators/workspaces/world-workspace.mjs
+      - name: Reuse contract
+        run: |
+          ! grep -REn --include='*.mjs' '\blocalStorage\b|\bindexedDB\b|new[[:space:]]+WebSocket|new[[:space:]]+RTCPeerConnection|\beval[[:space:]]*\(|new[[:space:]]+Function[[:space:]]*\(' src/creators/workspaces src/creators/ui
+      - name: Install Playwright for mobile regression
+        run: npm install --no-save playwright@1.55.0
+      - name: Serve candidate branch
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 >/tmp/kelo-creators-http.log 2>&1 &
+          for i in {1..20}; do curl -fsS http://127.0.0.1:8000/index.html >/dev/null && exit 0; sleep 1; done
+          cat /tmp/kelo-creators-http.log
+          exit 1
+      - name: Direct key URL — ?mapEditor=1&creators=1 → Hub → World
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/creators-direct-launch-audit.mjs
+      - name: Mobile 390×844 — CREATORS → World → Studio
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/live-studio-click-audit.mjs
+      - name: Upload direct Creators evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: creators-direct-launch-evidence
+          path: artifacts/creators-direct-*.png
+          if-no-files-found: warn

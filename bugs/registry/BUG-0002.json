@@ -1,0 +1,149 @@
+{
+  "schema_version": 2,
+  "id": "BUG-0002",
+  "title": "Guest play fix is not yet verified through the real iPhone user flow",
+  "status": "FIXED_PENDING_VERIFY",
+  "severity": "critical",
+  "area": ["auth", "guest", "ios", "entry-flow"],
+  "source": "mixed",
+  "discovered_at": "2026-09-13",
+  "reported_by": ["human QA", "AI inspection"],
+  "reports": [],
+  "environment": {
+    "game_build": null,
+    "device": "iPhone real device target",
+    "os": "iOS",
+    "browser": "Safari",
+    "surface": "LIVE guest entry"
+  },
+  "reproduction": [
+    "Open the deployed KELO WORLD page from a fresh mobile session.",
+    "Use the visible Jugar como invitado flow rather than importing internal modules.",
+    "Verify the auth gate closes and does not reopen.",
+    "Verify gameplay remains available as Guest."
+  ],
+  "expected": "A player can choose Guest, enter gameplay, and remain in the game without the auth gate reappearing.",
+  "actual": "Guest/session fixes exist in main, but the current real-iPhone automation does not prove the complete visible Guest flow because the BrowserStack context fails before the page is tested.",
+  "evidence": [
+    "Commit 4da93131c1e617168ee904483d4fe1d00cf0f3a8: feat(auth): enable guest play for AI testing",
+    "Commit 2c5e55ced94129e8cbe756bbbec503b8705cf37c: feat(auth): load guest play bypass",
+    "Commit 92d36bcf4e8ebfaa54f578f2ea608cb1ed2b43b0: fix(auth): keep valid guest sessions inside the game",
+    "src/auth/guest-play-bypass.js supports explicit ?guest=1 / ?aiGuest=1 plus valid anonymous sessions"
+  ],
+  "suspected_files": [
+    "src/auth/guest-play-bypass.js"
+  ],
+  "owner_hint": "Kelo auth / guest entry flow",
+  "claimed_by": null,
+  "claim_started_at": null,
+  "research": {
+    "status": "blocked",
+    "summary": "The guest bypass/session code has a coherent candidate fix in main, but the target acceptance flow has not been executed on a real iPhone through the visible auth UI. The main uncertainty is verification, not a currently demonstrated new auth defect. BrowserStack session creation is blocked by BUG-0001.",
+    "known_facts": [
+      {
+        "id": "F1",
+        "statement": "Guest bypass/session handling changes are present in main across three identified commits.",
+        "evidence": ["4da93131c1e617168ee904483d4fe1d00cf0f3a8", "2c5e55ced94129e8cbe756bbbec503b8705cf37c", "92d36bcf4e8ebfaa54f578f2ea608cb1ed2b43b0"]
+      },
+      {
+        "id": "F2",
+        "statement": "The existing World reopen test does not prove the human-visible Jugar como invitado path because it opens Creator Hub programmatically.",
+        "evidence": ["Existing BUG-0002 note before schema v2 migration"]
+      },
+      {
+        "id": "F3",
+        "statement": "The BrowserStack real-iPhone workflow currently fails before reaching the page because of BUG-0001.",
+        "evidence": ["BUG-0001"]
+      }
+    ],
+    "hypotheses": [
+      {
+        "id": "H1",
+        "theory": "The current guest session fix correctly keeps a valid anonymous Guest session inside gameplay after the visible Guest action.",
+        "confidence": "medium",
+        "status": "supported",
+        "why": "The relevant session/bypass code and fix commits exist, but the exact target flow has not been independently exercised on the target device.",
+        "evidence_for": ["F1"],
+        "evidence_against": ["F2", "F3"],
+        "test_next": "Run the exact fresh-session visible Guest flow on real iPhone Safari and confirm the auth gate remains closed during gameplay."
+      },
+      {
+        "id": "H2",
+        "theory": "A remaining mobile-only auth/session race may still reopen the gate even though programmatic or desktop paths pass.",
+        "confidence": "low",
+        "status": "unverified",
+        "why": "The target real-device visible flow has not produced acceptance evidence yet.",
+        "evidence_for": ["F2", "F3"],
+        "evidence_against": ["F1"],
+        "test_next": "Only pursue this if the real-iPhone visible Guest flow fails; capture the exact gate/session transition before editing auth code again."
+      }
+    ],
+    "ruled_out": [],
+    "unknowns": [
+      {
+        "id": "U1",
+        "question": "Does the deployed visible Jugar como invitado flow remain inside gameplay on a fresh real-iPhone Safari session?",
+        "why_it_matters": "This is the acceptance condition separating a real remaining auth bug from an already-correct candidate blocked only on verification.",
+        "quickest_test": "Fresh real iPhone Safari: visible auth -> tap Jugar como invitado -> gameplay -> wait/navigate enough to prove the gate does not reopen."
+      }
+    ],
+    "external_references": [],
+    "last_researched_at": "2026-09-14T02:58:00Z"
+  },
+  "attempt_history": [
+    {
+      "id": "A1",
+      "at": "2026-09-13",
+      "actor": "development agents",
+      "goal": "Add explicit guest bypass support and preserve valid anonymous Guest sessions inside gameplay.",
+      "hypothesis_ids": ["H1"],
+      "change": {
+        "commits": ["4da93131c1e617168ee904483d4fe1d00cf0f3a8", "2c5e55ced94129e8cbe756bbbec503b8705cf37c", "92d36bcf4e8ebfaa54f578f2ea608cb1ed2b43b0"],
+        "files": ["src/auth/guest-play-bypass.js"],
+        "summary": "Added Guest bypass/session handling and a fix intended to prevent a valid anonymous session from being thrown back to the auth gate."
+      },
+      "validation": {
+        "environment": "Code/local-programmatic coverage; target real-iPhone acceptance not reached",
+        "method": "Inspect candidate code and existing tests; real-device automation blocked by BUG-0001.",
+        "result": "BLOCKED",
+        "evidence": ["BUG-0001", "Existing World test bypasses the visible Guest UI"]
+      },
+      "conclusion": "The candidate exists, but no target-device evidence is strong enough to call the player-facing Guest bug verified.",
+      "do_not_repeat_without": null
+    }
+  ],
+  "next_best_actions": [
+    {
+      "priority": 1,
+      "action": "Unblock or bypass BUG-0001 only for verification purposes, then execute the exact visible Guest acceptance flow on a real iPhone Safari session.",
+      "reason": "No additional auth rewrite is justified until the existing candidate is tested through the actual player path.",
+      "expected_signal": "Guest enters gameplay and the auth gate stays closed; otherwise capture the exact point and state at which it reopens.",
+      "stop_condition": "If the target flow passes, move verification toward PASS instead of changing auth code; if it fails, reopen diagnosis with the captured transition as new evidence."
+    }
+  ],
+  "fix": {
+    "status": "candidate",
+    "commits": [
+      "4da93131c1e617168ee904483d4fe1d00cf0f3a8",
+      "2c5e55ced94129e8cbe756bbbec503b8705cf37c",
+      "92d36bcf4e8ebfaa54f578f2ea608cb1ed2b43b0"
+    ],
+    "files": ["src/auth/guest-play-bypass.js"],
+    "summary": "Guest bypass/session handling was added and valid anonymous Guest sessions are intended to stay inside gameplay."
+  },
+  "verification": {
+    "status": "PENDING",
+    "method": "Fresh real iPhone Safari E2E: visible auth -> tap Jugar como invitado -> gameplay -> auth gate remains closed.",
+    "evidence": [],
+    "verified_by": null,
+    "verified_at": null
+  },
+  "blocked_by": ["BUG-0001"],
+  "duplicate_of": null,
+  "related_bugs": ["BUG-0003"],
+  "notes": [
+    "The existing World reopen test opens Creator Hub programmatically and therefore is not sufficient proof of the human Guest entry flow.",
+    "Do not promote to VERIFIED solely from local/desktop tests."
+  ],
+  "updated_at": "2026-09-14T02:58:00Z"
+}

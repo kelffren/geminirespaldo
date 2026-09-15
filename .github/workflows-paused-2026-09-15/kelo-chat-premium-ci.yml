@@ -1,0 +1,39 @@
+name: Kelo Chat Premium Judge
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'src/ui/luxe-shell.js'
+      - 'src/ui/kelo-chat-drawer.js'
+      - 'src/ui/kelo-chat-integration-bridge.js'
+      - 'scripts/kelo-chat-premium-audit.mjs'
+      - '.github/workflows/kelo-chat-premium-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kelo-chat-premium-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  reference-judge:
+    name: Premium reference contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run independent chat reference judge
+        run: node scripts/kelo-chat-premium-audit.mjs
+      - name: Parse premium chat JavaScript
+        run: node --check src/ui/kelo-chat-drawer.js
+      - name: Parse chat integration bridge
+        run: node --check src/ui/kelo-chat-integration-bridge.js

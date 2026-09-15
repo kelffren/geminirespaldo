@@ -1,0 +1,91 @@
+name: ChatGPT World Control Test
+
+on:
+  push:
+    paths:
+      - '.github/workflows/chatgpt-world-control-test.yml'
+  workflow_dispatch:
+
+jobs:
+  control-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: npm install --no-save playwright@1.55.0
+      - name: Open LIVE and move player
+        shell: bash
+        run: |
+          mkdir -p artifacts/chatgpt-control
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { chromium } from 'playwright';
+
+          const url='https://kelffren.github.io/gemini/?aiGuest=1&chatgpt-control='+Date.now();
+          const browser=await chromium.launch({headless:true,executablePath:'/usr/bin/google-chrome',args:['--no-sandbox','--disable-dev-shm-usage']});
+          const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+          const page=await context.newPage();
+          const consoleErrors=[];
+          const httpErrors=[];
+          const requestFailures=[];
+
+          page.on('console',m=>{
+            if(m.type()==='error'){
+              consoleErrors.push({text:m.text(),location:m.location()});
+            }
+          });
+          page.on('pageerror',e=>consoleErrors.push({text:'PAGEERROR: '+(e.stack||e.message),location:null}));
+          page.on('response',response=>{
+            const status=response.status();
+            if(status>=400){
+              const request=response.request();
+              httpErrors.push({status,statusText:response.statusText(),url:response.url(),resourceType:request.resourceType(),method:request.method()});
+            }
+          });
+          page.on('requestfailed',request=>{
+            requestFailures.push({url:request.url(),resourceType:request.resourceType(),method:request.method(),failure:request.failure()?.errorText||'unknown'});
+          });
+
+          await page.goto(url,{waitUntil:'networkidle',timeout:60000});
+          await page.waitForFunction(()=>typeof localPlayer!=='undefined'&&typeof camera!=='undefined'&&document.getElementById('game-canvas'),null,{timeout:45000});
+          await page.waitForTimeout(2500);
+
+          const performanceResources=await page.evaluate(()=>performance.getEntriesByType('resource').map(r=>({name:r.name,initiatorType:r.initiatorType,duration:r.duration,transferSize:r.transferSize,encodedBodySize:r.encodedBodySize})).filter(r=>r.transferSize===0||r.encodedBodySize===0));
+          const getState=()=>page.evaluate(()=>({
+            player:{x:localPlayer.x,y:localPlayer.y,vx:localPlayer.vx,vy:localPlayer.vy},
+            camera:{x:camera.x,y:camera.y,targetX:camera.targetX,targetY:camera.targetY},
+            input:{x:input.normX,y:input.normY,keys:{...input.keys}},
+            title:document.title,
+            bootReady:!!window.__keloBootReady
+          }));
+
+          const before=await getState();
+          await page.screenshot({path:'artifacts/chatgpt-control/before.png'});
+
+          await page.keyboard.down('w');
+          await page.waitForTimeout(700);
+          await page.keyboard.up('w');
+          await page.waitForTimeout(500);
+
+          const after=await getState();
+          await page.screenshot({path:'artifacts/chatgpt-control/after.png'});
+          const result={url,before,after,delta:{x:after.player.x-before.player.x,y:after.player.y-before.player.y},consoleErrors,httpErrors,requestFailures,performanceResources};
+          fs.writeFileSync('artifacts/chatgpt-control/result.json',JSON.stringify(result,null,2));
+          console.log('CHATGPT_CONTROL_RESULT='+JSON.stringify(result));
+
+          if(Math.abs(result.delta.x)<1&&Math.abs(result.delta.y)<1){
+            throw new Error('Player did not move after keyboard input');
+          }
+          await browser.close();
+          NODE
+      - name: Upload control preview
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chatgpt-world-control
+          path: artifacts/chatgpt-control/
+          if-no-files-found: error

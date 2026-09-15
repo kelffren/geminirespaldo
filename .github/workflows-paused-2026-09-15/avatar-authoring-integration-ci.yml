@@ -1,0 +1,78 @@
+name: Avatar Authoring Integration CI
+
+on:
+  pull_request:
+    paths:
+      - 'src/creators/avatar/avatar-frame-*.mjs'
+      - 'src/creators/avatar/kelo-universal-asset-compiler.mjs'
+      - 'src/creators/ui/avatar-authoring-workspace.mjs'
+      - 'src/creators/ui/avatar-frame-*.mjs'
+      - 'src/creators/workspaces/avatar-workspace.mjs'
+      - 'scripts/avatar-authoring-159-155-audit.mjs'
+      - 'tests/avatar-authoring-159-155.spec.js'
+      - 'tests/fixtures/avatar-authoring-159-155.html'
+      - 'playwright.avatar-authoring.config.js'
+      - '.github/workflows/avatar-authoring-integration-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax
+        run: |
+          node --check src/creators/avatar/avatar-frame-project.mjs
+          node --check src/creators/avatar/avatar-frame-project-store.mjs
+          node --check src/creators/avatar/avatar-frame-pixels.mjs
+          node --check src/creators/avatar/avatar-frame-compositor.mjs
+          node --check src/creators/avatar/kelo-universal-asset-compiler.mjs
+          node --check src/creators/ui/avatar-frame-editor.mjs
+          node --check src/creators/ui/avatar-frame-builder.mjs
+          node --check src/creators/ui/avatar-authoring-workspace.mjs
+          node --check src/creators/workspaces/avatar-workspace.mjs
+          node --check tests/avatar-authoring-159-155.spec.js
+      - name: 159 + 155 integration contract
+        run: node scripts/avatar-authoring-159-155-audit.mjs
+
+  mobile-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright without mutating repository
+        run: npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund @playwright/test@1.55.0
+      - name: Install Chromium and WebKit
+        run: npx playwright install --with-deps chromium webkit
+      - name: Start static runtime
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/avatar-authoring-http.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:4173/tests/fixtures/avatar-authoring-159-155.html >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/avatar-authoring-http.log
+          exit 1
+      - name: Native mobile gestures + authored atlas · Chromium + iPhone WebKit
+        env:
+          AVATAR_AUTHORING_QA_URL: http://127.0.0.1:4173/tests/fixtures/avatar-authoring-159-155.html
+        run: npx playwright test --config=playwright.avatar-authoring.config.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: avatar-authoring-159-155-browser-proof
+          path: |
+            test-results/
+            playwright-avatar-authoring-report.json
+          if-no-files-found: ignore
+          retention-days: 7

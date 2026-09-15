@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "REPORT-000000",
+  "created_at": null,
+  "source": "player",
+  "player_description": "",
+  "category": "other",
+  "screenshot_ref": null,
+  "environment": {
+    "game_build": null,
+    "device": null,
+    "os": null,
+    "browser": null,
+    "screen": null,
+    "network": null
+  },
+  "game_context": {
+    "world": null,
+    "scene": null,
+    "position": null,
+    "ui_surface": null,
+    "player_id_hash": null
+  },
+  "diagnostics": {
+    "recent_events": [],
+    "console_errors": [],
+    "network_errors": [],
+    "fps": null,
+    "ping_ms": null
+  },
+  "sanitized": false,
+  "triage": {
+    "status": "UNTRIAGED",
+    "bug_id": null,
+    "duplicate_report": false,
+    "notes": []
+  }
+}

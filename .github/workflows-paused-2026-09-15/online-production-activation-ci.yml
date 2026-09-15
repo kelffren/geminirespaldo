@@ -1,0 +1,117 @@
+name: Online Production Activation CI
+
+on:
+  pull_request:
+    paths:
+      - 'server/**'
+      - 'src/config/online-runtime-config.js'
+      - 'src/auth/**'
+      - 'src/ui/account-auth-ui.js'
+      - 'src/ui/google-auth-button.js'
+      - 'scripts/audit-online-auth-lifecycle.mjs'
+      - 'scripts/online-foundation-audit.mjs'
+      - 'index.html'
+      - 'render.yaml'
+      - 'docs/ops/RENDER_SERVER.md'
+      - 'docs/systems/ONLINE_FOUNDATION.md'
+      - '.github/workflows/online-production-activation-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - 'src/config/online-runtime-config.js'
+      - 'src/auth/**'
+      - 'src/ui/account-auth-ui.js'
+      - 'src/ui/google-auth-button.js'
+      - 'scripts/audit-online-auth-lifecycle.mjs'
+      - 'scripts/online-foundation-audit.mjs'
+      - 'index.html'
+      - 'render.yaml'
+      - 'docs/ops/RENDER_SERVER.md'
+      - 'docs/systems/ONLINE_FOUNDATION.md'
+      - '.github/workflows/online-production-activation-ci.yml'
+
+jobs:
+  online-runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.20.0'
+      - name: Syntax
+        run: |
+          node --check server/index.js
+          node --check server/smoke-test.js
+          node --check server/persistence-smoke-test.js
+          node --check server/server-state-bridge.js
+          node --check server/online-identity-store.js
+          node --check src/config/online-runtime-config.js
+          node --check src/auth/supabase-auth-runtime.js
+          node --check src/auth/online-auth-lifecycle-bridge.js
+          node --check src/ui/account-auth-ui.js
+          node --check src/ui/google-auth-button.js
+          node --check scripts/audit-online-auth-lifecycle.mjs
+          node --check scripts/online-foundation-audit.mjs
+      - name: Account auth contract
+        run: |
+          grep -q "PRODUCTION_APP_URL='https://kelffren.github.io/gemini/'" src/auth/supabase-auth-runtime.js
+          grep -q "params.get('authLocal')==='1'" src/auth/supabase-auth-runtime.js
+          grep -q "signInAsGuest" src/auth/supabase-auth-runtime.js
+          grep -q "signInWithGoogle" src/auth/supabase-auth-runtime.js
+          grep -q "provider:'google'" src/auth/supabase-auth-runtime.js
+          grep -q "kelo.active.character.v1" src/auth/supabase-auth-runtime.js
+          grep -q "kelo.supabase.session.v1" src/auth/supabase-auth-runtime.js
+          grep -q "syncNetSession(session,characterId)" src/auth/supabase-auth-runtime.js
+          grep -q "ready(9000)" src/auth/supabase-auth-runtime.js
+          grep -q "TOKEN_REFRESHED" src/auth/online-auth-lifecycle-bridge.js
+          grep -q "SIGNED_OUT" src/auth/online-auth-lifecycle-bridge.js
+          grep -q "disconnectForAuth" src/auth/online-auth-lifecycle-bridge.js
+          grep -q "signInWithPassword" src/ui/account-auth-ui.js
+          grep -q "protectGuestWithEmail" src/ui/account-auth-ui.js
+          grep -q "Continuar con Google" src/ui/google-auth-button.js
+          grep -q "kelo-online-runtime-config-v6" src/config/online-runtime-config.js
+          grep -q "static-supabase-pinned-2.116.0" src/config/online-runtime-config.js
+          ! grep -q "document.write" src/config/online-runtime-config.js
+          grep -q "@supabase/supabase-js@2.116.0" index.html
+          grep -q "src/auth/supabase-auth-runtime.js" index.html
+          grep -q "src/auth/online-auth-lifecycle-bridge.js" index.html
+          grep -q "src/ui/account-auth-ui.js" index.html
+          grep -q "src/ui/google-auth-button.js" index.html
+          node - <<'NODE'
+          const fs=require('fs');
+          const html=fs.readFileSync('index.html','utf8');
+          const order=[
+            'src/config/online-runtime-config.js',
+            '@supabase/supabase-js@2.116.0',
+            'src/auth/supabase-auth-runtime.js',
+            'src/auth/online-auth-lifecycle-bridge.js',
+            'src/ui/account-auth-ui.js',
+            'src/ui/google-auth-button.js',
+            'engine-net.js'
+          ];
+          let last=-1;
+          for(const token of order){
+            const pos=html.indexOf(token);
+            if(pos<0||pos<=last)throw new Error('Auth bootstrap order invalid at '+token);
+            last=pos;
+          }
+          NODE
+          ! grep -Eq "(service_role|sb_secret)[[:space:]]*[:=]" src/auth/supabase-auth-runtime.js src/auth/online-auth-lifecycle-bridge.js src/ui/account-auth-ui.js src/ui/google-auth-button.js
+      - name: Auth lifecycle audit
+        run: node scripts/audit-online-auth-lifecycle.mjs
+      - name: Install server dependencies
+        working-directory: server
+        run: npm install --omit=dev --no-audit --no-fund
+      - name: Authoritative server smoke
+        working-directory: server
+        run: npm run test:smoke
+      - name: Persistence bridge smoke
+        working-directory: server
+        run: npm run test:persistence
+      - name: Online Foundation audit
+        run: |
+          npm install --no-audit --no-fund
+          npm run audit:online-foundation
+          npm run audit:foundation
+          npm run audit:docs

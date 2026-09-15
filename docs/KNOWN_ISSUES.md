@@ -1,0 +1,11 @@
+# KNOWN_ISSUES
+- Algunos usuarios no encuentran Pages: deben usar kelffren.github.io/gemini/ no github.com
+- Desktop HiDPI a veces muestra mundo en esquina (engine-h/i/l setTransform)
+- HUD duplica botón Yo (inspect + top-bar)
+- Proyectiles viejos arenaPvP no se pintaban; engine-m los sustituye visualmente
+- engine-l puso CD antes del cast (corregido)
+- Muros plaza tapaban arte y frenaban dash (corregido splice)
+- Cadena de wrappers render/update frágil (a-n). No aplanar ahora.
+- plaza.jpg 38KB baja resolución
+- No Phaser todavía pese a spec
+- Economía demo en localStorage se puede corromper a mano

@@ -1,0 +1,1404 @@
+{
+  "contractVersion": "kelo-art-asset-contract-v2",
+  "worldTileSize": 32,
+  "sampling": "nearest",
+  "layerPhases": [
+    "ground",
+    "ground_variation",
+    "transitions",
+    "paths_floors",
+    "decals_details",
+    "props_back",
+    "props_front",
+    "vfx_weather_lighting"
+  ],
+  "districtIds": [
+    "central",
+    "rural",
+    "arena",
+    "commerce",
+    "gardens"
+  ],
+  "assets": [
+    {
+      "id": "justicia-fountain-v2",
+      "family": "plaza-fountain",
+      "version": "2.0.0",
+      "path": "assets/justicia_fountain_v2.PNG",
+      "kind": "landmark-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "padding": 0,
+      "spacing": 0,
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "anchor": {
+        "mode": "registry-instance"
+      },
+      "visualBounds": {
+        "mode": "asset"
+      },
+      "footprint": {
+        "mode": "registry-instance"
+      },
+      "collider": {
+        "mode": "registry-instance"
+      },
+      "ownership": "generic-props",
+      "layers": [
+        "props_front"
+      ],
+      "priority": 20,
+      "occlusion": {
+        "mode": "registry-instance"
+      },
+      "districtCompatibility": [
+        "central"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "502"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "cesped-ground-v1",
+      "family": "ground_grass",
+      "version": "1.0.0",
+      "path": "assets/cesped-runtime.PNG",
+      "kind": "ground-atlas",
+      "width": 160,
+      "height": 160,
+      "requireAlpha": false,
+      "sampling": "nearest",
+      "padding": 0,
+      "spacing": 0,
+      "frames": {
+        "mode": "grid",
+        "count": 25
+      },
+      "cellWidth": 32,
+      "cellHeight": 32,
+      "columns": 5,
+      "rows": 5,
+      "anchor": {
+        "mode": "tile-origin"
+      },
+      "visualBounds": {
+        "mode": "cell"
+      },
+      "footprint": {
+        "mode": "none"
+      },
+      "collider": {
+        "mode": "none"
+      },
+      "ownership": "surface-ground-v1",
+      "layers": [
+        "ground"
+      ],
+      "priority": 0,
+      "occlusion": {
+        "mode": "none"
+      },
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "501"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "arboleskelo1-atlas-v1",
+      "family": "plaza-nature",
+      "version": "1.0.0",
+      "path": "assets/Arboleskelo1.PNG",
+      "kind": "prop-atlas-irregular",
+      "width": 1536,
+      "height": 1024,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "padding": 0,
+      "spacing": 0,
+      "frames": {
+        "mode": "irregular",
+        "count": 17,
+        "metadata": "src/environment/generated/arboleskelo1-atlas.js"
+      },
+      "anchor": {
+        "mode": "registry-frame"
+      },
+      "visualBounds": {
+        "mode": "registry-frame"
+      },
+      "footprint": {
+        "mode": "registry-instance"
+      },
+      "collider": {
+        "mode": "registry-instance"
+      },
+      "ownership": "tile-registry",
+      "layers": [
+        "props_back",
+        "props_front"
+      ],
+      "priority": 10,
+      "occlusion": {
+        "mode": "registry-instance"
+      },
+      "districtCompatibility": [
+        "central"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "306"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-fountain-justice-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/fuente-de-la-justicia.png",
+      "kind": "standalone-prop",
+      "width": 1122,
+      "height": 1402,
+      "requireAlpha": false,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "601"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-compass-rose-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/rosa-de-los-vientos.png",
+      "kind": "standalone-decal",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": false,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "decals_details"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "602"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-ceremonial-platform-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/plataforma-ceremonial.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "603"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-curved-planter-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/jardinera-imperial-curva.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "604"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-banner-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/estandarte-imperial.png",
+      "kind": "standalone-prop",
+      "width": 1024,
+      "height": 1536,
+      "requireAlpha": false,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "605"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-lion-fountain-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/fuente-de-los-leones.png",
+      "kind": "standalone-prop",
+      "width": 1122,
+      "height": 1402,
+      "requireAlpha": false,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "606"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-podium-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/podio-imperial.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": false,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "607"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-kiosk-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/kiosco-imperial.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "608"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-obelisk-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/obelisco-imperial.png",
+      "kind": "standalone-prop",
+      "width": 1024,
+      "height": 1536,
+      "requireAlpha": false,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "609"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-staircase-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/escalinata-imperial.png",
+      "kind": "standalone-prop",
+      "width": 1448,
+      "height": 1086,
+      "requireAlpha": false,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "610"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-lamp-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/farola-imperial.png",
+      "kind": "standalone-prop",
+      "width": 1024,
+      "height": 1536,
+      "requireAlpha": false,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "611"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-topiary-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/topiario-imperial.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": false,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "612"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-farola-monumental-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/farola-monumental.png",
+      "kind": "standalone-prop",
+      "width": 1122,
+      "height": 1402,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "613"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-fuente-astral-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/fuente-astral.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "614"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-banco-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/banco-imperial.png",
+      "kind": "standalone-prop",
+      "width": 1448,
+      "height": 1086,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "615"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-cartelera-triple-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/cartelera-imperial-triple.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "616"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-escalinata-real-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/escalinata-real.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "617"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-brasero-azul-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/brasero-llama-azul.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "618"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-arbol-florido-blanco-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/arbol-florido-blanco.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "619"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-arbol-florido-azul-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/arbol-florido-azul.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "620"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-poste-direccional-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/poste-direccional.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "621"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-puente-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/puente-imperial.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "622"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-estatua-angel-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/estatua-angel.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "623"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-baldosa-laureada-diagonal-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/baldosa-laureada-diagonal.png",
+      "kind": "standalone-decal",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "decals_details"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "624"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-canal-cascadas-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/canal-cascadas.png",
+      "kind": "standalone-prop",
+      "width": 1448,
+      "height": 1086,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "625"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-baldosa-brujula-radial-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/baldosa-brujula-radial.png",
+      "kind": "standalone-decal",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "decals_details"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "626"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-baldosa-brujula-laureada-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/baldosa-brujula-laureada.png",
+      "kind": "standalone-decal",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "decals_details"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "627"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-baldosa-rosa-central-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/baldosa-rosa-central.png",
+      "kind": "standalone-decal",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "decals_details"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "628"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-jardinera-floral-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/jardinera-floral.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "629"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-arbol-sagrado-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/arbol-sagrado.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "630"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-arbol-redondo-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/arbol-redondo.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "631"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-tablon-misiones-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/tablon-misiones.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "632"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-baldosa-curva-laureada-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/baldosa-curva-laureada.png",
+      "kind": "standalone-decal",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "decals_details"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "633"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-baldosa-brujula-marco-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/baldosa-brujula-marco.png",
+      "kind": "standalone-decal",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "decals_details"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "634"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-cipres-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/cipres-imperial.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "635"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-fuente-estelar-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/fuente-estelar.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "636"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-baldosa-esquina-laureada-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/baldosa-esquina-laureada.png",
+      "kind": "standalone-decal",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "decals_details"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "637"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-cipres-espiral-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/cipres-espiral.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "638"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-arco-floral-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/arco-floral.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "639"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-baldosa-curva-interior-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/baldosa-curva-interior.png",
+      "kind": "standalone-decal",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "decals_details"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "640"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    },
+    {
+      "id": "imperial-carrito-mercado-v1",
+      "family": "imperial-plaza",
+      "version": "1.0.0",
+      "path": "assets/world/imperial-plaza/carrito-mercado.png",
+      "kind": "standalone-prop",
+      "width": 1254,
+      "height": 1254,
+      "requireAlpha": true,
+      "sampling": "nearest",
+      "frames": {
+        "mode": "single",
+        "count": 1
+      },
+      "ownership": "property-catalog",
+      "layers": [
+        "props_back"
+      ],
+      "districtCompatibility": [
+        "*"
+      ],
+      "cache": {
+        "strategy": "query",
+        "key": "art",
+        "value": "641"
+      },
+      "fallback": {
+        "mode": "none"
+      }
+    }
+  ]
+}

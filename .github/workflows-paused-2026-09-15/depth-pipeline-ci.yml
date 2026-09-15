@@ -1,0 +1,35 @@
+name: Depth Pipeline CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'engine-c.js'
+      - 'src/environment/environment-layer-stack.js'
+      - 'src/environment/prop-contract.js'
+      - 'src/environment/generic-props.js'
+      - 'src/environment/rural-ground.js'
+      - 'scripts/validate_depth_pipeline.py'
+      - '.github/workflows/depth-pipeline-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-depth-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate formal depth pipeline
+        run: python scripts/validate_depth_pipeline.py
+      - name: Syntax check environment JavaScript
+        run: |
+          node --check src/environment/environment-layer-stack.js
+          node --check src/environment/prop-contract.js
+          node --check src/environment/generic-props.js
+          node --check src/environment/rural-ground.js
+          node --check engine-c.js

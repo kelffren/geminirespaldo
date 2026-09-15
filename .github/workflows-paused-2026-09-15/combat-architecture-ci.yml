@@ -1,0 +1,40 @@
+name: Combat Architecture CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/core/events/**'
+      - 'src/core/kelo-runtime-bootstrap.js'
+      - 'src/systems/combat/**'
+      - 'src/systems/effects/**'
+      - 'src/systems/melee/**'
+      - 'src/systems/pvp-world.js'
+      - 'src/visuals/combat-presentation-bridge.js'
+      - 'src/visuals/melee-combat-visuals.js'
+      - 'src/ui/profile-panel-close.js'
+      - 'scripts/combat-architecture-audit.js'
+      - '.github/workflows/combat-architecture-ci.yml'
+  pull_request:
+    paths:
+      - 'src/core/events/**'
+      - 'src/core/kelo-runtime-bootstrap.js'
+      - 'src/systems/combat/**'
+      - 'src/systems/effects/**'
+      - 'src/systems/melee/**'
+      - 'src/systems/pvp-world.js'
+      - 'src/visuals/combat-presentation-bridge.js'
+      - 'src/visuals/melee-combat-visuals.js'
+      - 'src/ui/profile-panel-close.js'
+      - 'scripts/combat-architecture-audit.js'
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Audit reusable combat foundations
+        run: node scripts/combat-architecture-audit.js

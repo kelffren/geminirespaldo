@@ -1,0 +1,31 @@
+name: House LIVE enter smoke
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/house-live-smoke.yml'
+      - 'scripts/house-live-smoke.mjs'
+  workflow_dispatch:
+jobs:
+  live-house:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright
+        run: npm install --no-save playwright@1.55.0
+      - name: Click real House enter button on GitHub Pages
+        env:
+          LIVE_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/house-live-smoke.mjs
+      - name: Upload LIVE evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: house-live-smoke
+          path: artifacts/house-live-*
+          if-no-files-found: warn

@@ -1,0 +1,1 @@
+window.KELO_WORLD_DECORATION_RESET=true;

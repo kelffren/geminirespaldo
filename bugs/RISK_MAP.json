@@ -1,0 +1,76 @@
+{
+  "version": 2,
+  "description": "Risk rules used by bug:risk. Scores are additive and capped at 100.",
+  "rules": [
+    {
+      "id": "world-studio-ios",
+      "patterns": ["src/creators/workspaces/world-", "src/studio/", "src/ui/studio-launcher.js"],
+      "score": 24,
+      "reason": "World/Studio has critical mobile boot history and a large lazy module graph.",
+      "tests": ["npm run bug:brief -- BUG-0003", "npm run audit:studio", "npm run bug:impact -- src/creators/workspaces/world-workspace.mjs --depth=3", "real iPhone Create -> World -> interactive -> close/reopen"]
+    },
+    {
+      "id": "esm-loader-mobile",
+      "patterns": ["src/ui/studio-launcher.js", "src/creators/ui/creator-hub.mjs", "src/creators/workspaces/world-workspace.mjs", "src/studio/integration/live-studio-controller.mjs", "src/studio/studio-entry.mjs"],
+      "score": 18,
+      "reason": "These files orchestrate dynamic ESM loading in the mobile World path; regressions can appear as hangs, duplicate module state or Safari-only boot failures.",
+      "tests": ["npm run bug:brief -- BUG-0003", "npm run bug:impact -- src/studio/integration/live-studio-controller.mjs --depth=3", "real iPhone World open twice without reload"]
+    },
+    {
+      "id": "auth-session",
+      "patterns": ["src/auth/", "src/core/auth", "src/ui/login", "supabase"],
+      "score": 20,
+      "reason": "Authentication/session changes can block the entire player entry path.",
+      "tests": ["guest login smoke", "returning-session smoke"]
+    },
+    {
+      "id": "update-system",
+      "patterns": ["src/core/update-", "src/ui/update-ui.js", "sw.js", "scripts/turbo-"],
+      "score": 20,
+      "reason": "Updater/service-worker changes can affect every client and stale-cache recovery.",
+      "tests": ["npm run audit:updater", "npm run audit:turbo", "npm run build", "npm run audit:turbo-build"]
+    },
+    {
+      "id": "network-authority",
+      "patterns": ["src/net/", "src/online/", "authority", "supabase"],
+      "score": 18,
+      "reason": "Network/authority defects can corrupt multiplayer state or silently reject edits.",
+      "tests": ["npm run audit:online-foundation"]
+    },
+    {
+      "id": "render-loop",
+      "patterns": ["src/render/", "src/visuals/", "canvas", "renderer", "src/studio/render/"],
+      "score": 15,
+      "reason": "Render/canvas changes can create device-specific crashes, memory pressure or frame stalls.",
+      "tests": ["npm run audit:performance", "mobile visual smoke"]
+    },
+    {
+      "id": "asset-memory-pressure",
+      "patterns": ["assets/", "spritesheet", "atlas", "tileset", "src/assets/", "src/studio/assets/"],
+      "score": 10,
+      "reason": "Large or duplicated assets can increase decode/GPU/WebContent memory and trigger mobile-only instability.",
+      "tests": ["npm run audit:performance", "cold mobile load", "repeat open/close smoke while watching memory symptoms"]
+    },
+    {
+      "id": "pvp-combat",
+      "patterns": ["src/pvp/", "src/combat/", "src/abilities/", "arena"],
+      "score": 16,
+      "reason": "Combat changes have high player-facing regression cost and timing sensitivity.",
+      "tests": ["npm run audit:arena", "npm run audit:pvp-facing"]
+    },
+    {
+      "id": "persistence",
+      "patterns": ["indexeddb", "storage", "save", "draft"],
+      "score": 14,
+      "reason": "Persistence changes can block boot or lose player/editor state.",
+      "tests": ["save/reload/reopen smoke"]
+    },
+    {
+      "id": "critical-shell",
+      "patterns": ["index.html", "sw.js", "package.json"],
+      "score": 10,
+      "reason": "Critical boot/build surface changed.",
+      "tests": ["npm test", "npm run build"]
+    }
+  ]
+}

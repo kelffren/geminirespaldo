@@ -1,0 +1,57 @@
+name: Install Admin Key World Creator V1
+on:
+  push:
+    branches: [ feature/admin-key-world-editor-v1 ]
+    paths:
+      - '.github/workflows/install-admin-key-v1.yml'
+      - 'scripts/integrate-admin-key-v1.py'
+      - 'scripts/admin-key-browser-audit.mjs'
+      - 'src/systems/admin-key-system.js'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  integrate-and-certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Integrate Admin Key with current editor
+        run: python3 scripts/integrate-admin-key-v1.py
+      - name: Syntax and regression checks
+        run: |
+          node --check src/systems/admin-key-system.js
+          node --check src/ui/property-editor.js
+          node --check scripts/admin-key-browser-audit.mjs
+          node scripts/property-editor-audit.js
+      - name: Install Playwright
+        run: npm install --no-save playwright@1.55.0
+      - name: Serve candidate locally
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/admin-key-http.log 2>&1 &
+          for i in {1..20}; do curl -fsS http://127.0.0.1:8000/index.html >/dev/null && exit 0; sleep 1; done
+          cat /tmp/admin-key-http.log
+          exit 1
+      - name: Certify normal player vs Admin Key creator
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/admin-key-browser-audit.mjs
+      - name: Commit certified integration
+        run: |
+          git config user.name kelo-admin-key-bot
+          git config user.email 68343904+kelffren@users.noreply.github.com
+          git add -- src/ui/property-editor.js index.html docs/CODE_INDEX.md ENGINE_MAP.md
+          git diff --cached --quiet && exit 0
+          git commit -m 'Integrate Admin Key gated world editor'
+          git push
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-key-world-editor-audit
+          path: artifacts/admin-key-*
+          if-no-files-found: warn

@@ -1,0 +1,28 @@
+name: Merge visual memory note
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/VISUAL_DIRECTION_MEMORY_PENDING.md'
+permissions:
+  contents: write
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Append validated note
+        run: |
+          if [ ! -f docs/VISUAL_DIRECTION_MEMORY_PENDING.md ]; then
+            echo 'No pending note; nothing to merge.'
+            exit 0
+          fi
+          cat docs/VISUAL_DIRECTION_MEMORY_PENDING.md >> docs/VISUAL_DIRECTION_MEMORY.md
+          rm docs/VISUAL_DIRECTION_MEMORY_PENDING.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/VISUAL_DIRECTION_MEMORY.md docs/VISUAL_DIRECTION_MEMORY_PENDING.md
+          git commit -m 'docs(visual): record validated placement gate'
+          git push

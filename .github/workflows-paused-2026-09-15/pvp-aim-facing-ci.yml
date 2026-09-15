@@ -1,0 +1,68 @@
+name: PvP Aim Facing CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'engine-ac.js'
+      - 'src/characters/character-appearance.js'
+      - 'src/abilities/**'
+      - 'src/core/kelo-runtime-bootstrap.js'
+      - 'src/systems/pvp-world.js'
+      - 'src/systems/pvp-combat-runtime-loader.js'
+      - 'src/systems/pvp-ability-movement-prediction.js'
+      - 'src/systems/melee/melee-weapon-profiles.js'
+      - 'src/ui/player-nameplate.js'
+      - 'scripts/pvp-aim-facing-audit.js'
+      - 'scripts/movement-onset-audit.js'
+      - 'scripts/pixel-phase-audit.js'
+      - 'scripts/audit-pvp-follow-recovery.js'
+      - 'scripts/audit-pvp-cast-movement-parity.js'
+      - 'scripts/nameplate-avatar-anchor-audit.js'
+      - 'package.json'
+      - '.github/workflows/pvp-aim-facing-ci.yml'
+  pull_request:
+    paths:
+      - 'engine-ac.js'
+      - 'src/characters/character-appearance.js'
+      - 'src/abilities/**'
+      - 'src/core/kelo-runtime-bootstrap.js'
+      - 'src/systems/pvp-world.js'
+      - 'src/systems/pvp-combat-runtime-loader.js'
+      - 'src/systems/pvp-ability-movement-prediction.js'
+      - 'src/systems/melee/melee-weapon-profiles.js'
+      - 'src/ui/player-nameplate.js'
+      - 'scripts/pvp-aim-facing-audit.js'
+      - 'scripts/movement-onset-audit.js'
+      - 'scripts/pixel-phase-audit.js'
+      - 'scripts/audit-pvp-follow-recovery.js'
+      - 'scripts/audit-pvp-cast-movement-parity.js'
+      - 'scripts/nameplate-avatar-anchor-audit.js'
+      - 'package.json'
+      - '.github/workflows/pvp-aim-facing-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify independent movement and PvP aim-facing
+        run: npm run audit:pvp-facing
+      - name: Measure idle-to-movement step-off
+        run: node scripts/movement-onset-audit.js
+      - name: Measure avatar screen pixel phase
+        run: node scripts/pixel-phase-audit.js
+      - name: Measure light combo recovery mobility
+        run: node scripts/audit-pvp-follow-recovery.js
+      - name: Verify ability cast movement client-server parity at 60/90/120 Hz
+        run: node scripts/audit-pvp-cast-movement-parity.js
+      - name: Verify avatar semantic nameplate anchoring
+        run: node scripts/nameplate-avatar-anchor-audit.js
+      - name: Verify Foundation architecture
+        run: npm run audit:foundation

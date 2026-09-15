@@ -1,0 +1,59 @@
+name: Compile Forest Plaza Tileset
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'assets/world/plaza/forest-plaza-tileset-v2.png'
+      - 'scripts/compile-forest-plaza-tileset.mjs'
+      - '.github/workflows/forest-plaza-tileset-compile.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kelo-forest-plaza-compile
+  cancel-in-progress: false
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install project dependencies without lockfile
+        run: npm install --no-package-lock
+      - run: npx playwright install --with-deps chromium
+      - name: Process with Kelo Asset Sheet Compiler
+        run: node scripts/compile-forest-plaza-tileset.mjs assets/world/plaza/forest-plaza-tileset-v2.png src/environment/generated/forest-plaza-tileset-v2-manifest.json src/environment/generated/forest-plaza-tileset-v2-manifest.js
+      - name: Validate compiled integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          node -e "const m=require('./src/environment/generated/forest-plaza-tileset-v2-manifest.json'); if(m.kind!=='kelo-asset-sheet-manifest'||!Array.isArray(m.assets)||m.assets.length<1) process.exit(1); console.log('FOREST_PLAZA_COMPILED_ASSETS='+m.assets.length)"
+          grep -q 'forest-plaza-tileset-v2-manifest.js' index.html
+          grep -q 'forest-plaza-asset-catalog.js' index.html
+      - name: Commit compiled manifest and runtime wiring
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'kelo-asset-compiler-bot'
+          git config user.email '68343904+kelffren@users.noreply.github.com'
+          git add src/environment/generated/forest-plaza-tileset-v2-manifest.json src/environment/generated/forest-plaza-tileset-v2-manifest.js index.html
+          if git diff --cached --quiet; then
+            echo 'Compiler output already current.'
+            exit 0
+          fi
+          git commit -m 'asset: compile forest plaza tileset manifest'
+          for attempt in 1 2 3 4 5 6; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep $((attempt * 2))
+          done
+          echo 'Unable to publish compiled manifest after retries.' >&2
+          exit 1

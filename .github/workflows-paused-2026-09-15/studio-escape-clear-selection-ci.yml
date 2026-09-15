@@ -1,0 +1,27 @@
+name: Studio Escape Clear Selection CI
+
+on:
+  pull_request:
+    paths:
+      - 'src/studio/input/studio-select-all-controller.mjs'
+      - 'scripts/studio-escape-clear-selection-audit.mjs'
+      - '.github/workflows/studio-escape-clear-selection-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/studio/input/studio-select-all-controller.mjs'
+      - 'scripts/studio-escape-clear-selection-audit.mjs'
+      - '.github/workflows/studio-escape-clear-selection-ci.yml'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax check
+        run: node --check src/studio/input/studio-select-all-controller.mjs
+      - name: Escape clear-selection contract
+        run: node scripts/studio-escape-clear-selection-audit.mjs

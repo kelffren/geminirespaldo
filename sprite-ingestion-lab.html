@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Kelo Universal Sprite Ingestion — Adversarial Lab</title>
+  <style>
+    :root{color-scheme:dark;font-family:Inter,system-ui,sans-serif;background:#08090c;color:#f5f1e7}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -20%,#242117,#08090c 42%);min-height:100vh}.wrap{width:min(1180px,100%);margin:auto;padding:26px 18px 70px}header{display:flex;gap:18px;align-items:flex-end;justify-content:space-between;border-bottom:1px solid #292b31;padding-bottom:18px}h1{font-size:clamp(28px,5vw,54px);line-height:.95;margin:5px 0}.eyebrow{color:#d7b45d;font-size:11px;font-weight:900;letter-spacing:.17em}.status{border:1px solid #3a3d45;border-radius:999px;padding:9px 13px;color:#b4b7bd;font-size:12px;font-weight:800}.status.good{color:#87dda8;border-color:#28553b}.status.bad{color:#ff9696;border-color:#713838}.summary{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.score{background:#101218;border:1px solid #292d34;border-radius:14px;padding:12px;text-align:center}.score b{display:block;color:#8ce0ad;font-size:22px}.score span{display:block;color:#898d95;font-size:9px;margin-top:4px;font-weight:850}.stage{margin:12px 0;color:#a8acb4;font-size:13px}.compare{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}.panel{background:#0e1014;border:1px solid #2a2d34;border-radius:18px;overflow:hidden}.panel h2{font-size:12px;letter-spacing:.08em;margin:0;padding:12px 14px;border-bottom:1px solid #292d34}.checker{min-height:360px;display:grid;place-items:center;padding:14px;background-color:#111318;background-image:linear-gradient(45deg,#1d2026 25%,transparent 25%),linear-gradient(-45deg,#1d2026 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1d2026 75%),linear-gradient(-45deg,transparent 75%,#1d2026 75%);background-size:18px 18px;background-position:0 0,0 9px,9px -9px,-9px 0}.checker canvas{max-width:100%;max-height:420px;image-rendering:auto}.direction-row{display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px}.direction-row button,.filters button{border:1px solid #353942;background:#12151b;color:#ddd;border-radius:999px;padding:7px 10px;font-weight:850}.direction-row button.on,.filters button.on{border-color:#d1ae58;color:#e5c873;background:#211d13}.case-title{font-size:14px;font-weight:850;margin:4px 0}.case-meta{color:#989ca4;font-size:11px}.filters{display:flex;gap:7px;flex-wrap:wrap;margin:18px 0}.cases{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:9px}.case{background:#101218;border:1px solid #292d34;border-radius:14px;padding:11px;text-align:left;color:#e4e1d9}.case.good{border-color:#28553b}.case.bad{border-color:#713838}.case.review{border-color:#66552a}.case .line{display:flex;justify-content:space-between;gap:10px}.case small{display:block;color:#91959d;margin-top:5px}.case strong{font-size:11px}.case.good strong{color:#8ce0ad}.case.bad strong{color:#ff9696}.case.review strong{color:#efcf7b}@media(max-width:900px){.compare{grid-template-columns:1fr 1fr}.panel:last-child{grid-column:1/-1}}@media(max-width:760px){.summary{grid-template-columns:repeat(2,1fr)}.compare{grid-template-columns:1fr}.panel:last-child{grid-column:auto}.checker{min-height:280px}header{display:block}.status{display:inline-block;margin-top:10px}}
+  .upload{margin:18px 0;padding-bottom:14px}.upload h2{margin:0;padding:12px 14px;border-bottom:1px solid #292d34;font-size:12px;letter-spacing:.08em}.upload-zone{margin:14px;min-height:112px;border:1px dashed #806c38;border-radius:14px;display:grid;place-items:center;align-content:center;gap:7px;cursor:pointer;background:#15130e;text-align:center}.upload-zone:hover,.upload-zone.drag{border-color:#e5c873;background:#211d13}.upload-zone strong{color:#e5c873;font-size:18px}.upload-zone span{color:#aaa49a;font-size:12px}.upload-zone input{display:none}.upload-result{padding:0 14px;color:#a8acb4;font-size:12px;white-space:pre-wrap}.upload-result.good{color:#8ce0ad}.upload-result.review{color:#efcf7b}.upload-result.bad{color:#ff9696}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header><div><div class="eyebrow">KELO UNIVERSAL SPRITE INGESTION</div><h1>Adversarial Lab</h1><div class="case-meta">Corpus reproducible · GOOD / IRREGULAR / EXTREME · original conservado</div></div><div id="status" class="status">PREPARANDO…</div></header>
+    <section id="summary" class="summary"></section>
+    <div id="stage" class="stage">Cargando sprites válidos…</div>
+    <section class="upload panel">
+      <h2>SUBE TU PROPIO SPRITE</h2>
+      <label id="upload-zone" class="upload-zone" for="sprite-file">
+        <input id="sprite-file" type="file" accept="image/png,image/webp,image/jpeg">
+        <strong>＋ SUBIR SPRITE</strong>
+        <span>Arrastra aquí tu PNG/WebP/JPG · Kelo lo analiza automáticamente</span>
+      </label>
+      <div id="upload-result" class="upload-result">Ningún archivo propio analizado todavía.</div>
+    </section>
+    <section class="compare">
+      <article class="panel"><h2>BEFORE · INPUT IRREGULAR</h2><div id="before" class="checker"></div></article>
+      <article class="panel"><h2>AFTER · RUNTIME REAL</h2><div id="after" class="checker"></div><div id="directions" class="direction-row"></div></article>
+      <article class="panel"><h2>IN-GAME · KELOAVATAR MIDDLEWARE</h2><div class="checker"><canvas id="game-canvas" width="380" height="360"></canvas></div></article>
+    </section>
+    <div><div id="case-title" class="case-title">Esperando corpus…</div><div id="case-meta" class="case-meta"></div></div>
+    <nav id="filters" class="filters"></nav>
+    <section id="cases" class="cases"></section>
+  </main>
+  <script type="module" src="./scripts/sprite-ingestion-adversarial-lab.mjs"></script>
+</body>
+</html>

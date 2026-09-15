@@ -1,0 +1,10 @@
+## Validated Gardens stepping-stone recovery v13 — 2026-09-03
+
+- `STEPPING_STONES` at Gardens local `[11,16]` was confirmed declared-but-invisible because that cell resolves inside the main vertical ivory road and `world-map.js` intentionally suppresses Gardens overlays on road cells.
+- The authored accent was relocated to local `[9,16]`, immediately west on valid grass, while preserving the second stepping-stone placement, the 10 fixed placements, 41 declared cells, all navigation geometry, landmark clearance, collision, movement and gameplay.
+- `gardens-compositions` is now `v13`, mode `registry-authored-garden-compositions-v13`, with `navigationConflictFixCount=13` and `relocatedSteppingStoneAnchor=[9,16]`.
+- LIVE QA exposed stale audit assumptions rather than a renderer regression: the old Gardens audit expected the historical joins atlas mode/width while runtime correctly uses `gardens-joins-v3`, `authored-garden-endcaps-mid-variants-v3`, 288×32 with 9 columns. The audit now derives join/composition contracts from source and validates atlas geometry structurally instead of pinning obsolete dimensions.
+- Validation passed on mobile LIVE at 390×844 CSS / 780×1688 canvas. `Live mobile screenshot audit` run `33825667304` passed Gardens plus world, district decals, Rural, Plaza NPCs, Luxe architecture, fountain and Nobility checks. Gardens report recorded `consoleErrors=[]`, `failedRequests=[]`, `httpErrors=[]`.
+- GitHub Pages run `33825666086` and Kelo CI run `33825667258` both completed successfully for the validated gate.
+- Visual inspection of `live-gardens-marble.png` confirmed the recovered pale stepping-stone accent is readable on grass beside the ivory circulation without creating a seam, obstruction or competing focal point.
+- Next visual bottleneck: the authored-placement visibility audit should be generalized into a registry-level `declared -> renderable` validator for all Gardens placements, rather than discovering road/landmark conflicts one placement at a time.

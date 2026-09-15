@@ -1,0 +1,35 @@
+name: Audit Arboleskelo1 irregular atlas LIVE
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/audit-irregular-atlas-live.yml'
+      - 'scripts/live-irregular-atlas-audit.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for Pages
+        run: sleep 70
+      - name: Install Playwright
+        run: npm install playwright
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Audit LIVE mobile and irregular atlas
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+        run: node scripts/live-irregular-atlas-audit.mjs
+      - name: Upload audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: irregular-atlas-live-audit
+          path: artifacts/
+          if-no-files-found: error

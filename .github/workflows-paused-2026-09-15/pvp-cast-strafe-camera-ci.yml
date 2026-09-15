@@ -1,0 +1,64 @@
+name: PvP Cast Strafe Camera CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/core/camera-system.js'
+      - 'scripts/live-pvp-cast-strafe-camera-judge.mjs'
+      - 'scripts/audit-pvp-cast-strafe-camera-timing.mjs'
+      - '.github/workflows/pvp-cast-strafe-camera-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live-mobile-desktop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm install --no-audit --no-fund
+      - name: Cast-to-strafe 60/90/120 A/B timing audit
+        run: node scripts/audit-pvp-cast-strafe-camera-timing.mjs
+      - run: npx playwright install --with-deps chromium
+      - name: Serve checkout
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/kelo-http.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/ >/dev/null && exit 0; sleep 1; done
+          cat /tmp/kelo-http.log; exit 1
+      - name: Cast to opposite strafe Chromium judge
+        id: judge
+        continue-on-error: true
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+          CAST_STRAFE_CAMERA_STRICT: '1'
+        run: |
+          set +e
+          node scripts/live-pvp-cast-strafe-camera-judge.mjs
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          node - <<'NODE' >> "$GITHUB_OUTPUT"
+          const fs=require('fs');
+          const p='artifacts/pvp-cast-strafe-camera-live/report.json';
+          if(!fs.existsSync(p)){console.log('metrics=no-report');process.exit(0)}
+          const r=JSON.parse(fs.readFileSync(p,'utf8'));
+          const safe=n=>Number.isFinite(Number(n))?Number(n).toFixed(1).replace('.','p'):'na';
+          const parts=r.runs.map(x=>`${x.label==='mobile-landscape'?'m':'d'}s${safe(x.settleMs)}-j${safe(x.maxStep)}-t${safe(x.travel)}`);
+          console.log('metrics='+parts.join('_'));
+          NODE
+          exit 0
+      - name: Foundation architecture
+        run: npm run audit:foundation
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pvp-cast-strafe-${{ steps.judge.outputs.metrics || 'no-metrics' }}
+          path: artifacts/pvp-cast-strafe-camera-live/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Enforce browser verdict
+        if: always()
+        run: |
+          test "${{ steps.judge.outputs.exit_code }}" = "0"

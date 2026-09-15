@@ -1,0 +1,73 @@
+name: Kelo Studio LIVE audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/studio/**'
+      - 'src/creators/**'
+      - 'src/ui/studio-launcher.js'
+      - 'src/core/input-lock-system.js'
+      - 'src/core/input-system.js'
+      - 'src/core/camera-system.js'
+      - 'index.html'
+      - 'scripts/studio-live-audit.mjs'
+      - 'scripts/studio-smart-duplicate-placement-audit.mjs'
+      - '.github/workflows/studio-live-audit.yml'
+  pull_request:
+    paths:
+      - 'src/studio/**'
+      - 'src/creators/**'
+      - 'src/ui/studio-launcher.js'
+      - 'src/core/input-lock-system.js'
+      - 'src/core/input-system.js'
+      - 'src/core/camera-system.js'
+      - 'index.html'
+      - 'scripts/studio-live-audit.mjs'
+      - 'scripts/studio-smart-duplicate-placement-audit.mjs'
+      - '.github/workflows/studio-live-audit.yml'
+  workflow_dispatch:
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax
+        run: |
+          node --check scripts/studio-live-audit.mjs
+          node --check scripts/studio-smart-duplicate-placement-audit.mjs
+          node --check src/studio/tools/creator-actions.mjs
+      - name: Smart duplicate placement contract
+        run: node scripts/studio-smart-duplicate-placement-audit.mjs
+      - name: Install Playwright
+        run: npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund playwright@1.55.0
+      - name: Serve PR candidate
+        if: github.event_name == 'pull_request'
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 >/tmp/studio-live-http.log 2>&1 &
+          for i in {1..20}; do curl -fsS http://127.0.0.1:8000/index.html >/dev/null && exit 0; sleep 1; done
+          cat /tmp/studio-live-http.log
+          exit 1
+      - name: Audit PR candidate Kelo Studio vertical slice
+        if: github.event_name == 'pull_request'
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/studio-live-audit.mjs
+      - name: Audit deployed Kelo Studio vertical slice
+        if: github.event_name != 'pull_request'
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/studio-live-audit.mjs
+      - name: Upload Studio LIVE evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: studio-live-audit
+          path: artifacts/
+          if-no-files-found: warn

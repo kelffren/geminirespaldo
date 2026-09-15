@@ -1,0 +1,134 @@
+name: Live mobile screenshot audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'engine-*.js'
+      - 'src/environment/**'
+      - 'src/ui/**'
+      - 'src/systems/**'
+      - 'assets/**/*.png'
+      - 'assets/**/*.PNG'
+      - 'scripts/live-*.mjs'
+      - 'scripts/input-repair-audit.mjs'
+      - 'scripts/kelo-hub-audit.mjs'
+      - 'scripts/png-validation-core.mjs'
+      - 'scripts/validate-png-pipeline.mjs'
+      - 'scripts/test-png-validation.mjs'
+      - '.github/workflows/live-audit.yml'
+
+concurrency:
+  group: live-mobile-audit-main
+  cancel-in-progress: true
+
+jobs:
+  audit-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright package
+        run: npm install --no-save playwright@1.55.0
+      - name: Audit repaired mobile input path
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: |
+          mkdir -p artifacts
+          python3 -m http.server 4173 >/tmp/kelo-input-audit-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 0.25
+          done
+          set -o pipefail
+          AUDIT_URL='http://127.0.0.1:4173/?offline=1&qa-live-audit=1' node scripts/input-repair-audit.mjs 2>&1 | tee artifacts/input-repair-audit.log
+      - name: Audit Kelo Hub and collapsible chat
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: |
+          python3 -m http.server 4173 >/tmp/kelo-hub-audit-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 0.25
+          done
+          AUDIT_URL='http://127.0.0.1:4173/?offline=1&qa-live-audit=1' node scripts/kelo-hub-audit.mjs
+      - name: Detect world decoration mode
+        id: mode
+        run: |
+          if grep -q 'const DECORATION_RESET=true;' src/environment/environment-layer-stack.js; then
+            echo 'blank=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'blank=false' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Audit legacy render hot path on LIVE
+        # World-render audits intentionally use the public offline QA override so the
+        # permanent account gate remains intact while renderer/gameplay presentation is inspected.
+        env: &liveenv
+          AUDIT_URL: https://kelffren.github.io/gemini/?offline=1&qa-live-audit=1
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/live-render-hotpath-audit.mjs
+      - name: Audit live hero sprite on mobile and desktop
+        # live-hero-audit appends its own query marker with '?', so a trailing '&'
+        # keeps the QA auth flags intact instead of merging them into that marker.
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/?offline=1&qa-live-audit=1&
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/live-hero-audit.mjs
+      - name: Prove deployed mobile game is playable with real touch
+        env: *liveenv
+        run: node scripts/live-playability-audit.mjs
+      - name: Audit blank world reset
+        if: steps.mode.outputs.blank == 'true'
+        env: *liveenv
+        run: node scripts/live-blank-world-audit.mjs
+      - name: Audit current authored mobile world
+        if: steps.mode.outputs.blank != 'true'
+        env: *liveenv
+        run: node scripts/live-world-audit-v2.mjs
+      - name: Audit environment layer spatial conflicts
+        if: steps.mode.outputs.blank != 'true'
+        env: *liveenv
+        run: node scripts/live-layer-spatial-audit.mjs
+      - name: Audit Gardens marble cadence
+        if: steps.mode.outputs.blank != 'true'
+        env: *liveenv
+        run: node scripts/live-gardens-audit.mjs
+      - name: Audit authored district microdecals
+        if: steps.mode.outputs.blank != 'true'
+        env: *liveenv
+        run: node scripts/live-district-decals-audit.mjs
+      - name: Audit authored rural edge density
+        if: steps.mode.outputs.blank != 'true'
+        env: *liveenv
+        run: node scripts/live-rural-audit.mjs
+      - name: Audit authored Plaza NPCs
+        if: steps.mode.outputs.blank != 'true'
+        env: *liveenv
+        run: node scripts/live-npc-audit.mjs
+      - name: Audit authored Luxe architecture
+        if: steps.mode.outputs.blank != 'true'
+        env: *liveenv
+        run: node scripts/live-pavilion-audit.mjs
+      - name: Audit layered plaza fountain
+        if: steps.mode.outputs.blank != 'true'
+        env: *liveenv
+        run: node scripts/live-fountain-audit.mjs
+      - name: Audit nobility donation progression
+        env: *liveenv
+        run: node scripts/live-nobility-audit.mjs
+      - name: Upload screenshot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-mobile-audit
+          path: artifacts/
+          if-no-files-found: error

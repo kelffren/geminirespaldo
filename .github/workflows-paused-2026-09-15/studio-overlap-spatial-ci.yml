@@ -1,0 +1,35 @@
+name: Studio Overlap Spatial CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/studio/core/studio-kernel.mjs'
+      - 'src/studio/input/studio-overlap-cycle-controller.mjs'
+      - 'src/studio/spatial/spatial-chunk-index.mjs'
+      - 'scripts/studio-overlap-spatial-audit.mjs'
+      - 'scripts/studio-batch-spatial-sync-audit.mjs'
+      - '.github/workflows/studio-overlap-spatial-ci.yml'
+  pull_request:
+    paths:
+      - 'src/studio/core/studio-kernel.mjs'
+      - 'src/studio/input/studio-overlap-cycle-controller.mjs'
+      - 'src/studio/spatial/spatial-chunk-index.mjs'
+      - 'scripts/studio-overlap-spatial-audit.mjs'
+      - 'scripts/studio-batch-spatial-sync-audit.mjs'
+      - '.github/workflows/studio-overlap-spatial-ci.yml'
+
+jobs:
+  overlap-spatial:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax
+        run: node --check src/studio/core/studio-kernel.mjs && node --check src/studio/input/studio-overlap-cycle-controller.mjs && node --check scripts/studio-overlap-spatial-audit.mjs && node --check scripts/studio-batch-spatial-sync-audit.mjs
+      - name: Spatial overlap audit
+        run: node scripts/studio-overlap-spatial-audit.mjs
+      - name: Batch spatial sync audit
+        run: node scripts/studio-batch-spatial-sync-audit.mjs

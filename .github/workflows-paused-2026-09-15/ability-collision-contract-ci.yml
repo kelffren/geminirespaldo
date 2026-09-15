@@ -1,0 +1,63 @@
+name: Ability Collision Contracts
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'engine-a.js'
+      - 'engine-c.js'
+      - 'index.html'
+      - 'src/physics/**'
+      - 'src/abilities/**'
+      - 'src/environment/generic-props.js'
+      - 'src/environment/world-builder-system.js'
+      - 'src/property/property-system.js'
+      - 'src/visuals/ability-visuals.js'
+      - 'scripts/validate-ability-runtime-contract.mjs'
+      - 'scripts/validate-collision-contract.mjs'
+      - 'tests/stone-system.spec.js'
+      - '.github/workflows/ability-collision-contract-ci.yml'
+  pull_request:
+    paths:
+      - 'engine-a.js'
+      - 'engine-c.js'
+      - 'index.html'
+      - 'src/physics/**'
+      - 'src/abilities/**'
+      - 'src/environment/generic-props.js'
+      - 'src/environment/world-builder-system.js'
+      - 'src/property/property-system.js'
+      - 'src/visuals/ability-visuals.js'
+      - 'scripts/validate-ability-runtime-contract.mjs'
+      - 'scripts/validate-collision-contract.mjs'
+      - 'tests/stone-system.spec.js'
+      - '.github/workflows/ability-collision-contract-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and deterministic contracts
+        run: |
+          node --check engine-a.js
+          node --check engine-c.js
+          node --check src/physics/collision-utils.js
+          node --check src/abilities/abilityData.js
+          node --check src/abilities/stone-system.js
+          node --check src/abilities/kelo-ability-boot.js
+          node --check src/environment/generic-props.js
+          node --check src/environment/world-builder-system.js
+          node --check src/property/property-system.js
+          node --check src/visuals/ability-visuals.js
+          node --check scripts/validate-ability-runtime-contract.mjs
+          node --check scripts/validate-collision-contract.mjs
+          node scripts/validate-ability-runtime-contract.mjs
+          node scripts/validate-collision-contract.mjs
+      - name: Stone regression tests
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright test tests/stone-system.spec.js

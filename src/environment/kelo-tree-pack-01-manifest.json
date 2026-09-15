@@ -1,0 +1,34 @@
+{
+  "version": "kelo-tree-pack-01-v1",
+  "category": "nature",
+  "sourceAtlas": { "width": 1448, "height": 1086 },
+  "processing": {
+    "alphaThreshold": 8,
+    "trim": "connected-components",
+    "padding": 12,
+    "resample": "none",
+    "compression": "png-optimize-9",
+    "anchor": "bottom-center"
+  },
+  "runtime": {
+    "catalog": "KELO_PROPERTY_CATALOG",
+    "catalogVersion": "property-asset-catalog-v1.4.0",
+    "family": "kelo-tree-pack-01",
+    "phase": "props_back",
+    "collisionPolicy": "trunk-footprint-only"
+  },
+  "items": [
+    {"id":"tree:oak-round-green","file":"tree-oak-round-green.png","native":[364,361],"display":[128,128],"collision":{"x":48,"y":104,"w":32,"h":24}},
+    {"id":"tree:pine-tall-evergreen","file":"tree-pine-tall-evergreen.png","native":[234,372],"display":[88,144],"collision":{"x":32,"y":120,"w":24,"h":24}},
+    {"id":"tree:oak-broad-green","file":"tree-oak-broad-green.png","native":[351,366],"display":[120,128],"collision":{"x":44,"y":104,"w":32,"h":24}},
+    {"id":"tree:cherry-blossom-pink","file":"tree-cherry-blossom-pink.png","native":[347,362],"display":[120,128],"collision":{"x":44,"y":104,"w":32,"h":24}},
+    {"id":"tree:oak-autumn-orange","file":"tree-oak-autumn-orange.png","native":[349,362],"display":[120,128],"collision":{"x":44,"y":104,"w":32,"h":24}},
+    {"id":"tree:birch-green","file":"tree-birch-green.png","native":[290,356],"display":[104,128],"collision":{"x":36,"y":104,"w":32,"h":24}},
+    {"id":"tree:willow-weeping","file":"tree-willow-weeping.png","native":[365,353],"display":[128,128],"collision":{"x":48,"y":104,"w":32,"h":24}},
+    {"id":"tree:apple-red","file":"tree-apple-red.png","native":[335,360],"display":[120,128],"collision":{"x":44,"y":104,"w":32,"h":24}},
+    {"id":"tree:oak-dense-dark","file":"tree-oak-dense-dark.png","native":[367,363],"display":[128,128],"collision":{"x":48,"y":104,"w":32,"h":24}},
+    {"id":"tree:pine-snow","file":"tree-pine-snow.png","native":[275,364],"display":[96,128],"collision":{"x":36,"y":104,"w":24,"h":24}},
+    {"id":"tree:dead-gnarled","file":"tree-dead-gnarled.png","native":[339,356],"display":[120,128],"collision":{"x":44,"y":104,"w":32,"h":24}},
+    {"id":"tree:canopy-light-green","file":"tree-canopy-light-green.png","native":[346,367],"display":[120,128],"collision":{"x":44,"y":104,"w":32,"h":24}}
+  ]
+}

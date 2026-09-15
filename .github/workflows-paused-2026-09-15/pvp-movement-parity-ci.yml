@@ -1,0 +1,26 @@
+name: PvP Movement Parity CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/core/movement-profile.js'
+      - 'engine-ac.js'
+      - 'server/pvp-authority.js'
+      - 'index.html'
+      - 'scripts/pvp-movement-parity-audit.js'
+      - '.github/workflows/pvp-movement-parity-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify shared client-server movement contract
+        run: node scripts/pvp-movement-parity-audit.js
+      - name: Verify Foundation architecture
+        run: npm run audit:foundation

@@ -1,0 +1,87 @@
+name: Kelo Legacy Observatory
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [legacy-observatory, 'legacy-shadow-*', 'legacy-phase*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  legacy-observatory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run legacy census
+        run: node scripts/legacy-observatory.mjs
+
+      - name: Enforce migration activation gate
+        run: node scripts/legacy-migration-gate.mjs
+
+      - name: Verify farm shadow safety
+        run: node scripts/simulation-farm-shadow-audit.mjs
+
+      - name: Verify camera follow shadow safety
+        run: node scripts/camera-follow-shadow-audit.mjs
+
+      - name: Verify collision owner migration
+        run: node scripts/collision-owner-migration-audit.mjs
+
+      - name: Verify simulation owner migration
+        run: node scripts/simulation-owner-migration-audit.mjs
+
+      - name: Verify player vitals owner migration
+        run: node scripts/player-state-owner-migration-audit.mjs
+
+      - name: Verify render owner migration
+        run: node scripts/render-owner-migration-audit.mjs
+
+      - name: Verify player position shadow safety
+        run: node scripts/player-position-shadow-audit.mjs
+
+      - name: Verify player position transition owner
+        run: node scripts/player-position-transition-audit.mjs
+
+      - name: Syntax-check migration runtimes
+        run: |
+          node --check src/core/player-state-system.js
+          node --check src/core/player-position-system.js
+          node --check src/systems/combat/damage-resolver.js
+          node --check src/core/render-extension-system.js
+          node --check src/environment/gardens-landmark.js
+          node --check src/core/simulation-extension-system.js
+          node --check src/core/simulation-farm-shadow.js
+          node --check src/core/camera-follow-shadow.js
+          node --check src/core/player-position-shadow.js
+          node --check src/instances/instance-runtime-bridge.js
+          node --check src/instances/market-instance.js
+          node --check src/ui/builder-parcel-meta.js
+          node --check src/ui/builder-ux-v2.js
+          node --check src/environment/generic-prefabs.js
+          node --check src/environment/luxe-kiosk-atlas.js
+          node --check engine-c.js
+          node --check engine-ae.js
+          node --check engine-aj.js
+          node --check engine-l.js
+
+      - name: Upload observatory report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-observatory-report
+          path: artifacts/legacy-observatory/
+          if-no-files-found: warn
+          retention-days: 14

@@ -1,0 +1,45 @@
+name: Sync complete Plaza tree frame metadata
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/sync-plaza-tree-frame.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch registry metadata
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/environment/tile-registry.js')
+          s=p.read_text()
+          s=s.replace("src:'assets/plaza-tree-large-v1.png?art=303', width:367, height:489,\n    spriteWidth:367, spriteHeight:489, columns:1, spriteCount:1",
+                      "src:'assets/plaza-tree-large-v1.png?art=304', width:430, height:530,\n    spriteWidth:430, spriteHeight:530, columns:1, spriteCount:1")
+          s=s.replace("version:'1.10.31'", "version:'1.10.32'")
+          p.write_text(s)
+          reg=p.read_text()
+          assert "width:430, height:530" in reg
+          assert "spriteWidth:430, spriteHeight:530" in reg
+          assert "version:'1.10.32'" in reg
+          PY
+      - name: Commit synchronized frame metadata
+        run: |
+          git config user.name 'kelo-art-bot'
+          git config user.email '68343904+kelffren@users.noreply.github.com'
+          git add src/environment/tile-registry.js
+          if git diff --cached --quiet; then
+            echo 'metadata already synchronized'
+            exit 0
+          fi
+          git commit -m 'Use complete 430x530 Plaza tree frame'
+          git push origin HEAD:main

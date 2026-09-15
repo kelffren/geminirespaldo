@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="768" viewBox="0 0 512 768" shape-rendering="crispEdges">
+  <defs>
+    <symbol id="down" viewBox="0 0 128 192">
+      <ellipse fill="#d98f61" cx="64" cy="47" rx="29" ry="31"/><rect fill="#f1bd8b" x="45" y="26" width="32" height="31"/><rect fill="#aa5f42" x="39" y="51" width="7" height="15"/><rect fill="#aa5f42" x="82" y="51" width="7" height="15"/><rect fill="#d98f61" x="57" y="71" width="14" height="12"/><rect fill="#d98f61" x="36" y="111" width="8" height="22"/><rect fill="#d98f61" x="84" y="111" width="8" height="22"/>
+    </symbol>
+    <symbol id="left" viewBox="0 0 128 192">
+      <ellipse fill="#d98f61" cx="61" cy="47" rx="27" ry="31"/><rect fill="#f1bd8b" x="42" y="27" width="27" height="29"/><rect fill="#aa5f42" x="35" y="50" width="7" height="16"/><rect fill="#d98f61" x="55" y="71" width="13" height="12"/><rect fill="#d98f61" x="36" y="111" width="8" height="22"/><rect fill="#d98f61" x="82" y="111" width="8" height="22"/>
+    </symbol>
+    <symbol id="right" viewBox="0 0 128 192">
+      <ellipse fill="#d98f61" cx="67" cy="47" rx="27" ry="31"/><rect fill="#f1bd8b" x="59" y="27" width="27" height="29"/><rect fill="#aa5f42" x="86" y="50" width="7" height="16"/><rect fill="#d98f61" x="60" y="71" width="13" height="12"/><rect fill="#d98f61" x="38" y="111" width="8" height="22"/><rect fill="#d98f61" x="84" y="111" width="8" height="22"/>
+    </symbol>
+    <symbol id="up" viewBox="0 0 128 192">
+      <ellipse fill="#d98f61" cx="64" cy="47" rx="29" ry="31"/><rect fill="#aa5f42" x="39" y="48" width="50" height="22"/><rect fill="#d98f61" x="57" y="71" width="14" height="12"/><rect fill="#d98f61" x="36" y="111" width="8" height="22"/><rect fill="#d98f61" x="84" y="111" width="8" height="22"/>
+    </symbol>
+  </defs>
+  <g>
+    <use href="#down" x="0" y="0" width="128" height="192"/><use href="#down" x="128" y="0" width="128" height="192"/><use href="#down" x="256" y="0" width="128" height="192"/><use href="#down" x="384" y="0" width="128" height="192"/>
+    <use href="#left" x="0" y="192" width="128" height="192"/><use href="#left" x="128" y="192" width="128" height="192"/><use href="#left" x="256" y="192" width="128" height="192"/><use href="#left" x="384" y="192" width="128" height="192"/>
+    <use href="#right" x="0" y="384" width="128" height="192"/><use href="#right" x="128" y="384" width="128" height="192"/><use href="#right" x="256" y="384" width="128" height="192"/><use href="#right" x="384" y="384" width="128" height="192"/>
+    <use href="#up" x="0" y="576" width="128" height="192"/><use href="#up" x="128" y="576" width="128" height="192"/><use href="#up" x="256" y="576" width="128" height="192"/><use href="#up" x="384" y="576" width="128" height="192"/>
+  </g>
+</svg>

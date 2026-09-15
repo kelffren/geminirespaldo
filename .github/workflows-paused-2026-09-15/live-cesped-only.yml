@@ -1,0 +1,41 @@
+name: Focused cesped LIVE audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'assets/cesped-runtime.png'
+      - 'src/environment/surface-ground.js'
+      - 'src/environment/tile-registry.js'
+      - 'src/environment/atlas-contract.js'
+      - 'src/environment/art-asset-manifest.json'
+      - 'src/environment/png-validation-policy.json'
+      - 'index.html'
+      - 'scripts/live-cesped-audit.mjs'
+      - '.github/workflows/live-cesped-only.yml'
+  workflow_dispatch:
+jobs:
+  cesped-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright
+        run: npm install --no-save playwright@1.55.0
+      - name: Audit cesped on deployed mobile LIVE
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/live-cesped-audit.mjs
+      - name: Upload cesped evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-cesped-audit
+          path: |
+            artifacts/cesped-report.json
+            artifacts/live-cesped-390x844.png
+          if-no-files-found: error
+# audit-trigger: grass runtime deployed on Pages

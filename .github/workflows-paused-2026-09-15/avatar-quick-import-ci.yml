@@ -1,0 +1,140 @@
+name: Avatar Quick Import CI
+
+on:
+  pull_request:
+    paths:
+      - 'engine-net.js'
+      - 'server/index.js'
+      - 'server/avatar-sync-store.js'
+      - 'server/avatar-realtime-*.js'
+      - 'server/package.json'
+      - 'src/characters/creator-avatar-runtime.mjs'
+      - 'src/creators/avatar/**'
+      - 'src/creators/ui/avatar-workspace.mjs'
+      - 'src/creators/workspaces/avatar-workspace.mjs'
+      - 'src/creators/creator-entry.mjs'
+      - 'src/creators/ui/creator-hub.mjs'
+      - 'src/creators/content/runtime-content-registry.mjs'
+      - 'src/creators/content/supabase-content-repository.mjs'
+      - 'src/ui/studio-launcher.js'
+      - 'src/online/**'
+      - 'supabase/migrations/*avatar*'
+      - 'scripts/avatar-quick-import-audit.mjs'
+      - 'scripts/avatar-quick-import-live-audit.mjs'
+      - 'scripts/sprite-compiler-audit.mjs'
+      - 'scripts/sprite-ingestion-*.mjs'
+      - 'src/creators/sprite-compiler/**'
+      - 'tests/fixtures/**'
+      - 'sprite-ingestion-lab.html'
+      - 'docs/systems/AVATAR_QUICK_IMPORT.md'
+      - 'docs/system-catalog.json'
+      - 'package.json'
+      - '.github/workflows/avatar-quick-import-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'engine-net.js'
+      - 'server/index.js'
+      - 'server/avatar-sync-store.js'
+      - 'server/avatar-realtime-*.js'
+      - 'server/package.json'
+      - 'src/characters/creator-avatar-runtime.mjs'
+      - 'src/creators/avatar/**'
+      - 'src/creators/ui/avatar-workspace.mjs'
+      - 'src/creators/workspaces/avatar-workspace.mjs'
+      - 'src/creators/creator-entry.mjs'
+      - 'src/creators/ui/creator-hub.mjs'
+      - 'src/creators/content/runtime-content-registry.mjs'
+      - 'src/creators/content/supabase-content-repository.mjs'
+      - 'src/ui/studio-launcher.js'
+      - 'src/online/**'
+      - 'supabase/migrations/*avatar*'
+      - 'scripts/avatar-quick-import-audit.mjs'
+      - 'scripts/avatar-quick-import-live-audit.mjs'
+      - 'scripts/sprite-compiler-audit.mjs'
+      - 'scripts/sprite-ingestion-*.mjs'
+      - 'src/creators/sprite-compiler/**'
+      - 'tests/fixtures/**'
+      - 'sprite-ingestion-lab.html'
+      - 'docs/systems/AVATAR_QUICK_IMPORT.md'
+      - 'docs/system-catalog.json'
+      - 'package.json'
+      - '.github/workflows/avatar-quick-import-ci.yml'
+
+jobs:
+  avatar-quick:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Syntax
+        run: |
+          node --check engine-net.js
+          node --check server/index.js
+          node --check server/avatar-sync-store.js
+          node --check server/avatar-realtime-smoke-test.js
+          node --check server/avatar-realtime-fetch-stub.js
+          node --check src/characters/creator-avatar-runtime.mjs
+          node --check src/creators/avatar/avatar-spritesheet-analyzer.mjs
+          node --check src/creators/avatar/kelo-universal-asset-compiler.mjs
+          node --check src/creators/avatar/avatar-quick-import-service.mjs
+          node --check src/creators/ui/avatar-workspace.mjs
+          node --check src/creators/sprite-compiler/sprite-foreground-analysis.mjs
+          node --check src/creators/sprite-compiler/sprite-layout-interpreter.mjs
+          node --check src/creators/sprite-compiler/sprite-rig-interpreter.mjs
+          node --check src/creators/sprite-compiler/sprite-frame-normalizer.mjs
+          node --check src/creators/sprite-compiler/sprite-frame-geometry-repair.mjs
+          node --check src/creators/sprite-compiler/sprite-pixel-grammar.mjs
+          node --check src/creators/sprite-compiler/sprite-silhouette-consistency.mjs
+          node --check src/creators/sprite-compiler/sprite-donor-repair.mjs
+          node --check src/creators/sprite-compiler/sprite-atlas-finalizer.mjs
+          node --check src/creators/sprite-compiler/sprite-exact-canvas.mjs
+          node --check src/creators/sprite-compiler/sprite-world-asset-compiler.mjs
+          node --check src/creators/sprite-compiler/sprite-ingestion-validator.mjs
+          node --check src/creators/workspaces/avatar-workspace.mjs
+          node --check src/creators/creator-entry.mjs
+          node --check src/creators/content/runtime-content-registry.mjs
+          node --check src/creators/content/supabase-content-repository.mjs
+          node --check src/ui/studio-launcher.js
+          node --check scripts/avatar-quick-import-audit.mjs
+          node --check scripts/avatar-quick-import-live-audit.mjs
+          node --check scripts/sprite-compiler-audit.mjs
+          node --check scripts/sprite-ingestion-adversarial-lab.mjs
+          node --check scripts/sprite-ingestion-live-audit.mjs
+          node --check scripts/sprite-ingestion-core-audit.mjs
+      - name: Avatar architecture
+        run: npm run audit:avatar-quick
+      - name: Pixel grammar and world-asset compiler
+        run: npm run audit:sprite-compiler
+      - name: Universal sprite ingestion adversarial corpus
+        run: npm run audit:sprite-ingestion
+      - name: Universal content compatibility
+        run: npm run audit:universal-content
+      - name: Documentation contract
+        run: npm run audit:docs
+      - name: Install server dependencies
+        run: npm --prefix server install --ignore-scripts --no-audit --no-fund --no-package-lock
+      - name: Two-player authoritative avatar realtime proof
+        run: npm --prefix server run test:avatar-realtime
+      - name: Install browser audit dependency
+        run: npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund playwright@1.55.0
+      - name: Mobile upload preview and use proof
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/avatar-quick-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill ${server_pid} >/dev/null 2>&1 || true' EXIT
+          for i in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          AUDIT_URL=http://127.0.0.1:4173/ SPRITE_AUDIT_OUTPUT=artifacts/sprite-ingestion CHROME_BIN=/usr/bin/google-chrome node scripts/sprite-ingestion-live-audit.mjs
+      - name: Upload visual ingestion proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sprite-ingestion-before-after
+          path: artifacts/sprite-ingestion
+          if-no-files-found: warn

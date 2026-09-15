@@ -1,0 +1,51 @@
+name: PvP Action Combat CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/systems/pvp-world.js'
+      - 'src/systems/combat/**'
+      - 'src/systems/melee/**'
+      - 'src/abilities/**'
+      - 'engine-net.js'
+      - 'server/**'
+      - 'scripts/pvp-action-combat-audit.js'
+      - 'scripts/pvp-action-visual-audit.mjs'
+      - '.github/workflows/pvp-action-combat-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: node scripts/pvp-action-combat-audit.js
+  visual-mobile-desktop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Serve checkout
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/kelo-http.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/ >/dev/null && exit 0; sleep 1; done
+          cat /tmp/kelo-http.log; exit 1
+      - name: Browser visual review harness
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+        run: node scripts/pvp-action-visual-audit.mjs
+      - name: Upload visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pvp-action-visual-evidence
+          path: artifacts/pvp-action-live/
+          if-no-files-found: error
+          retention-days: 14

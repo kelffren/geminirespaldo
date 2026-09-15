@@ -1,0 +1,31 @@
+name: Terrain Contract CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/environment/terrain-contract.js'
+      - 'src/environment/tile-registry.js'
+      - 'src/environment/world-map.js'
+      - 'index.html'
+      - 'scripts/validate-terrain-contract.mjs'
+      - '.github/workflows/terrain-contract-ci.yml'
+  pull_request:
+    paths:
+      - 'src/environment/terrain-contract.js'
+      - 'src/environment/tile-registry.js'
+      - 'src/environment/world-map.js'
+      - 'index.html'
+      - 'scripts/validate-terrain-contract.mjs'
+  workflow_dispatch:
+jobs:
+  terrain-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax
+        run: |
+          node --check src/environment/terrain-contract.js
+          node --check src/environment/world-map.js
+          node --check scripts/validate-terrain-contract.mjs
+      - name: Validate terrain contract
+        run: node scripts/validate-terrain-contract.mjs

@@ -1,0 +1,7 @@
+## Validated Banco Hall Silhouette — V5.81 / Registry 1.10.12 / 2026-09-02
+- `assets/banco-hall-v1.svg` keeps the existing 160x128 authored asset footprint and unchanged gameplay collider `{x:1664,y:1376,w:128,h:96}`, but now uses a stepped hip roof, central pediment, corner caps, deeper eaves and asymmetric window highlights to reduce the previous flat-box silhouette on mobile.
+- `TileRegistry 1.10.12` cache-busts Banco Hall as `assets/banco-hall-v1.svg?v=2`; architecture remains registry-driven through the generic prefab renderer and no movement, collision, economy, combat, networking, chat or inventory behavior changed.
+- LIVE V5.81 validation passed at 390x844 CSS / 780x1688 backing canvas with `world-v1.2`, four architecture prefabs, architecture renderer `architecture-prefab-renderer-v1.3`, and `consoleErrors=[]`, `failedRequests=[]`, `httpErrors=[]`.
+- Manual inspection of `live-mobile.png` confirms Banco Hall is visible at the bottom of the mobile frame and the roof now has a stronger tiered silhouette and central crown while the entrance remains aligned and readable.
+- QA gap fixed: `.github/workflows/live-audit.yml` now watches `assets/banco-hall-v1.svg` directly, so future Banco art-only edits cannot bypass the mobile LIVE audit.
+- Next largest bottleneck: Commerce Arcade remains a tall, long rectangular mass; the next safe visual pass should add modular roof/end-cap variation or split its facade rhythm without changing the existing gameplay footprint.

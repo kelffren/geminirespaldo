@@ -1,0 +1,85 @@
+name: Install Spartan main hero
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'hero-install-requests/*.json'
+      - '.github/workflows/install-main-hero-spartan.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kelo-main-hero-install
+  cancel-in-progress: false
+
+jobs:
+  install:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install hero runtime hook
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          requests=(hero-install-requests/*.json)
+          if [ ${#requests[@]} -eq 0 ]; then
+            echo 'No pending hero install request.'
+            exit 0
+          fi
+
+          node --check src/characters/main-hero-spartan.js
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          index = Path('index.html')
+          text = index.read_text(encoding='utf-8')
+
+          old_preload = 'assets/hero.PNG?hero=deeab966'
+          new_preload = 'assets/hero-spartan-spritesheet.png?hero=spartan-v1'
+          if old_preload in text:
+              text = text.replace(old_preload, new_preload, 1)
+
+          old_hook = '<script src="src/characters/character-appearance.js?v=3"></script>'
+          new_hook = old_hook + '<script src="src/characters/main-hero-spartan.js?v=1"></script>'
+          if 'src/characters/main-hero-spartan.js' not in text:
+              if old_hook not in text:
+                  raise SystemExit('character appearance hook not found in index.html')
+              text = text.replace(old_hook, new_hook, 1)
+
+          index.write_text(text, encoding='utf-8')
+
+          for req in Path('hero-install-requests').glob('*.json'):
+              req.unlink()
+          PY
+
+      - name: Verify install
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'assets/hero-spartan-spritesheet.png?hero=spartan-v1' index.html
+          grep -q 'src/characters/main-hero-spartan.js?v=1' index.html
+          node --check src/characters/main-hero-spartan.js
+
+      - name: Commit hero install
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- index.html hero-install-requests; then
+            echo 'Hero already installed.'
+            exit 0
+          fi
+          git config user.name 'kelo-hero-bot'
+          git config user.email '68343904+kelffren@users.noreply.github.com'
+          git add index.html hero-install-requests
+          git commit -m 'feat(hero): make Spartan spritesheet the main player'
+          git pull --rebase origin main
+          git push origin HEAD:main

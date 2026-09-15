@@ -1,0 +1,239 @@
+# KELO-INDEX
+# area: QA / MAP FORGE
+# owner: Map Forge CI
+# purpose: protect deterministic Map Forge core, Creator Hub launch, iPhone touch entry, fuzz validity, quality differentiation and fixed-seed visual evidence
+name: Map Forge Core CI
+
+on:
+  pull_request:
+    paths:
+      - 'src/world/map-forge/**'
+      - 'src/studio/adapters/map-forge-draft-importer.mjs'
+      - 'src/creators/workspaces/map-forge-workspace.mjs'
+      - 'src/creators/ui/map-forge-workspace.mjs'
+      - 'src/creators/ui/creator-hub.mjs'
+      - 'scripts/map-forge-core-audit.mjs'
+      - 'scripts/map-forge-selection-diversity-audit.mjs'
+      - 'scripts/map-forge-block-road-clearance-audit.mjs'
+      - 'scripts/map-forge-paving-intent-audit.mjs'
+      - 'scripts/map-forge-decoration-spacing-audit.mjs'
+      - 'tests/map-forge-mobile-preview.spec.js'
+      - 'tests/map-forge-ios-entry.spec.js'
+      - 'tests/map-forge-visual-round.spec.js'
+      - 'tests/map-forge-fountain-clearance.spec.js'
+      - 'tests/map-forge-orientation-visual.spec.js'
+      - 'tests/map-forge-royal-capital-road-width.mjs'
+      - 'tests/map-forge-scene-prefabs.mjs'
+      - 'tests/map-forge-upright-decorations.mjs'
+      - 'tests/map-forge-urban-fabric-score.mjs'
+      - 'playwright.map-forge-ios.config.js'
+      - '.github/workflows/map-forge-core-ci.yml'
+      - 'docs/systems/MAP_FORGE_SYSTEM.md'
+      - 'docs/system-catalog.json'
+  push:
+    branches: [main]
+    paths:
+      - 'src/world/map-forge/**'
+      - 'src/studio/adapters/map-forge-draft-importer.mjs'
+      - 'src/creators/workspaces/map-forge-workspace.mjs'
+      - 'src/creators/ui/map-forge-workspace.mjs'
+      - 'src/creators/ui/creator-hub.mjs'
+      - 'scripts/map-forge-core-audit.mjs'
+      - 'scripts/map-forge-selection-diversity-audit.mjs'
+      - 'scripts/map-forge-block-road-clearance-audit.mjs'
+      - 'scripts/map-forge-paving-intent-audit.mjs'
+      - 'scripts/map-forge-decoration-spacing-audit.mjs'
+      - 'tests/map-forge-mobile-preview.spec.js'
+      - 'tests/map-forge-ios-entry.spec.js'
+      - 'tests/map-forge-visual-round.spec.js'
+      - 'tests/map-forge-fountain-clearance.spec.js'
+      - 'tests/map-forge-orientation-visual.spec.js'
+      - 'tests/map-forge-royal-capital-road-width.mjs'
+      - 'tests/map-forge-scene-prefabs.mjs'
+      - 'tests/map-forge-upright-decorations.mjs'
+      - 'tests/map-forge-urban-fabric-score.mjs'
+      - 'playwright.map-forge-ios.config.js'
+      - '.github/workflows/map-forge-core-ci.yml'
+
+jobs:
+  deterministic-core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run Map Forge deterministic + 300-seed audit
+        run: node scripts/map-forge-core-audit.mjs
+      - name: Guard Royal Capital arterial width
+        run: node tests/map-forge-royal-capital-road-width.mjs
+      - name: Guard authored scene prefabs and road connectors
+        run: node tests/map-forge-scene-prefabs.mjs
+      - name: Guard upright decoration orientation
+        run: node tests/map-forge-upright-decorations.mjs
+      - name: Run best-of selection diversity audit
+        run: node scripts/map-forge-selection-diversity-audit.mjs
+      - name: Run buildable block road-clearance audit
+        run: node scripts/map-forge-block-road-clearance-audit.mjs
+      - name: Run semantic paving + PAVING_BLOB hard-gate audit
+        run: node scripts/map-forge-paving-intent-audit.mjs
+      - name: Run decoration overlap score-gate audit
+        run: node scripts/map-forge-decoration-spacing-audit.mjs
+      - name: Run sparse urban fabric elite-score audit
+        run: node tests/map-forge-urban-fabric-score.mjs
+
+  visual-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium webkit
+      - name: Serve branch checkout
+        run: python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/kelo-map-forge-http.log 2>&1 &
+      - name: Guard Creator Hub launch against stalled first generation
+        env:
+          KELO_PAGES: http://127.0.0.1:4173/
+        run: npx playwright test tests/map-forge-mobile-preview.spec.js --project=chromium --grep "opens from Creator Hub"
+      - name: Guard Creator Hub launch on iPhone WebKit
+        env:
+          KELO_PAGES: http://127.0.0.1:4173/
+        run: npx playwright test tests/map-forge-mobile-preview.spec.js --config=playwright.map-forge-ios.config.js --project=webkit-iphone --grep "opens from Creator Hub"
+      - name: Guard exact MENÚ to CREATORS to Map Forge touch path on iPhone WebKit
+        env:
+          KELO_PAGES: http://127.0.0.1:4173/
+        run: npx playwright test tests/map-forge-ios-entry.spec.js --config=playwright.map-forge-ios.config.js --project=webkit-iphone
+      - name: Wait for Map Forge launch fix on live Pages
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 45); do
+            adapter="$(curl --max-time 10 -fsSL "https://kelffren.github.io/gemini/src/creators/workspaces/map-forge-workspace.mjs?smoke=${GITHUB_SHA}-${i}" || true)"
+            testfile="$(curl --max-time 10 -fsSL "https://kelffren.github.io/gemini/tests/map-forge-mobile-preview.spec.js?smoke=${GITHUB_SHA}-${i}" || true)"
+            if grep -q 'generation readiness is editor state' <<<"$adapter" \
+              && grep -q 'Map Forge opens from Creator Hub before a stalled first generation settles' <<<"$testfile"; then
+              echo 'PASS live Pages contains the Map Forge launch fix and regression test'
+              exit 0
+            fi
+            echo "Waiting for Pages to publish Map Forge launch fix ($i/45)..."
+            sleep 4
+          done
+          echo 'FAIL Pages never exposed the Map Forge launch fix in time'
+          exit 1
+      - name: Open Map Forge from Creator Hub on live Pages
+        env:
+          KELO_PAGES: https://kelffren.github.io/gemini/
+        run: npx playwright test tests/map-forge-mobile-preview.spec.js --project=chromium --grep "opens from Creator Hub"
+      - name: Open Map Forge from Creator Hub on live Pages (iPhone WebKit)
+        env:
+          KELO_PAGES: https://kelffren.github.io/gemini/
+        run: npx playwright test tests/map-forge-mobile-preview.spec.js --config=playwright.map-forge-ios.config.js --project=webkit-iphone --grep "opens from Creator Hub"
+      - name: Tap MENÚ to CREATORS to Map Forge on live Pages (iPhone WebKit)
+        env:
+          KELO_PAGES: https://kelffren.github.io/gemini/
+        run: npx playwright test tests/map-forge-ios-entry.spec.js --config=playwright.map-forge-ios.config.js --project=webkit-iphone
+      - name: Prepare paired visual pipeline states
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          KELO_BASE_REF: ${{ github.event.pull_request.base.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          cp src/world/map-forge/map-forge-champion-overrides.mjs /tmp/map-forge-champion-after.mjs
+          cp src/world/map-forge/map-forge-builder.mjs /tmp/map-forge-builder-after.mjs
+          cp src/world/map-forge/map-forge-core.mjs /tmp/map-forge-core-after.mjs
+          cp src/world/map-forge/map-forge-arrival-scene.mjs /tmp/map-forge-arrival-after.mjs
+          cp src/world/map-forge/map-forge-scene-prefabs.mjs /tmp/map-forge-scene-prefabs-after.mjs
+          cp src/studio/adapters/map-forge-draft-importer.mjs /tmp/map-forge-importer-after.mjs
+          eval "$(node <<'NODE'
+          const paths = [
+            'src/world/map-forge/map-forge-champion-overrides.mjs',
+            'src/world/map-forge/map-forge-builder.mjs',
+            'src/world/map-forge/map-forge-core.mjs',
+            'src/world/map-forge/map-forge-arrival-scene.mjs',
+            'src/world/map-forge/map-forge-scene-prefabs.mjs',
+            'src/studio/adapters/map-forge-draft-importer.mjs'
+          ];
+          const api = process.env.GITHUB_API_URL || 'https://api.github.com';
+          const repo = process.env.GITHUB_REPOSITORY;
+          const ref = process.env.KELO_BASE_REF;
+          const headers = {
+            Accept: 'application/vnd.github+json',
+            Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+            'X-GitHub-Api-Version': '2022-11-28'
+          };
+          const commits = [];
+          for (const filePath of paths) {
+            const url = new URL(`${api}/repos/${repo}/commits`);
+            url.searchParams.set('sha', ref);
+            url.searchParams.set('path', filePath);
+            url.searchParams.set('per_page', '1');
+            const response = await fetch(url, { headers });
+            if (!response.ok) throw new Error(`GitHub commits lookup failed ${response.status} for ${filePath}`);
+            const [entry] = await response.json();
+            if (entry) commits.push(entry);
+          }
+          commits.sort((a, b) => Date.parse(b.commit.committer.date) - Date.parse(a.commit.committer.date));
+          const source = commits[0];
+          const base = source?.parents?.[0];
+          if (!source?.sha || !base?.sha) throw new Error('Could not resolve visual source commit and first parent from GitHub history');
+          console.log(`SOURCE_CHANGE_COMMIT=${source.sha}`);
+          console.log(`BASE_COMMIT=${base.sha}`);
+          NODE
+          )"
+          git fetch --no-tags --depth=1 origin "$SOURCE_CHANGE_COMMIT" "$BASE_COMMIT"
+          git cat-file -e "$SOURCE_CHANGE_COMMIT^{commit}"
+          git cat-file -e "$BASE_COMMIT^{commit}"
+          git show "$BASE_COMMIT:src/world/map-forge/map-forge-champion-overrides.mjs" > /tmp/map-forge-champion-before.mjs
+          git show "$BASE_COMMIT:src/world/map-forge/map-forge-builder.mjs" > /tmp/map-forge-builder-before.mjs
+          git show "$BASE_COMMIT:src/world/map-forge/map-forge-core.mjs" > /tmp/map-forge-core-before.mjs
+          git show "$BASE_COMMIT:src/world/map-forge/map-forge-arrival-scene.mjs" > /tmp/map-forge-arrival-before.mjs
+          git show "$BASE_COMMIT:src/world/map-forge/map-forge-scene-prefabs.mjs" > /tmp/map-forge-scene-prefabs-before.mjs
+          git show "$BASE_COMMIT:src/studio/adapters/map-forge-draft-importer.mjs" > /tmp/map-forge-importer-before.mjs
+          echo "Comparing complete visual pipeline around GitHub-confirmed source change: $BASE_COMMIT -> $SOURCE_CHANGE_COMMIT (current $(git rev-parse HEAD))"
+      - name: Capture fixed-seed BEFORE preview and runtime evidence
+        env:
+          KELO_PAGES: http://127.0.0.1:4173/
+          KELO_VISUAL_STAGE: before
+        run: |
+          cp /tmp/map-forge-champion-before.mjs src/world/map-forge/map-forge-champion-overrides.mjs
+          cp /tmp/map-forge-builder-before.mjs src/world/map-forge/map-forge-builder.mjs
+          cp /tmp/map-forge-core-before.mjs src/world/map-forge/map-forge-core.mjs
+          cp /tmp/map-forge-arrival-before.mjs src/world/map-forge/map-forge-arrival-scene.mjs
+          cp /tmp/map-forge-scene-prefabs-before.mjs src/world/map-forge/map-forge-scene-prefabs.mjs
+          cp /tmp/map-forge-importer-before.mjs src/studio/adapters/map-forge-draft-importer.mjs
+          npx playwright test tests/map-forge-visual-round.spec.js --project=chromium --output=playwright-results/before
+      - name: Capture fixed-seed AFTER preview and runtime evidence
+        env:
+          KELO_PAGES: http://127.0.0.1:4173/
+          KELO_VISUAL_STAGE: after
+        run: |
+          cp /tmp/map-forge-champion-after.mjs src/world/map-forge/map-forge-champion-overrides.mjs
+          cp /tmp/map-forge-builder-after.mjs src/world/map-forge/map-forge-builder.mjs
+          cp /tmp/map-forge-core-after.mjs src/world/map-forge/map-forge-core.mjs
+          cp /tmp/map-forge-arrival-after.mjs src/world/map-forge/map-forge-arrival-scene.mjs
+          cp /tmp/map-forge-scene-prefabs-after.mjs src/world/map-forge/map-forge-scene-prefabs.mjs
+          cp /tmp/map-forge-importer-after.mjs src/studio/adapters/map-forge-draft-importer.mjs
+          npx playwright test tests/map-forge-visual-round.spec.js tests/map-forge-fountain-clearance.spec.js --project=chromium --output=playwright-results/after
+      - name: Capture directional prop evidence
+        continue-on-error: true
+        env:
+          KELO_PAGES: http://127.0.0.1:4173/
+          KELO_ORIENTATION_STAGE: after
+        run: npx playwright test tests/map-forge-orientation-visual.spec.js --project=chromium --output=playwright-results/orientation
+      - name: Upload Map Forge visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: map-forge-visual-round
+          path: |
+            test-results/**
+            playwright-results/**
+            playwright-map-forge-ios-report.json
+          if-no-files-found: ignore

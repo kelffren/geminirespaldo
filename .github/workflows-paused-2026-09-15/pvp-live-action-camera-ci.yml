@@ -1,0 +1,69 @@
+name: PvP Live Action Camera CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/core/camera-system.js'
+      - 'src/systems/pvp-visual-competitive-pass.js'
+      - 'scripts/live-pvp-live-action-camera-judge.mjs'
+      - '.github/workflows/pvp-live-action-camera-ci.yml'
+      - 'docs/systems/PVP_LIVE_ACTION_CAMERA.md'
+      - 'guide.html'
+  workflow_dispatch:
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Syntax
+        run: |
+          node --check src/core/camera-system.js
+          node --check src/systems/pvp-visual-competitive-pass.js
+          node --check scripts/live-pvp-live-action-camera-judge.mjs
+      - name: Foundation
+        run: npm run audit:foundation
+      - name: Documentation
+        run: npm run audit:docs
+      - name: Wait for exact runtime on Pages
+        run: |
+          python3 - <<'PY'
+          import hashlib, pathlib, time, urllib.request
+          base='https://kelffren.github.io/gemini/'
+          targets=['src/core/camera-system.js','src/systems/pvp-visual-competitive-pass.js']
+          expected={p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in targets}
+          for attempt in range(60):
+              bad=[]
+              for p in targets:
+                  try:
+                      body=urllib.request.urlopen(base+p+'?camera-ci='+str(time.time_ns()),timeout=15).read()
+                      actual=hashlib.sha256(body).hexdigest()
+                      if actual!=expected[p]: bad.append((p,actual[:10],expected[p][:10]))
+                  except Exception as exc: bad.append((p,str(exc)[:40]))
+              if not bad:
+                  print('Exact camera runtime live on Pages'); raise SystemExit(0)
+              print('Waiting for Pages',attempt+1,bad); time.sleep(10)
+          raise SystemExit('Exact camera runtime did not appear')
+          PY
+      - name: Agent B browser evaluation
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          PVP_CAMERA_OUT: artifacts/pvp-live-action-camera
+          PVP_CAMERA_STRICT: '1'
+        run: node scripts/live-pvp-live-action-camera-judge.mjs
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pvp-live-action-camera
+          path: artifacts/pvp-live-action-camera/
+          if-no-files-found: error

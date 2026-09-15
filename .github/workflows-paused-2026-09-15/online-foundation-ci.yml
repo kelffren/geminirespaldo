@@ -1,0 +1,47 @@
+name: Kelo Online Foundation
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - 'server/online-identity-store.js'
+      - 'scripts/online-foundation-audit.mjs'
+      - 'docs/systems/ONLINE_FOUNDATION.md'
+      - 'docs/system-catalog.json'
+      - 'docs/CODE_INDEX.md'
+      - 'package.json'
+      - '.github/workflows/online-foundation-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/**'
+      - 'server/online-identity-store.js'
+      - 'scripts/online-foundation-audit.mjs'
+      - 'docs/systems/ONLINE_FOUNDATION.md'
+      - 'docs/system-catalog.json'
+      - 'docs/CODE_INDEX.md'
+      - 'package.json'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.117.0
+      - run: node --check server/online-identity-store.js
+      - run: node --check scripts/online-foundation-audit.mjs
+      - run: npm run audit:online-foundation
+      - run: npm run audit:docs
+      - run: npm run audit:foundation
+      - name: Replay database from empty local Supabase
+        run: |
+          supabase db start
+          supabase db reset

@@ -1,0 +1,35 @@
+name: Map Forge Landmark Clearance CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/world/map-forge/**'
+      - 'scripts/map-forge-landmark-clearance-audit.mjs'
+      - 'scripts/map-forge-spawn-clearance-audit.mjs'
+      - '.github/workflows/map-forge-landmark-clearance-ci.yml'
+  workflow_dispatch:
+jobs:
+  landmark-clearance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Syntax check
+        run: node --check src/world/map-forge/map-forge-builder.mjs && node --check scripts/map-forge-landmark-clearance-audit.mjs && node --check scripts/map-forge-spawn-clearance-audit.mjs
+      - name: Audit 300 deterministic worlds
+        shell: bash
+        run: set -o pipefail; node scripts/map-forge-landmark-clearance-audit.mjs | tee landmark-clearance.json
+      - name: Audit primary spawn clearance
+        shell: bash
+        run: set -o pipefail; node scripts/map-forge-spawn-clearance-audit.mjs | tee spawn-clearance.json
+      - name: Retain audit metrics
+        uses: actions/upload-artifact@v4
+        with:
+          name: map-forge-landmark-clearance-metrics
+          path: |
+            landmark-clearance.json
+            spawn-clearance.json
+          retention-days: 7

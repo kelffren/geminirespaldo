@@ -1,0 +1,49 @@
+name: Audit authored Plaza tree LIVE
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/audit-plaza-tree-live.yml'
+      - 'src/environment/tile-registry.js'
+      - 'assets/plaza-tree-large-v1.png'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for Pages deployment
+        run: sleep 65
+      - name: Install Playwright
+        run: npm install playwright
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run mobile LIVE audit
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+        run: node scripts/live-asset-contract-audit.mjs
+      - name: Verify authored tree population is LIVE
+        run: |
+          python3 - <<'PY'
+          import urllib.request
+          registry=urllib.request.urlopen('https://kelffren.github.io/gemini/src/environment/tile-registry.js?tree-audit=3', timeout=30).read().decode()
+          assert 'assets/plaza-tree-large-v1.png?art=304' in registry
+          assert 'spriteWidth:430, spriteHeight:530, columns:1, spriteCount:1' in registry
+          assert "version:'1.10.32'" in registry
+          assert registry.count("Object.freeze({id:'plaza-tree-") >= 12
+          png=urllib.request.urlopen('https://kelffren.github.io/gemini/assets/plaza-tree-large-v1.png?tree-audit=3', timeout=30).read()
+          assert png[:8] == b'\x89PNG\r\n\x1a\n'
+          print('PASS LIVE authored Plaza tree population with complete frame')
+          PY
+      - name: Upload mobile screenshot and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plaza-tree-live-mobile-audit
+          path: artifacts/
+          if-no-files-found: warn

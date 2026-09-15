@@ -1,0 +1,35 @@
+name: Live Atlas Contract Audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'src/environment/atlas-contract.js'
+      - 'src/environment/world-map.js'
+      - 'src/environment/gardens-atlas.js'
+      - 'src/environment/gardens-joins.js'
+      - 'src/environment/tile-registry.js'
+      - 'src/environment/prop-contract.js'
+      - 'src/environment/prefab-contract.js'
+      - 'src/environment/generic-props.js'
+      - 'src/environment/generic-prefabs.js'
+      - 'scripts/live-atlas-contract-audit.mjs'
+      - '.github/workflows/live-atlas-contract-audit.yml'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save playwright
+      - run: node scripts/live-atlas-contract-audit.mjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-atlas-contract-audit
+          path: artifacts/

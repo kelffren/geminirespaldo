@@ -1,0 +1,44 @@
+name: Game Tuning CI
+on:
+  pull_request:
+    paths:
+      - 'game-tuning.json'
+      - 'src/systems/game-tuning-*.js'
+      - 'src/ui/game-tuning-admin-ui.js'
+      - 'server/game-tuning-*.js'
+      - 'server/sprite-ai-bootstrap.js'
+      - 'index.html'
+      - 'docs/system-catalog.json'
+      - 'docs/systems/GAME_TUNING_SYSTEM.md'
+      - 'scripts/game-tuning-audit.mjs'
+      - '.github/workflows/game-tuning-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'game-tuning.json'
+      - 'src/systems/game-tuning-*.js'
+      - 'src/ui/game-tuning-admin-ui.js'
+      - 'server/game-tuning-*.js'
+      - 'server/sprite-ai-bootstrap.js'
+      - 'index.html'
+      - 'docs/system-catalog.json'
+      - 'docs/systems/GAME_TUNING_SYSTEM.md'
+      - 'scripts/game-tuning-audit.mjs'
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.20.0'
+      - run: node --check src/systems/game-tuning-authority.js
+      - run: node --check src/systems/game-tuning-system.js
+      - run: node --check src/ui/game-tuning-admin-ui.js
+      - run: node --check server/game-tuning-publisher.js
+      - run: node --check server/game-tuning-http.js
+      - run: node --check server/sprite-ai-bootstrap.js
+      - run: node scripts/game-tuning-audit.mjs
+      - run: npm run audit:foundation
+      - run: npm run audit:docs
+      - run: npm run audit:updater

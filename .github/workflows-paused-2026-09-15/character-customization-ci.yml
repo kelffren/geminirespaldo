@@ -1,0 +1,115 @@
+name: Character Customization CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/characters/character-slot-schema.js'
+      - 'src/characters/character-customization.js'
+      - 'src/characters/character-visual-presets.js'
+      - 'src/characters/character-content-packs.js'
+      - 'src/characters/character-visual-stack.js'
+      - 'src/characters/character-demo-kit.js'
+      - 'src/characters/customization-assets/**'
+      - 'src/ui/character-customizer-ui.js'
+      - 'src/ui/character-customizer-preview.js'
+      - 'src/ui/character-customizer-responsive.css'
+      - 'src/ui/profile-panel-close.js'
+      - 'src/ui/self-interaction-ui.js'
+      - 'scripts/character-customization-audit.js'
+      - 'scripts/character-customization-kit-audit.js'
+      - 'scripts/live-character-customization-audit.mjs'
+      - 'docs/systems/CHARACTER_CUSTOMIZATION_SYSTEM.md'
+      - 'docs/system-catalog.json'
+      - 'guide.html'
+      - 'ENGINE_MAP.md'
+      - 'package.json'
+      - '.github/workflows/character-customization-ci.yml'
+  pull_request:
+    paths:
+      - 'src/characters/character-slot-schema.js'
+      - 'src/characters/character-customization.js'
+      - 'src/characters/character-visual-presets.js'
+      - 'src/characters/character-content-packs.js'
+      - 'src/characters/character-visual-stack.js'
+      - 'src/characters/character-demo-kit.js'
+      - 'src/characters/customization-assets/**'
+      - 'src/ui/character-customizer-ui.js'
+      - 'src/ui/character-customizer-preview.js'
+      - 'src/ui/character-customizer-responsive.css'
+      - 'src/ui/profile-panel-close.js'
+      - 'src/ui/self-interaction-ui.js'
+      - 'scripts/character-customization-audit.js'
+      - 'scripts/character-customization-kit-audit.js'
+      - 'scripts/live-character-customization-audit.mjs'
+      - 'docs/systems/CHARACTER_CUSTOMIZATION_SYSTEM.md'
+      - 'docs/system-catalog.json'
+      - 'guide.html'
+      - 'ENGINE_MAP.md'
+      - 'package.json'
+      - '.github/workflows/character-customization-ci.yml'
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Audit Character Creator V2 domain contract
+        run: npm run audit:character
+      - name: Audit Character Creator V2 vertical slice
+        run: node scripts/character-customization-kit-audit.js
+      - name: Audit synchronized system documentation
+        run: npm run audit:docs
+      - name: Syntax check touched JavaScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/characters/character-slot-schema.js
+          node --check src/characters/character-customization.js
+          node --check src/characters/character-visual-presets.js
+          node --check src/characters/character-content-packs.js
+          node --check src/characters/character-visual-stack.js
+          node --check src/characters/character-demo-kit.js
+          node --check src/ui/character-customizer-ui.js
+          node --check src/ui/character-customizer-preview.js
+          node --check src/ui/profile-panel-close.js
+          node --check src/ui/self-interaction-ui.js
+          node --check scripts/live-character-customization-audit.mjs
+
+  browser:
+    needs: contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install browser audit dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run Character Creator V2 on the PR checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/kelo-character-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill ${server_pid} >/dev/null 2>&1 || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          AUDIT_URL=http://127.0.0.1:4173/ node scripts/live-character-customization-audit.mjs
+      - name: Upload Character Creator V2 browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: character-creator-v2-pr-browser
+          path: artifacts/character-customization-live/
+          if-no-files-found: warn
+          retention-days: 14

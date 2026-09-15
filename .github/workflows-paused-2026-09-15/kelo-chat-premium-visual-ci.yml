@@ -1,0 +1,67 @@
+name: Kelo Chat Premium Visual Judge
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'src/ui/luxe-shell.js'
+      - 'src/ui/kelo-chat-drawer.js'
+      - 'src/ui/kelo-chat-integration-bridge.js'
+      - 'tests/kelo-chat-premium-visual.spec.js'
+      - '.github/workflows/kelo-chat-premium-visual-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kelo-chat-premium-visual-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  visual-reference-judge:
+    name: Browser visual interaction judge
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install test dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Start local KELO WORLD
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/kelo-chat-server.log 2>&1 &
+          echo $! > /tmp/kelo-chat-server.pid
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/kelo-chat-server.log
+          exit 1
+
+      - name: Run premium browser reference judge
+        env:
+          KELO_CHAT_JUDGE_URL: http://127.0.0.1:4173/
+        run: npx playwright test tests/kelo-chat-premium-visual.spec.js --reporter=line --workers=1
+
+      - name: Upload judge screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kelo-chat-premium-visual-judge
+          path: |
+            test-results/chat-premium-judge/
+            playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7

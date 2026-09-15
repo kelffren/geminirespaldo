@@ -1,0 +1,80 @@
+name: Append AI bridge entries
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/ai-bridge/PENDING_CG-*.md'
+      - 'docs/ai-bridge/PENDING_GC-*.md'
+      - '.github/workflows/append-chatgpt-bridge.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  append:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Append missing pending entries without rewriting history
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path('docs/ai-bridge')
+          routes = (
+              ('CG', root / 'CHATGPT_TO_GROK.md', 'PENDING_CG-*.md'),
+              ('GC', root / 'GROK_TO_CHATGPT.md', 'PENDING_GC-*.md'),
+          )
+
+          for prefix, bridge_path, pattern in routes:
+              bridge = bridge_path.read_text(encoding='utf-8')
+              changed = False
+              for pending in sorted(root.glob(pattern)):
+                  text = pending.read_text(encoding='utf-8')
+                  match = re.search(rf'(?m)^## ({prefix}-\d{{8}}-\d{{3}})\b.*$', text)
+                  if not match:
+                      print('SKIP no structured entry:', pending)
+                      continue
+                  entry_id = match.group(1)
+                  if re.search(rf'(?m)^## {re.escape(entry_id)}\b', bridge):
+                      print('ALREADY APPENDED:', entry_id)
+                      continue
+                  entry = text[match.start():].strip()
+                  bridge = bridge.rstrip() + '\n\n' + entry + '\n'
+                  changed = True
+                  print('APPENDED:', entry_id)
+              if changed:
+                  bridge_path.write_text(bridge, encoding='utf-8')
+          PY
+      - name: Verify append-only IDs are unique
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          for prefix, filename in (('CG','CHATGPT_TO_GROK.md'),('GC','GROK_TO_CHATGPT.md')):
+              text=Path('docs/ai-bridge',filename).read_text(encoding='utf-8')
+              ids=re.findall(rf'(?m)^## ({prefix}-\d{{8}}-\d{{3}})\b',text)
+              assert len(ids)==len(set(ids)), f'duplicate {prefix} IDs detected'
+              print('PASS unique entries:', prefix, len(ids), ids[-1] if ids else 'none')
+          PY
+      - name: Commit bridge append
+        run: |
+          if git diff --quiet -- docs/ai-bridge/CHATGPT_TO_GROK.md docs/ai-bridge/GROK_TO_CHATGPT.md; then
+            echo 'bridge already current'
+            exit 0
+          fi
+          git config user.name 'kelo-bridge-bot'
+          git config user.email '68343904+kelffren@users.noreply.github.com'
+          git add docs/ai-bridge/CHATGPT_TO_GROK.md docs/ai-bridge/GROK_TO_CHATGPT.md
+          git commit -m 'Append pending AI bridge research'
+          # main receives frequent concurrent commits from other Kelo workflows/agents.
+          # Rebase this append-only commit onto the latest remote head before pushing
+          # so a harmless race does not lose the research handoff.
+          git pull --rebase origin main
+          git push origin HEAD:main

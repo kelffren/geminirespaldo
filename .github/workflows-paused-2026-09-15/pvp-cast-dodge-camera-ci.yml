@@ -1,0 +1,44 @@
+name: PvP Cast Dodge Camera CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/core/camera-system.js'
+      - 'scripts/live-pvp-cast-dodge-camera-judge.mjs'
+      - 'scripts/audit-pvp-cast-dodge-camera-timing.mjs'
+      - '.github/workflows/pvp-cast-dodge-camera-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live-mobile-desktop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm install --no-audit --no-fund
+      - name: Cast-to-dodge 60/90/120 timing audit
+        run: node scripts/audit-pvp-cast-dodge-camera-timing.mjs
+      - run: npx playwright install --with-deps chromium
+      - name: Serve checkout
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/kelo-http.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/ >/dev/null && exit 0; sleep 1; done
+          cat /tmp/kelo-http.log; exit 1
+      - name: Cast to dodge Chromium judge
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+          CAST_DODGE_CAMERA_STRICT: '1'
+        run: node scripts/live-pvp-cast-dodge-camera-judge.mjs
+      - name: Foundation architecture
+        run: npm run audit:foundation
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pvp-cast-dodge-camera-evidence
+          path: artifacts/pvp-cast-dodge-camera-live/
+          if-no-files-found: error
+          retention-days: 14

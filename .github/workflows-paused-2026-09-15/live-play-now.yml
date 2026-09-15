@@ -1,0 +1,39 @@
+name: Playwright LIVE playability proof
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/live-play-now.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-play-now-main
+  cancel-in-progress: true
+
+jobs:
+  prove-live-gameplay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright
+        run: npm install --no-save playwright@1.55.0
+      - name: Prove deployed mobile world is visible and playable with real touch
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/?offline=1&qa-live-audit=1
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/live-play-now-audit.mjs
+      - name: Upload Playwright proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-play-now
+          path: artifacts/
+          if-no-files-found: error

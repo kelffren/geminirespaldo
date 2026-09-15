@@ -1,0 +1,11 @@
+## Validated Atlas Architecture Phase 7 Closure — 2026-09-05
+
+- **Status:** Phase 7 Atlas Architecture is closed for the current art pipeline contract.
+- **Ownership:** `kelo-atlas-contract-v1` is now `1.2.0` and is the sole image-creation owner for managed environment atlases. Consumers acquire by registry key and must not rewrite asset URLs.
+- **World renderer:** `world-map.js` is `world-v1.24` and no longer creates terrain/Gardens `Image()` instances or appends a private `?world=` cache token. Terrain atlases plus `gardensBase`/`gardensJoins` are acquired through `KELO_ATLAS_CONTRACT`.
+- **Generic consumers:** Generic Props and Generic Prefabs remain on `atlas-contract-managed-v1`; world terrain/Gardens now use the same ownership model.
+- **Static gates:** Atlas Contract CI rejects direct world image loading, private world cache rewriting, missing managed-world ownership tokens, or a regression away from Atlas Contract 1.2. Kelo CI also rejects direct image loading in world/props/prefabs.
+- **Validated CI:** Atlas Contract CI run `33971722955` passed. Kelo CI run `33971827995` passed after replacing stale checks for Atlas Contract 1.1.1 / `?v=1` with the current 1.2 contract; gates were strengthened rather than weakened. Pages run `33971827325` passed.
+- **Validated LIVE:** Live Atlas Contract Audit run `33971953342` passed at 390×844 CSS / 780×1688 backing. Runtime reported `world-v1.24`, `atlasConsumerMode=atlas-contract-managed-v1`, `worldOwnsImageLoader=false`, Atlas Contract `1.2.0`, 17 managed records, zero contract violations, terrain atlases ready, Gardens base/join loaded, and `consoleErrors=[]`, `pageErrors=[]`, `failedRequests=[]`, `httpErrors=[]`.
+- **Visual inspection:** Mobile Plaza and Gardens captures were inspected after LIVE validation. Plaza fountain/depth, roads, terrain, character readability and Gardens paths/vegetation remained coherent; no missing textures or obvious structural regression was observed.
+- **Boundary for Phase 8:** role-aware residency, true district-time lazy loading/eviction, decoded-image memory budgets, chunk-cache budgets, DPR/backing-canvas limits and performance telemetry belong to the Mobile Performance Contract rather than reopening Atlas Architecture ownership.

@@ -1,0 +1,54 @@
+name: Kelo Boot Budget CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'engine-*.js'
+      - 'src/core/**'
+      - 'src/environment/**'
+      - 'src/ui/**'
+      - 'src/systems/performance-governor.js'
+      - 'scripts/boot-budget-audit.mjs'
+      - 'scripts/update-v5-contract-test.mjs'
+      - '.github/workflows/boot-budget-ci.yml'
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'engine-*.js'
+      - 'src/core/**'
+      - 'src/environment/**'
+      - 'src/ui/**'
+      - 'src/systems/performance-governor.js'
+      - 'scripts/boot-budget-audit.mjs'
+      - 'scripts/update-v5-contract-test.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  boot-budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax check zero-boot infrastructure
+        run: |
+          node --check src/core/module-loader.js
+          node --check src/core/boot-stage-loader.js
+          node --check src/core/micro-core-runtime.js
+          node --check src/core/settings-lazy-gate.js
+          node --check src/core/creators-lazy-gate.js
+          node --check src/core/update-gate.js
+          node --check src/core/update-system-v4.js
+          node --check src/core/update-system-v5.js
+          node --check src/core/update-verifier-worker.js
+          node --check src/core/update-intelligence-ui.js
+          node --check src/ui/lite-shell-gate.js
+          node --check scripts/update-v5-contract-test.mjs
+          node --check scripts/boot-budget-audit.mjs
+      - name: Enforce Update OS V5 contract
+        run: node scripts/update-v5-contract-test.mjs
+      - name: Audit critical boot bytes
+        run: node scripts/boot-budget-audit.mjs

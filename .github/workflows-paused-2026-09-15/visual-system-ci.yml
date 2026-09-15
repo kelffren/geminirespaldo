@@ -1,0 +1,121 @@
+name: Visual System CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'engine-c.js'
+      - 'engine-net.js'
+      - 'server/index.js'
+      - 'src/abilities/**'
+      - 'src/visuals/**'
+      - 'src/systems/pvp-world.js'
+      - 'src/visuals/melee-assets/**'
+      - 'scripts/visual-system-contract-audit.js'
+      - 'scripts/ability-visual-profiles-audit.js'
+      - 'scripts/melee-visuals-audit.js'
+      - 'scripts/melee-m1-combo-audit.js'
+      - 'scripts/melee-presentation-bridge-audit.js'
+      - '.github/workflows/visual-system-ci.yml'
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'engine-c.js'
+      - 'engine-net.js'
+      - 'server/index.js'
+      - 'src/abilities/**'
+      - 'src/visuals/**'
+      - 'src/systems/pvp-world.js'
+      - 'src/visuals/melee-assets/**'
+      - 'scripts/visual-system-contract-audit.js'
+      - 'scripts/ability-visual-profiles-audit.js'
+      - 'scripts/melee-visuals-audit.js'
+      - 'scripts/melee-m1-combo-audit.js'
+      - 'scripts/melee-presentation-bridge-audit.js'
+      - '.github/workflows/visual-system-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  visual-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Required modular files
+        run: |
+          test -f src/visuals/visual-system.js
+          test -f src/visuals/visual-manifests.js
+          test -f src/visuals/asset-registry.js
+          test -f src/visuals/animation-system.js
+          test -f src/visuals/fx-system.js
+          test -f src/visuals/sequence-system.js
+          test -f src/visuals/ability-visuals.js
+          test -f src/visuals/melee-visual-manifest.js
+          test -f src/visuals/melee-combat-visuals.js
+          test -f src/visuals/combat-presentation-bridge.js
+          test -f src/visuals/visual-lab.js
+          test -f src/visuals/visual-integration.js
+          test -f scripts/melee-visuals-audit.js
+          test -f scripts/melee-m1-combo-audit.js
+          test -f scripts/melee-presentation-bridge-audit.js
+          test -f src/visuals/melee-assets/sword-light-slash-up.svg
+          test -f src/visuals/melee-assets/sword-light-slash-down.svg
+          test -f src/visuals/melee-assets/sword-light-slash-left.svg
+          test -f src/visuals/melee-assets/sword-light-slash-right.svg
+          test -f src/visuals/melee-assets/sword-light-slash-up-right.svg
+          test -f src/visuals/melee-assets/sword-light-slash-down-right.svg
+          test -f src/visuals/melee-assets/sword-light-slash-down-left.svg
+          test -f src/visuals/melee-assets/sword-light-slash-up-left.svg
+      - name: Syntax
+        run: |
+          node --check src/visuals/visual-system.js
+          node --check src/visuals/visual-manifests.js
+          node --check src/visuals/asset-registry.js
+          node --check src/visuals/animation-system.js
+          node --check src/visuals/fx-system.js
+          node --check src/visuals/sequence-system.js
+          node --check src/visuals/ability-visuals.js
+          node --check src/visuals/melee-visual-manifest.js
+          node --check src/visuals/melee-combat-visuals.js
+          node --check src/visuals/combat-presentation-bridge.js
+          node --check src/visuals/visual-lab.js
+          node --check src/visuals/visual-integration.js
+          node --check src/abilities/abilityData.js
+          node --check src/systems/pvp-world.js
+          node --check engine-c.js
+          node --check engine-net.js
+          node --check server/index.js
+          node --check scripts/visual-system-contract-audit.js
+          node --check scripts/ability-visual-profiles-audit.js
+          node --check scripts/melee-visuals-audit.js
+          node --check scripts/melee-m1-combo-audit.js
+          node --check scripts/melee-presentation-bridge-audit.js
+      - name: Modular visual contract
+        run: node scripts/visual-system-contract-audit.js
+      - name: Ability visual profiles
+        run: node scripts/ability-visual-profiles-audit.js
+      - name: Melee visual contract
+        run: node scripts/melee-visuals-audit.js
+      - name: M1 combo feel contract
+        run: node scripts/melee-m1-combo-audit.js
+      - name: Melee presentation family contract
+        run: node scripts/melee-presentation-bridge-audit.js
+      - name: Online-first guardrails
+        run: |
+          grep -Eq "visualProfileId:[[:space:]]*'ability_visual_fireball_01'" src/abilities/abilityData.js
+          grep -q "fire_explosion_medium" src/visuals/visual-manifests.js
+          grep -q "sequence_debug_explosion_reuse" src/visuals/visual-manifests.js
+          grep -q "impact_melee_light" src/visuals/visual-manifests.js
+          grep -q "MELEE_ATTACK_STARTED" src/visuals/combat-presentation-bridge.js
+          grep -q "MELEE_HIT_CONFIRMED" src/visuals/combat-presentation-bridge.js
+          ! grep -q "emitVisual(" src/systems/pvp-world.js
+          grep -q "KeloMeleeEngine.beginAttack" src/systems/pvp-world.js
+          grep -q "KeloCombatEngine.attackSweep" src/systems/pvp-world.js
+          grep -q "visual:event" engine-net.js
+          grep -q "sanitizeVisualContext" server/index.js
+          grep -q "visual-integration.js?v=2" index.html
+          grep -q "melee-visual-manifest.js?v=2" index.html
+          grep -q "melee-combat-visuals.js?v=1" index.html
+          if grep -Eq 'KeloAnimation|KeloFX|KeloSequence|KeloVisualProfile' src/abilities/stone-system.js; then
+            echo 'StoneSystem became coupled to visual runtime'
+            exit 1
+          fi

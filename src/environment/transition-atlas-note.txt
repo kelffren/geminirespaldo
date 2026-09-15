@@ -1,0 +1,1 @@
+Authored transition overlay atlas is stored at assets/plaza-transitions-v1.png. Tile order: 0 top, 1 right, 2 bottom, 3 left, 4 TL, 5 TR, 6 BR, 7 BL, 8 TRL, 9 TRB, 10 RBL, 11 TBL, 12 TB, 13 LR, 14 TRBL, 15 empty.

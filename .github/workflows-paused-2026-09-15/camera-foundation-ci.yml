@@ -1,0 +1,88 @@
+name: Camera Foundation CI
+
+on:
+  pull_request:
+    paths:
+      - 'src/core/camera-system.js'
+      - 'engine-a.js'
+      - 'engine-b.js'
+      - 'engine-c.js'
+      - 'engine-h.js'
+      - 'src/ui/mobile-orientation.js'
+      - 'src/environment/mobile-performance-contract.js'
+      - 'index.html'
+      - 'scripts/camera-system-contract-audit.js'
+      - 'scripts/camera-viewport-browser-audit.mjs'
+      - 'scripts/live-pvp-camera-follow-judge.mjs'
+      - 'scripts/audit-pvp-camera-follow-timing.mjs'
+      - 'docs/systems/CAMERA_SYSTEM.md'
+      - 'docs/system-catalog.json'
+      - 'guide.html'
+      - '.github/workflows/camera-foundation-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/core/camera-system.js'
+      - 'engine-a.js'
+      - 'engine-b.js'
+      - 'engine-c.js'
+      - 'engine-h.js'
+      - 'src/ui/mobile-orientation.js'
+      - 'src/environment/mobile-performance-contract.js'
+      - 'index.html'
+      - 'scripts/camera-system-contract-audit.js'
+      - 'scripts/camera-viewport-browser-audit.mjs'
+      - 'scripts/live-pvp-camera-follow-judge.mjs'
+      - 'scripts/audit-pvp-camera-follow-timing.mjs'
+      - 'docs/systems/CAMERA_SYSTEM.md'
+      - 'docs/system-catalog.json'
+      - 'guide.html'
+      - '.github/workflows/camera-foundation-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  certify-camera:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Syntax + deterministic camera contract
+        run: |
+          node --check src/core/camera-system.js
+          node --check engine-h.js
+          node --check src/ui/mobile-orientation.js
+          node --check scripts/camera-system-contract-audit.js
+          node --check scripts/camera-viewport-browser-audit.mjs
+          node --check scripts/live-pvp-camera-follow-judge.mjs
+          node --check scripts/audit-pvp-camera-follow-timing.mjs
+          node scripts/camera-system-contract-audit.js
+          node scripts/audit-pvp-camera-follow-timing.mjs
+      - name: Install Playwright
+        run: npm install --no-save playwright@1.55.0
+      - name: Serve candidate
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 >/tmp/camera-foundation-http.log 2>&1 &
+          for i in {1..20}; do curl -fsS http://127.0.0.1:8000/index.html >/dev/null && exit 0; sleep 1; done
+          cat /tmp/camera-foundation-http.log
+          exit 1
+      - name: Browser audit portrait landscape desktop
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: |
+          node scripts/camera-viewport-browser-audit.mjs
+          node scripts/live-pvp-camera-follow-judge.mjs
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: camera-foundation-evidence
+          path: |
+            artifacts/camera-foundation-*
+            artifacts/pvp-camera-follow-*
+          if-no-files-found: warn

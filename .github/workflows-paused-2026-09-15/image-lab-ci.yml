@@ -1,0 +1,38 @@
+name: Image Lab CI
+
+on:
+  pull_request:
+    paths:
+      - 'image-lab.html'
+      - 'src/creators/assets/image-lab-*.mjs'
+      - 'src/creators/assets/image-format-converter.mjs'
+      - 'src/creators/ui/image-lab-workspace.mjs'
+      - 'scripts/image-lab-audit.mjs'
+      - 'docs/systems/IMAGE_LAB.md'
+      - 'docs/system-catalog.json'
+      - 'package.json'
+      - '.github/workflows/image-lab-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'image-lab.html'
+      - 'src/creators/assets/image-lab-*.mjs'
+      - 'src/creators/assets/image-format-converter.mjs'
+      - 'src/creators/ui/image-lab-workspace.mjs'
+      - 'scripts/image-lab-audit.mjs'
+      - 'docs/systems/IMAGE_LAB.md'
+      - 'docs/system-catalog.json'
+      - 'package.json'
+      - '.github/workflows/image-lab-ci.yml'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm run audit:image-lab
+      - run: npm run audit:docs

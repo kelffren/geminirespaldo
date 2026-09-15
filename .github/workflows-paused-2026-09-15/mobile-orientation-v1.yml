@@ -1,0 +1,46 @@
+name: Mobile Orientation V1
+on:
+  workflow_dispatch:
+  push:
+    branches: [ feature/mobile-orientation-v1 ]
+    paths:
+      - 'src/ui/mobile-orientation.js'
+      - 'scripts/mobile-orientation-audit.mjs'
+      - 'index.html'
+      - '.github/workflows/mobile-orientation-v1.yml'
+permissions:
+  contents: read
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax checks
+        run: |
+          node --check src/ui/mobile-orientation.js
+          node --check scripts/mobile-orientation-audit.mjs
+          grep -q 'src/ui/mobile-orientation.js?v=1' index.html
+      - name: Install Playwright
+        run: npm install --no-save playwright@1.55.0
+      - name: Serve candidate
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/orientation-http.log 2>&1 &
+          for i in {1..20}; do curl -fsS http://127.0.0.1:8000/index.html >/dev/null && exit 0; sleep 1; done
+          cat /tmp/orientation-http.log
+          exit 1
+      - name: Certify portrait landscape and rotate button
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/mobile-orientation-audit.mjs
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-orientation-v1-audit
+          path: artifacts/mobile-orientation-*
+          if-no-files-found: warn

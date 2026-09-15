@@ -1,0 +1,15 @@
+node_modules/
+playwright-report.json
+playwright-report/
+test-results/
+blob-report/
+
+# Supabase/local backend secrets and ephemeral CLI state
+.env
+.env.*
+!.env.example
+supabase/.temp/
+supabase/.branches/
+supabase/.env
+supabase/.env.*
+!supabase/.env.example

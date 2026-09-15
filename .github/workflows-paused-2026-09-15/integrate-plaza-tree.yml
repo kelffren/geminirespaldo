@@ -1,0 +1,37 @@
+name: Integrate authored Plaza tree
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'assets/plaza-tree-large-v1.png'
+      - 'scripts/integrate_plaza_tree.py'
+      - '.github/workflows/integrate-plaza-tree.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply registry and asset-contract integration
+        run: python3 scripts/integrate_plaza_tree.py
+      - name: Validate Asset Contract
+        run: node scripts/validate-art-assets.mjs
+      - name: Commit integration
+        run: |
+          git config user.name 'kelo-art-bot'
+          git config user.email '68343904+kelffren@users.noreply.github.com'
+          git add src/environment/tile-registry.js src/environment/art-asset-manifest.json
+          if git diff --cached --quiet; then
+            echo 'integration already current'
+            exit 0
+          fi
+          git commit -m 'Use authored Kelo tree in Plaza'
+          git push origin HEAD:main

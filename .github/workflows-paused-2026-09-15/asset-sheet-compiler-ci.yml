@@ -1,0 +1,81 @@
+name: Asset Sheet Compiler CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/creators/assets/**'
+      - 'src/creators/ui/asset-sheet-workspace.mjs'
+      - 'src/creators/workspaces/asset-sheet-workspace.mjs'
+      - 'src/creators/creator-entry.mjs'
+      - 'src/creators/ui/creator-hub.mjs'
+      - 'scripts/asset-sheet-compiler-audit.mjs'
+      - 'scripts/asset-sheet-live-audit.mjs'
+      - 'docs/systems/CREATOR_ASSET_BRIDGE.md'
+      - 'docs/system-catalog.json'
+      - 'docs/CODE_INDEX.md'
+      - 'package.json'
+      - '.github/workflows/asset-sheet-compiler-ci.yml'
+  pull_request:
+    paths:
+      - 'src/creators/assets/**'
+      - 'src/creators/ui/asset-sheet-workspace.mjs'
+      - 'src/creators/workspaces/asset-sheet-workspace.mjs'
+      - 'scripts/asset-sheet-compiler-audit.mjs'
+      - 'scripts/asset-sheet-live-audit.mjs'
+      - 'docs/systems/CREATOR_ASSET_BRIDGE.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Syntax
+        run: |
+          node --check src/creators/assets/asset-sheet-compiler.mjs
+          node --check src/creators/assets/asset-sheet-browser.mjs
+          node --check src/creators/assets/kelo-creator-asset-bridge.mjs
+          node --check src/creators/assets/asset-sheet-catalog-preview-adapter.mjs
+          node --check src/creators/ui/asset-sheet-workspace.mjs
+          node --check src/creators/workspaces/asset-sheet-workspace.mjs
+      - name: Asset sheet contract
+        run: npm run audit:asset-sheet
+      - name: System documentation
+        run: npm run audit:docs
+
+  live-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund playwright@1.55.0
+      - name: Serve candidate
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 >/tmp/kelo-asset-sheet-http.log 2>&1 &
+          for i in {1..20}; do curl -fsS http://127.0.0.1:8000/CHATGPT_ASSET_UPLOAD_BRIDGE.md >/dev/null && exit 0; sleep 1; done
+          tail -80 /tmp/kelo-asset-sheet-http.log
+          exit 1
+      - name: Real atlas at 390x844
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: npm run audit:asset-sheet:live
+      - name: Upload visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: asset-sheet-compiler-evidence
+          path: artifacts/asset-sheet-compiler/
+          if-no-files-found: warn
+          retention-days: 14

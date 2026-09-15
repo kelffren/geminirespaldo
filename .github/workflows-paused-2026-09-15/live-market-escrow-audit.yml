@@ -1,0 +1,59 @@
+name: Market Escrow LIVE mobile audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'src/systems/equipment-system.js'
+      - 'src/systems/backpack-system.js'
+      - 'src/systems/container-system.js'
+      - 'src/systems/market-escrow-system.js'
+      - 'src/ui/backpack-ui.js'
+      - 'src/ui/market-ui.js'
+      - 'scripts/live-market-escrow-cdp-audit-v3.mjs'
+      - '.github/workflows/live-market-escrow-audit.yml'
+  workflow_dispatch:
+jobs:
+  market-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Normalize release-title gate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/live-market-escrow-cdp-audit-v3.mjs')
+          s=p.read_text(encoding='utf-8')
+          old="document.title==='Kelo World — V6.20'"
+          new="document.title.startsWith('Kelo World — V6.')"
+          if old not in s:
+              raise SystemExit('expected stale V6.20 title gate not found')
+          p.write_text(s.replace(old,new),encoding='utf-8')
+          PY
+      - name: Market syntax
+        run: |
+          node --check src/systems/equipment-system.js
+          node --check src/systems/backpack-system.js
+          node --check src/systems/container-system.js
+          node --check src/systems/market-escrow-system.js
+          node --check src/ui/market-ui.js
+          node --check scripts/live-market-escrow-cdp-audit-v3.mjs
+      - name: Audit real mobile market escrow
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: |
+          set -o pipefail
+          mkdir -p artifacts
+          node scripts/live-market-escrow-cdp-audit-v3.mjs 2>&1 | tee artifacts/market-escrow-audit.log
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-market-escrow-audit
+          path: artifacts/
+          if-no-files-found: error

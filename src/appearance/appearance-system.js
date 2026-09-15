@@ -1,0 +1,30 @@
+/* KELO-INDEX
+ * area: APPEARANCE
+ * owner: KeloAppearance
+ * purpose: registry/resolver compartido de perfiles, slots y outfits para character/mount
+ * public-api: registerProfile/registerItem/getProfile/getItem/validateItem/resolveLoadout/registerMany
+ * consumes: asset IDs y transforms declarativos; render owners consumen el resultado
+ * state-owned: definiciones ligeras registradas; NO posee stats ni inventory
+ * extension-points: targetType, slots, anchors, directionRules, animationRules, layerRules
+ * online: snapshots viajan por IDs/revision; servidor valida ownership, no pixeles
+ * do-not: no aplicar gameplay stats; no dibujar; no hardcodear species/item IDs
+ */
+(function(root,factory){const api=factory();if(root)root.KeloAppearance=api;if(typeof module==='object'&&module.exports)module.exports=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+const VERSION='appearance-foundation-v1.0.0',SCHEMA_VERSION=1;
+const profiles=new Map(),items=new Map();
+const copy=v=>v==null?v:JSON.parse(JSON.stringify(v));
+function safeId(v){return typeof v==='string'&&/^[a-z0-9][a-z0-9._:-]*$/i.test(v);}
+function normalizeTransform(v){v=v||{};return{x:Number(v.x)||0,y:Number(v.y)||0,scaleX:Number.isFinite(Number(v.scaleX))?Number(v.scaleX):1,scaleY:Number.isFinite(Number(v.scaleY))?Number(v.scaleY):1,rotation:Number(v.rotation)||0,flipX:v.flipX===true,flipY:v.flipY===true};}
+function validateProfile(raw){const errors=[];if(!raw||typeof raw!=='object')return{ok:false,errors:['PROFILE_REQUIRED']};if(!safeId(raw.id))errors.push('ID_INVALID');if(!raw.targetType)errors.push('TARGET_REQUIRED');if(!Array.isArray(raw.slots)||!raw.slots.length)errors.push('SLOTS_REQUIRED');return{ok:!errors.length,errors};}
+function normalizeProfile(raw){const check=validateProfile(raw);if(!check.ok)throw new Error('APPEARANCE_PROFILE_INVALID:'+check.errors.join(','));const slots=[...new Set(raw.slots.map(String))];return Object.freeze({schemaVersion:SCHEMA_VERSION,id:String(raw.id),targetType:String(raw.targetType),slots:Object.freeze(slots),anchors:Object.freeze(copy(raw.anchors||{})),depthRules:Object.freeze(copy(raw.depthRules||{})),directionRules:Object.freeze(copy(raw.directionRules||{})),animationRules:Object.freeze(copy(raw.animationRules||{})),tags:Object.freeze((raw.tags||[]).map(String))});}
+function validateItem(raw){const errors=[];if(!raw||typeof raw!=='object')return{ok:false,errors:['ITEM_REQUIRED']};if(!safeId(raw.id))errors.push('ID_INVALID');if(!raw.targetType)errors.push('TARGET_REQUIRED');if(!raw.slotId)errors.push('SLOT_REQUIRED');if(!Array.isArray(raw.compatibleProfiles)||!raw.compatibleProfiles.length)errors.push('COMPATIBILITY_REQUIRED');if(!raw.assetBundleId)errors.push('ASSET_BUNDLE_REQUIRED');for(const pid of raw.compatibleProfiles||[]){const p=profiles.get(String(pid));if(!p)errors.push('PROFILE_UNKNOWN:'+pid);else if(p.targetType!==String(raw.targetType))errors.push('PROFILE_TARGET_MISMATCH:'+pid);else if(!p.slots.includes(String(raw.slotId)))errors.push('PROFILE_SLOT_MISMATCH:'+pid+':'+raw.slotId);}return{ok:!errors.length,errors};}
+function normalizeItem(raw){const check=validateItem(raw);if(!check.ok)throw new Error('APPEARANCE_ITEM_INVALID:'+check.errors.join(','));return Object.freeze({schemaVersion:SCHEMA_VERSION,id:String(raw.id),displayName:String(raw.displayName||raw.id),targetType:String(raw.targetType),slotId:String(raw.slotId),compatibleProfiles:Object.freeze(raw.compatibleProfiles.map(String)),assetBundleId:String(raw.assetBundleId),transforms:Object.freeze(copy(raw.transforms||{})),layerRules:Object.freeze(copy(raw.layerRules||{})),animationMapping:Object.freeze(copy(raw.animationMapping||{})),tags:Object.freeze((raw.tags||[]).map(String)),rarity:String(raw.rarity||'common')});}
+function registerProfile(raw){const row=normalizeProfile(raw);if(profiles.has(row.id))throw new Error('APPEARANCE_PROFILE_DUPLICATE:'+row.id);profiles.set(row.id,row);return row;}
+function registerItem(raw){const row=normalizeItem(raw);if(items.has(row.id))throw new Error('APPEARANCE_ITEM_DUPLICATE:'+row.id);items.set(row.id,row);return row;}
+function registerMany(payload){const out={profiles:[],items:[]};for(const p of payload?.profiles||[])out.profiles.push(registerProfile(p));for(const i of payload?.items||[])out.items.push(registerItem(i));return out;}
+function compatible(item,profile){return!!item&&!!profile&&item.targetType===profile.targetType&&item.compatibleProfiles.includes(profile.id)&&profile.slots.includes(item.slotId);}
+function resolveLoadout({profileId,slots={},direction='down',motion='idle'}={}){const profile=profiles.get(String(profileId||''));if(!profile)return{ok:false,error:'PROFILE_NOT_FOUND',layers:[]};const layers=[];for(const slotId of profile.slots){const itemId=slots[slotId];if(!itemId)continue;const item=items.get(String(itemId));if(!item||!compatible(item,profile))continue;const dir=(item.transforms&&item.transforms[direction])||item.transforms.default||{};const transform=normalizeTransform(dir);const depth=Number(item.layerRules?.[direction]?.depth??item.layerRules?.depth??profile.depthRules?.[direction]?.[slotId]??profile.depthRules?.[slotId]??0);layers.push({slotId,itemId:item.id,assetBundleId:item.assetBundleId,transform,depth,direction,motion,animation:item.animationMapping?.[motion]||item.animationMapping?.default||null});}layers.sort((a,b)=>a.depth-b.depth||profile.slots.indexOf(a.slotId)-profile.slots.indexOf(b.slotId));return{ok:true,profileId:profile.id,targetType:profile.targetType,direction,motion,layers};}
+function migrate(raw){if(!raw||typeof raw!=='object')return null;const copyRow=copy(raw);copyRow.schemaVersion=SCHEMA_VERSION;return copyRow;}
+return Object.freeze({version:VERSION,schemaVersion:SCHEMA_VERSION,registerProfile,registerItem,registerMany,validateProfile,validateItem,getProfile:id=>profiles.get(String(id))||null,getItem:id=>items.get(String(id))||null,listProfiles:()=>[...profiles.values()],listItems:()=>[...items.values()],resolveLoadout,compatible,migrate,get profileCount(){return profiles.size;},get itemCount(){return items.size;}});
+});

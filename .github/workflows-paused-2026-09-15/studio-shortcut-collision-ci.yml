@@ -1,0 +1,32 @@
+name: Studio Shortcut Collision CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/studio/input/studio-selection-history-controller.mjs'
+      - 'src/studio/input/studio-snap-cycle-controller.mjs'
+      - 'scripts/studio-shortcut-collision-audit.mjs'
+      - '.github/workflows/studio-shortcut-collision-ci.yml'
+  pull_request:
+    paths:
+      - 'src/studio/input/studio-selection-history-controller.mjs'
+      - 'src/studio/input/studio-snap-cycle-controller.mjs'
+      - 'scripts/studio-shortcut-collision-audit.mjs'
+      - '.github/workflows/studio-shortcut-collision-ci.yml'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax check
+        run: |
+          node --check src/studio/input/studio-selection-history-controller.mjs
+          node --check src/studio/input/studio-snap-cycle-controller.mjs
+          node --check scripts/studio-shortcut-collision-audit.mjs
+      - name: Shortcut collision contract
+        run: node scripts/studio-shortcut-collision-audit.mjs

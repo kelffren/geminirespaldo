@@ -1,0 +1,28 @@
+name: Melee Recovery Mobility CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/systems/melee/**'
+      - 'src/systems/pvp-world.js'
+      - 'server/pvp-authority.js'
+      - 'scripts/melee-recovery-mobility-audit.js'
+      - 'scripts/audit-pvp-heavy-recovery.js'
+      - '.github/workflows/melee-recovery-mobility-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verify cumulative melee recovery movement contract
+        run: node scripts/melee-recovery-mobility-audit.js
+      - name: Verify heavy recovery fixed-step feel contract
+        run: node scripts/audit-pvp-heavy-recovery.js
+      - name: Verify Foundation architecture
+        run: npm run audit:foundation

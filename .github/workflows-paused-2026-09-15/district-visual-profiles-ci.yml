@@ -1,0 +1,27 @@
+name: District Visual Profiles CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/environment/terrain-contract.js'
+      - 'src/environment/world-map.js'
+      - 'scripts/validate-district-visual-profiles.mjs'
+      - '.github/workflows/district-visual-profiles-ci.yml'
+  pull_request:
+    paths:
+      - 'src/environment/terrain-contract.js'
+      - 'src/environment/world-map.js'
+      - 'scripts/validate-district-visual-profiles.mjs'
+      - '.github/workflows/district-visual-profiles-ci.yml'
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate District Visual Profiles
+        run: |
+          node --check src/environment/terrain-contract.js
+          node --check src/environment/world-map.js
+          node --check scripts/validate-district-visual-profiles.mjs
+          node scripts/validate-district-visual-profiles.mjs

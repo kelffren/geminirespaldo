@@ -1,0 +1,45 @@
+/* KELO-INDEX
+ * area: CREATORS / ABILITY DOCUMENT
+ * owner: Ability workspace document schema
+ * owns: editable ability gameplay contract + authoring links only
+ * does-not-own: casting, damage, cooldown authority, FX runtime, animation runtime, persistence or networking
+ * reuse: existing KeloAbilities data contract + StudioKernel documentModel
+ */
+const copy=value=>value==null?value:(typeof structuredClone==='function'?structuredClone(value):JSON.parse(JSON.stringify(value)));
+const uid=prefix=>`${prefix}:${globalThis.crypto?.randomUUID?.()||`${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`}`;
+const finite=(value,fallback=0)=>Number.isFinite(Number(value))?Number(value):fallback;
+const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
+const positive=(value,fallback=0)=>Math.max(0,finite(value,fallback));
+export const ABILITY_TARGET_TYPES=Object.freeze(['self','direction','position','target']);
+export const ABILITY_INPUT_MODES=Object.freeze(['instant','press_release','hold_release']);
+export const ABILITY_SLOT_TYPES=Object.freeze(['normal','ultimate']);
+export const ABILITY_ROLES=Object.freeze(['burst','control','mobility','defense','sustain','ultimate']);
+export const ABILITY_DELIVERY_TYPES=Object.freeze(['projectile','self_aoe','chain','dash','blink','instant','persistent_area','wall','trap','aura','swap_sword']);
+export const ABILITY_EFFECT_TYPES=Object.freeze(['damage','heal','shield','status']);
+export const ABILITY_TELEGRAPH_SHAPES=Object.freeze(['none','line','circle','dash','blink','wall']);
+export const ABILITY_ELEMENTS=Object.freeze(['fire','ice','lightning','wind','earth','shadow','poison','light']);
+export const ABILITY_FORMS=Object.freeze(['projectile','nova','chain','dash','shield','vortex','wall','trap','aura','swap']);
+function idKey(value){return String(value||'new_ability').toLowerCase().replace(/[^a-z0-9_]+/g,'_').replace(/^_+|_+$/g,'')||'new_ability';}
+function normalizeEffect(effect={}){
+  const type=ABILITY_EFFECT_TYPES.includes(String(effect.type))?String(effect.type):'damage';
+  return {_id:String(effect._id||uid('ability-effect')),type,damageType:String(effect.damageType||'physical'),amount:positive(effect.amount,20),status:String(effect.status||'slow'),duration:positive(effect.duration,2),magnitude:finite(effect.magnitude,.25),tickInterval:positive(effect.tickInterval,1),refreshPolicy:String(effect.refreshPolicy||'refresh'),perTick:effect.perTick===true,visualProfileId:effect.visualProfileId==null?null:String(effect.visualProfileId)};
+}
+export function normalizeAbilityDocument(input={}){
+  const source=input.definition||input,targeting=source.targeting||{},resource=source.resource||{},action=source.action||{},telegraph=source.telegraph||{},delivery=source.delivery||{},visuals=source.visuals||{},recipe=Array.isArray(source.recipe)?source.recipe:[],links=input.links||{};
+  const targetType=ABILITY_TARGET_TYPES.includes(String(targeting.type))?String(targeting.type):'direction',inputMode=ABILITY_INPUT_MODES.includes(String(source.input?.mode))?String(source.input.mode):'press_release',slotType=ABILITY_SLOT_TYPES.includes(String(source.slotType))?String(source.slotType):'normal',role=ABILITY_ROLES.includes(String(source.role))?String(source.role):'burst',deliveryType=ABILITY_DELIVERY_TYPES.includes(String(delivery.type))?String(delivery.type):'projectile',shape=ABILITY_TELEGRAPH_SHAPES.includes(String(telegraph.shape))?String(telegraph.shape):'line';
+  const element=ABILITY_ELEMENTS.includes(String(recipe[0]))?String(recipe[0]):'fire',form=ABILITY_FORMS.includes(String(recipe[1]))?String(recipe[1]):'projectile';
+  return {schema:1,documentType:'ABILITY',documentId:String(input.documentId||uid('ability-document')),definition:{id:Math.max(1,Math.round(finite(source.id,1000))),key:idKey(source.key),name:String(source.name||'New Ability'),icon:String(source.icon||'✨'),slotType,role,recipe:[element,form],targeting:{type:targetType,range:positive(targeting.range,420)},resource:{type:String(resource.type||'mana'),cost:positive(resource.cost,20)},cooldown:positive(source.cooldown,5),input:{mode:inputMode},action:{windup:positive(action.windup,.08),active:positive(action.active,.04),recovery:positive(action.recovery,.2),movementScale:clamp(finite(action.movementScale,.75),0,1.5)},telegraph:{shape,range:positive(telegraph.range,targeting.range||420),radius:positive(telegraph.radius,80),width:positive(telegraph.width,24)},delivery:{type:deliveryType,speed:positive(delivery.speed,420),radius:positive(delivery.radius,16),maxDistance:positive(delivery.maxDistance,targeting.range||420),pierceCount:Math.max(0,Math.round(finite(delivery.pierceCount,0))),maxTargets:Math.max(1,Math.round(finite(delivery.maxTargets,1))),jumpRange:positive(delivery.jumpRange,180),damageFalloff:clamp(finite(delivery.damageFalloff,.8),0,1),distance:positive(delivery.distance,160),duration:positive(delivery.duration,.2),tickInterval:positive(delivery.tickInterval,.5),width:positive(delivery.width,150),hp:positive(delivery.hp,250),activationRadius:positive(delivery.activationRadius,55),armTime:positive(delivery.armTime,.5),blocksMovement:delivery.blocksMovement!==false,blocksProjectiles:delivery.blocksProjectiles!==false,teamFilter:String(delivery.teamFilter||'enemy'),wallCollision:delivery.wallCollision!==false,actorCollision:delivery.actorCollision!==false,sweptCollision:delivery.sweptCollision!==false,directionSource:String(delivery.directionSource||'aim')},effects:(source.effects||[]).map(normalizeEffect),visualProfileId:source.visualProfileId==null?null:String(source.visualProfileId),visuals:{color:String(visuals.color||'#7fd7ff'),accent:String(visuals.accent||'#ffffff'),fx:String(visuals.fx||idKey(source.key))}},links:{animationProjectId:links.animationProjectId==null?null:String(links.animationProjectId),castVfxProjectId:links.castVfxProjectId==null?null:String(links.castVfxProjectId),impactVfxProjectId:links.impactVfxProjectId==null?null:String(links.impactVfxProjectId)},meta:{createdAt:finite(input.meta?.createdAt,Date.now()),updatedAt:finite(input.meta?.updatedAt,Date.now())}};
+}
+export const abilityDocumentModel=Object.freeze({id:'ability',normalize:normalizeAbilityDocument,chunkSize:()=>512,rebuildSpatial(){},syncCommand(){}});
+export function abilityDefinitionFromDocument(document){
+  const doc=normalizeAbilityDocument(document),def=copy(doc.definition);def.effects=def.effects.map(effect=>{const row=copy(effect);delete row._id;if(row.type!=='damage')delete row.damageType;if(row.type!=='status'){delete row.status;delete row.magnitude;delete row.tickInterval;delete row.refreshPolicy;delete row.visualProfileId;}if(row.type!=='status'&&row.type!=='shield')delete row.duration;if(row.type!=='damage'&&row.type!=='heal'&&row.type!=='shield')delete row.amount;return row;});return Object.freeze(def);
+}
+export function abilityTimelineDuration(document){const a=normalizeAbilityDocument(document).definition.action;return Math.max(.05,a.windup+a.active+a.recovery);}
+export function validateAbilityDocument(document,{supportedDeliveryTypes=null}={}){
+  const doc=normalizeAbilityDocument(document),def=doc.definition,errors=[],warnings=[];
+  if(!def.key.trim())errors.push('ABILITY_KEY_REQUIRED');if(!def.name.trim())errors.push('ABILITY_NAME_REQUIRED');if(def.cooldown<0)errors.push('ABILITY_COOLDOWN_INVALID');if(def.resource.cost<0)errors.push('ABILITY_RESOURCE_COST_INVALID');if(def.action.windup+def.action.active+def.action.recovery<=0)errors.push('ABILITY_ACTION_TIMING_INVALID');
+  if(!ABILITY_DELIVERY_TYPES.includes(def.delivery.type))errors.push(`ABILITY_DELIVERY_INVALID:${def.delivery.type}`);if(Array.isArray(supportedDeliveryTypes)&&supportedDeliveryTypes.length&&!supportedDeliveryTypes.includes(def.delivery.type))errors.push(`ABILITY_DELIVERY_UNSUPPORTED:${def.delivery.type}`);
+  if((def.targeting.type==='direction'||def.targeting.type==='position'||def.targeting.type==='target')&&def.targeting.range<=0)errors.push('ABILITY_TARGET_RANGE_REQUIRED');if(def.delivery.type==='projectile'&&(def.delivery.speed<=0||def.delivery.maxDistance<=0||def.delivery.radius<=0))errors.push('ABILITY_PROJECTILE_INVALID');if((def.delivery.type==='dash'||def.delivery.type==='blink')&&def.delivery.distance<=0)errors.push('ABILITY_MOVEMENT_DISTANCE_INVALID');if(def.delivery.type==='persistent_area'||def.delivery.type==='aura')if(def.delivery.duration<=0||def.delivery.tickInterval<=0)errors.push('ABILITY_AREA_TIMING_INVALID');
+  if(!def.effects.length&& !['dash','blink','wall','swap_sword'].includes(def.delivery.type))warnings.push('ABILITY_HAS_NO_EFFECTS');for(const effect of def.effects){if(!ABILITY_EFFECT_TYPES.includes(effect.type))errors.push(`ABILITY_EFFECT_INVALID:${effect.type}`);if(['damage','heal','shield'].includes(effect.type)&&effect.amount<0)errors.push(`ABILITY_EFFECT_AMOUNT_INVALID:${effect._id}`);if(effect.type==='status'&&!effect.status.trim())errors.push(`ABILITY_STATUS_REQUIRED:${effect._id}`);}
+  return Object.freeze({ok:errors.length===0,errors:Object.freeze(errors),warnings:Object.freeze(warnings)});
+}

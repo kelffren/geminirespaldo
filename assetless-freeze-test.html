@@ -1,0 +1,69 @@
+<!-- KELO-INDEX
+  area: RUNTIME / ASSETLESS FREEZE LAB
+  owner: isolated diagnostic page
+  keys: ASSETLESS FREEZE IOS SPRITES ATLAS MAP DIAGNOSTIC
+  purpose: ejecutar el core de movimiento/render sin solicitar ningún asset visual, atlas, mapa, prop, garden, CSS externo ni manifest
+  online: N/A; diagnóstico aislado, no cambia el runtime principal
+  do-not: convertir esta página en runtime de producción
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#05070a">
+  <title>Kelo World — ASSETLESS FREEZE TEST</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none}
+    html,body{width:100%;height:100%;overflow:hidden;background:#05070a}
+    #game-canvas{width:100%;height:100%;display:block;touch-action:none}
+    #ui-layer{position:absolute;inset:0;pointer-events:none;z-index:10}
+    #action-bar-container{display:none}
+    #social-modal,#pvp-hud{display:none}
+    #assetless-lab{position:fixed;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:99999;padding:7px 11px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(0,0,0,.64);color:#fff;font:700 11px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;pointer-events:none;white-space:nowrap}
+  </style>
+</head>
+<body>
+<canvas id="game-canvas"></canvas>
+<div id="ui-layer"><div id="action-bar-container"></div></div>
+<div id="social-modal"></div>
+<div id="pvp-hud"><span id="player-hp-fill"></span><span id="rival-hp-fill"></span><span id="rival-name"></span></div>
+<div id="assetless-lab">ASSETLESS TEST · 0 SPRITES · 0 ATLAS · 0 MAP ASSETS</div>
+<script>
+(function(){
+  window.KELO_ASSETLESS_FREEZE_LAB=true;
+  window.KELO_WORLD_DECORATION_RESET=false;
+  window.KELO_HIDE_MINIMAP=true;
+  window.__keloHoldGameLoop=true;
+  document.documentElement.setAttribute('data-kelo-auth-gate','off');
+  document.documentElement.setAttribute('data-kelo-guest-play','1');
+})();
+</script>
+<!-- Core only. No manifest, external CSS, Image(), atlas, tile registry, world map or prop pipeline. -->
+<script src="src/core/events/event-bus.js?v=assetless-lab-1"></script>
+<script src="src/core/input-lock-system.js?v=assetless-lab-1"></script>
+<script src="src/core/movement-profile.js?v=assetless-lab-1"></script>
+<script src="src/core/kelo-runtime-bootstrap.js?v=assetless-lab-1"></script>
+<script src="src/physics/collision-utils.js?v=assetless-lab-1"></script>
+<script src="engine-a.js?v=assetless-lab-1"></script>
+<script>window.KELO_COLLISION.attachLegacyObstacleArray(obstacles,{adoptExistingOwner:'core-static'});</script>
+<script src="src/core/input-system.js?v=assetless-lab-1"></script>
+<script src="src/core/movement-system.js?v=assetless-lab-1"></script>
+<script src="engine-b.js?v=assetless-lab-1"></script>
+<script src="engine-c.js?v=assetless-lab-1"></script>
+<script>
+window.__keloBootReady=true;
+window.dispatchEvent(new Event('kelo:boot-ready'));
+window.KELO_ASSETLESS_LAB_AUDIT=Object.freeze({
+  build:'assetless-freeze-lab-1',
+  assetRequestsExpected:0,
+  atlasContractLoaded:false,
+  tileRegistryLoaded:false,
+  worldMapLoaded:false,
+  propsLoaded:false,
+  gardensLoaded:false,
+  forestPlazaLoaded:false
+});
+</script>
+</body>
+</html>

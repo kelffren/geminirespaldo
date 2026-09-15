@@ -1,0 +1,30 @@
+name: Sprite Ability Combat Lab CI
+
+on:
+  pull_request:
+    paths:
+      - 'src/creators/sprite-ability/**'
+      - 'src/studio/ui/studio-workspace-shell.mjs'
+      - 'scripts/sprite-ability-combat-lab-audit.mjs'
+      - '.github/workflows/sprite-ability-combat-lab-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/creators/sprite-ability/**'
+      - 'src/studio/ui/studio-workspace-shell.mjs'
+      - 'scripts/sprite-ability-combat-lab-audit.mjs'
+      - '.github/workflows/sprite-ability-combat-lab-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  combat-lab-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Audit Sprite Ability Combat Lab
+        run: node scripts/sprite-ability-combat-lab-audit.mjs

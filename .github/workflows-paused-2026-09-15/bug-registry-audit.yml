@@ -1,0 +1,71 @@
+name: Bug Registry Audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bugs/**'
+      - 'scripts/bug-*.mjs'
+      - 'scripts/lib/bug-*.mjs'
+      - 'src/core/bug-observability.mjs'
+      - 'package.json'
+      - '.github/workflows/bug-registry-audit.yml'
+  pull_request:
+    paths:
+      - 'bugs/**'
+      - 'scripts/bug-*.mjs'
+      - 'scripts/lib/bug-*.mjs'
+      - 'src/core/bug-observability.mjs'
+      - 'package.json'
+      - '.github/workflows/bug-registry-audit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit-bug-registry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Self-test bug intelligence tooling
+        run: npm run test:bug-intelligence
+
+      - name: Audit incoming report integrity and privacy
+        run: npm run audit:bug-reports
+
+      - name: Audit bug registry schema and research history
+        run: npm run audit:bugs
+
+      - name: Audit permanent regression protection
+        run: npm run audit:bug-regressions
+
+      - name: Enforce bug closure evidence gate
+        run: npm run audit:bug-close
+
+      - name: Fail on verified or closed bug recurrence
+        run: npm run audit:bug-recurrence
+
+      - name: Print incoming recurrence clusters
+        run: npm run bug:triage
+
+      - name: Print bug health dashboard
+        run: npm run bug:health
+
+      - name: Score regression risk for this commit
+        run: npm run bug:risk -- HEAD~1 HEAD
+
+      - name: Analyze reverse dependency blast radius
+        run: npm run bug:impact -- --diff HEAD~1 HEAD --depth=2
+
+      - name: Smoke-test agent briefing on critical World bug
+        run: npm run bug:brief -- BUG-0003

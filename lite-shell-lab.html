@@ -1,0 +1,66 @@
+<!-- KELO-INDEX
+  area: LAB / UI BOOT
+  owner: Lite Shell production-parity experiment
+  purpose: probar el mundo real sin luxe-shell/mobile-orientation/player-hud en el arranque; UI completa entra al primer toque
+  do-not: NO producción automática
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#05070a">
+<title>Kelo World · Lite Shell Lab</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none}html,body{width:100%;height:100%;overflow:hidden;background:#05070a}#game-canvas{width:100%;height:100%;display:block;touch-action:none}#ui-layer{position:absolute;inset:0;pointer-events:none;z-index:10}body.social-mode #action-bar-container{display:none!important}#kelo-module-loader{position:fixed;left:50%;bottom:max(14px,calc(env(safe-area-inset-bottom) + 8px));transform:translateX(-50%);z-index:2147483600;pointer-events:none;min-width:168px;max-width:78vw;padding:8px 12px 9px;border-radius:16px;background:rgba(7,10,12,.88);border:1px solid rgba(229,189,98,.38);color:#e7c56a;font:700 11px/1.25 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;text-align:center}#kelo-module-loader[hidden]{display:none!important}#kelo-module-loader .kelo-ml-track{margin-top:6px;height:3px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}#kelo-module-loader .kelo-ml-bar{display:block;height:100%;width:0;background:#e7c56a}.lsl-metric{position:fixed;z-index:95;left:8px;bottom:max(8px,env(safe-area-inset-bottom));padding:7px 9px;border-radius:11px;background:rgba(5,12,15,.88);border:1px solid rgba(255,255,255,.09);color:#b9ccc5;font:9px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;pointer-events:none}
+</style>
+</head>
+<body class="social-mode">
+<canvas id="game-canvas"></canvas>
+<div id="ui-layer"><div class="action-bar" id="action-bar-container"></div></div>
+<div id="kelo-module-loader" hidden><span id="kelo-ml-text">Cargando…</span><div class="kelo-ml-track"><i class="kelo-ml-bar" id="kelo-ml-bar"></i></div></div>
+<div class="lsl-metric" id="lsl-metric">Lite Shell · midiendo…</div>
+<script>window.KELO_LITE_SHELL_LAB=true;window.KELO_WORLD_DECORATION_RESET=true;window.KELO_HIDE_MINIMAP=true;window.__keloHoldGameLoop=true;document.documentElement.setAttribute('data-kelo-auth-gate','off');document.documentElement.setAttribute('data-kelo-guest-play','1');</script>
+<script src="src/core/events/event-bus.js?v=1"></script>
+<script src="src/core/input-lock-system.js?v=1"></script>
+<script src="src/core/movement-profile.js?v=1"></script>
+<script src="src/core/kelo-runtime-bootstrap.js?v=3-player-vitals"></script>
+<script src="src/physics/collision-utils.js?v=2"></script>
+<script src="engine-a.js?v=151"></script>
+<script src="src/core/player-state-system.js?v=1"></script>
+<script>window.KELO_COLLISION.attachLegacyObstacleArray(obstacles,{adoptExistingOwner:'core-static'});</script>
+<script src="src/core/input-system.js?v=1"></script>
+<script src="src/core/movement-system.js?v=2"></script>
+<script src="engine-b.js?v=95-boot-ready"></script>
+<script src="engine-c.js?v=230-sim-owner"></script>
+<script src="src/core/camera-follow-shadow.js?v=1"></script>
+<script src="src/core/camera-system.js?v=1"></script>
+<script src="src/core/avatar-render-system.js?v=2-base-zoo-authority"></script>
+<script src="src/core/render-extension-system.js?v=3"></script>
+<script src="src/core/simulation-extension-system.js?v=4-sim-owner"></script>
+<script src="src/core/simulation-farm-shadow.js?v=1"></script>
+<script src="engine-d.js?v=95"></script><script src="engine-e.js?v=94"></script><script src="engine-f.js?v=95"></script><script src="engine-g.js?v=96"></script>
+<script src="src/environment/mobile-performance-contract.js?v=2-cache-working-set"></script>
+<script src="engine-h.js?v=151"></script><script src="engine-i.js?v=94"></script><script src="engine-j.js?v=94"></script><script src="engine-k.js?v=94"></script>
+<script src="src/environment/rural-nature-atlas.js?v=200"></script><script src="src/environment/gardens-atlas.js?v=2"></script><script src="src/environment/gardens-joins.js?v=3"></script><script src="src/environment/terrain-contract.js?v=1"></script><script src="src/environment/generated/arboleskelo1-atlas.js?v=1"></script><script src="src/environment/tile-registry.js?v=237"></script><script src="src/environment/atlas-contract.js?v=4"></script><script src="src/environment/gardens-t-junction-registry.js?v=1"></script><script src="src/environment/district-decals-registry.js?v=3"></script><script src="src/environment/gardens-compositions.js?v=10"></script><script src="src/environment/world-map.js?v=terrain-191"></script><script src="src/environment/environment-layer-stack.js?v=4"></script><script src="src/environment/surface-ground.js?v=1"></script><script src="src/environment/prop-contract.js?v=7-map-probe"></script><script src="src/environment/generic-props.js?v=9"></script><script src="src/environment/prefab-contract.js?v=1"></script><script src="engine-l.js?v=223"></script>
+<script src="src/systems/performance-governor.js?v=4-boot-ready"></script>
+<script>window.__keloBootReady=true;window.dispatchEvent(new Event('kelo:boot-ready'));</script>
+<script src="src/core/module-loader.js?v=8-style-first-use"></script>
+<script>window.KELO_MODULE_LOADER&&window.KELO_MODULE_LOADER.start({build:'V6.69-lite-shell-lab'});</script>
+<script src="src/core/settings-lazy-gate.js?v=1"></script>
+<script src="src/ui/lite-shell-gate.js?v=1"></script>
+<script>
+(function(){
+  const out=document.getElementById('lsl-metric');
+  function kb(n){return (Number(n||0)/1024).toFixed(1)+'KB';}
+  function refresh(label){
+    const entries=performance.getEntriesByType('resource').filter(function(e){return /luxe-shell|mobile-orientation|luxe-player-hud|lite-shell-gate/.test(e.name);});
+    const tx=entries.reduce(function(n,e){return n+(Number(e.transferSize)||0);},0),decoded=entries.reduce(function(n,e){return n+(Number(e.decodedBodySize)||0);},0);
+    out.textContent=(label||'Lite')+' · UI red '+kb(tx)+' · decoded '+kb(decoded)+' · full='+(!!window.KELO_LUXE);
+  }
+  addEventListener('load',function(){refresh('BOOT');},{once:true});
+  addEventListener('kelo:lite-shell:file-end',function(){refresh('UPGRADE');});
+  addEventListener('kelo:lite-shell:upgrade-end',function(){refresh('LISTO');});
+})();
+</script>
+</body></html>

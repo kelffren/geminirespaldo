@@ -1,0 +1,46 @@
+name: PvP Camera Reversal Feel CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/core/camera-system.js'
+      - 'scripts/audit-camera-reversal-feel.mjs'
+      - 'scripts/live-camera-reversal-judge.mjs'
+      - '.github/workflows/pvp-camera-reversal-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  live-feel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Foundation architecture audit
+        run: node scripts/foundation-architecture-audit.js
+      - name: Audit reversal timing at 60 90 120 Hz
+        run: node scripts/audit-camera-reversal-feel.mjs
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Serve exact checkout
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/kelo-camera-reversal-http.log 2>&1 &
+          python3 - <<'PY'
+          import time, urllib.request
+          for _ in range(50):
+              try:
+                  if urllib.request.urlopen('http://127.0.0.1:4173/index.html',timeout=1).status == 200:
+                      raise SystemExit(0)
+              except Exception:
+                  time.sleep(.2)
+          raise SystemExit('server unavailable')
+          PY
+      - name: Judge camera reversal on mobile and desktop
+        env:
+          AUDIT_URL: http://127.0.0.1:4173/
+        run: node scripts/live-camera-reversal-judge.mjs

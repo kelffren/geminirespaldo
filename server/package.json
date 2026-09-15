@@ -1,0 +1,18 @@
+{
+  "name": "kelo-world-server",
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "node": ">=24.20.0 <25"
+  },
+  "scripts": {
+    "start": "node sprite-ai-bootstrap.js",
+    "test:smoke": "node smoke-test.js",
+    "test:persistence": "node persistence-smoke-test.js",
+    "test:avatar-realtime": "node avatar-realtime-smoke-test.js",
+    "test:sprite-ai": "node sprite-ai-smoke-test.js"
+  },
+  "dependencies": {
+    "ws": "8.21.3"
+  }
+}

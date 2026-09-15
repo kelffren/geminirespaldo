@@ -1,0 +1,39 @@
+name: Imperial round tree visual audit
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/imperial-round-tree-visual-audit.yml'
+      - '.github/scripts/capture-imperial-round-tree.cjs'
+      - '.github/scripts/capture-imperial-round-tree-game.cjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Playwright
+        run: npm install --no-save playwright
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Capture compiler
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+        run: node .github/scripts/capture-imperial-round-tree.cjs
+      - name: Capture tree inside real LIVE guest game
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+        run: node .github/scripts/capture-imperial-round-tree-game.cjs
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: imperial-round-tree-visual-audit
+          path: artifacts/
+          if-no-files-found: error

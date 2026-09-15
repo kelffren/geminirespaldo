@@ -1,0 +1,130 @@
+name: Capture Imperial round tree compiler and LIVE
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/imperial-round-tree-capture.yml'
+      - 'src/environment/prop-contract.js'
+      - 'src/property/property-asset-catalog.js'
+      - 'assets/world/imperial-plaza/arbol-redondo.png'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for GitHub Pages deployment
+        run: sleep 30
+
+      - name: Install Playwright
+        run: npm install --no-save playwright
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Compile asset and capture real LIVE placement
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+        run: |
+          mkdir -p artifacts
+          cat > capture-round-tree.cjs <<'NODE'
+          const { chromium } = require('playwright');
+          const fs = require('fs');
+
+          (async()=>{
+            const browser = await chromium.launch({headless:true});
+            const context = await browser.newContext({viewport:{width:540,height:760},deviceScaleFactor:1});
+            const page = await context.newPage();
+            const failed=[];
+            page.on('requestfailed',req=>failed.push(`${req.method()} ${req.url()} :: ${req.failure()?.errorText||'failed'}`));
+            const treeResponses=[];
+            page.on('response',res=>{ if(res.url().includes('arbol-redondo.png')) treeResponses.push({url:res.url(),status:res.status()}); });
+
+            const url = `${process.env.AUDIT_URL}?round-tree-audit=${Date.now()}`;
+            const response = await page.goto(url,{waitUntil:'domcontentloaded',timeout:60000});
+            if(!response || !response.ok()) throw new Error(`LIVE page HTTP ${response?.status()}`);
+
+            await page.waitForFunction(()=>window.KELO_PROPERTY_CATALOG?.get?.('imperial:arbol-redondo'),null,{timeout:30000});
+            await page.waitForFunction(()=>window.KELO_PROP_CONTRACT?.version==='1.8.0',null,{timeout:30000});
+            await page.waitForFunction(()=>window.KELO_GENERIC_PROPS?.isAssetReady?.('plazaRoundTree')===true,null,{timeout:30000});
+
+            const compileAudit = await page.evaluate(async()=>{
+              const template=window.KELO_PROPERTY_CATALOG.get('imperial:arbol-redondo');
+              if(!template)throw new Error('imperial:arbol-redondo missing from Property Catalog');
+              const compilerModule=await import(`./src/studio/compiler/world-compiler.mjs?round-tree=${Date.now()}`);
+              const previewModule=await import(`./src/studio/render/studio-asset-preview-service.mjs?round-tree=${Date.now()}`);
+              const prefab={
+                id:template.id,version:1,label:template.label,category:template.category,
+                bounds:{w:template.width,h:template.height},
+                components:{visual:{source:'property-catalog',parts:template.parts||[]},...(template.collision?{collider:{rect:template.collision,blocksMovement:true}}:{})},
+                dependencies:[...new Set((template.parts||[]).map(p=>p.assetKey).filter(Boolean))]
+              };
+              const compiler=compilerModule.createWorldCompiler({resolvePrefab:id=>id===template.id?prefab:{id}});
+              const auditDocument={
+                worldId:'audit:imperial-round-tree',settings:{chunkSize:512},dependencies:[],terrain:{},navigation:{collisions:{}},gameRules:{},revision:{id:'round-tree-live-audit'},
+                entities:[{id:'round-tree-compiled-1',prefabId:'imperial:arbol-redondo',transform:{x:1260,y:1540,scale:2},bounds:{w:template.width,h:template.height},components:{}}]
+              };
+              const compiled=compiler.compile(auditDocument);
+              const entity=compiled.chunks.flatMap(c=>c.staticEntities).find(e=>e.id==='round-tree-compiled-1');
+              if(!entity)throw new Error('round tree did not compile into static entity');
+              const part=entity.components?.visual?.parts?.[0];
+              if(part?.assetKey!=='imperialRoundTree')throw new Error(`compiled visual asset mismatch: ${part?.assetKey}`);
+              if(!compiled.dependencies.includes('imperial:arbol-redondo'))throw new Error('compiled dependency missing');
+
+              const overlay=document.createElement('section');
+              overlay.id='tree-compiler-audit';
+              overlay.style.cssText='position:fixed;inset:0;z-index:999999;background:#071011;color:#edf5f0;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;padding:18px;';
+              const card=document.createElement('div');
+              card.style.cssText='width:min(480px,100%);border:1px solid rgba(231,197,106,.45);border-radius:22px;background:#0b1718;padding:18px;box-shadow:0 25px 70px rgba(0,0,0,.6);';
+              const title=document.createElement('div');
+              title.innerHTML='<div style="font:700 12px Georgia,serif;letter-spacing:.16em;color:#f0d77d">KELO WORLD COMPILER</div><div style="font-size:24px;font-weight:800;margin-top:6px">Árbol Redondo Imperial</div><div style="font-size:11px;color:#83a398;margin-top:4px">imperial:arbol-redondo</div>';
+              const previewWrap=document.createElement('div');
+              previewWrap.style.cssText='margin:16px auto 12px;width:340px;max-width:100%;aspect-ratio:1;border-radius:18px;display:flex;align-items:center;justify-content:center;background-color:#101b1d;background-image:linear-gradient(45deg,#152426 25%,transparent 25%),linear-gradient(-45deg,#152426 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#152426 75%),linear-gradient(-45deg,transparent 75%,#152426 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0;overflow:hidden;border:1px solid rgba(255,255,255,.06)';
+              const canvas=document.createElement('canvas');previewWrap.appendChild(canvas);
+              const meta=document.createElement('div');
+              const compiledBounds=entity.bounds;
+              meta.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px"><div style="padding:10px;border-radius:10px;background:#102021"><b style="color:#f0d77d">SOURCE</b><br>1254 × 1254 PNG</div><div style="padding:10px;border-radius:10px;background:#102021"><b style="color:#f0d77d">EDITOR</b><br>${template.width} × ${template.height}</div><div style="padding:10px;border-radius:10px;background:#102021"><b style="color:#7fe0a8">COMPILED ✓</b><br>${compiledBounds.w} × ${compiledBounds.h}</div><div style="padding:10px;border-radius:10px;background:#102021"><b style="color:#7fe0a8">ASSET KEY ✓</b><br>${part.assetKey}</div></div><div style="margin-top:10px;font-size:10px;color:#8da49c">Static entity · collider ${entity.components?.collider?'ON':'OFF'}</div>`;
+              card.append(title,previewWrap,meta);overlay.appendChild(card);document.body.appendChild(overlay);
+              const preview=previewModule.createStudioAssetPreviewService({assetCatalog:window.KELO_PROPERTY_CATALOG,atlasContract:window.KELO_ATLAS_CONTRACT,devicePixelRatio:1});
+              await preview.renderThumbnail(canvas,template,{cssSize:320,padding:10});
+              window.__ROUND_TREE_PREVIEW_SERVICE=preview;
+              return {templateId:template.id,label:template.label,compiledBounds,assetKey:part.assetKey,dependencies:compiled.dependencies,chunkCount:compiled.chunks.length};
+            });
+
+            await page.screenshot({path:'artifacts/compiled-arbol-redondo.png',fullPage:true});
+            await page.evaluate(()=>{document.getElementById('tree-compiler-audit')?.remove();window.__ROUND_TREE_PREVIEW_SERVICE?.close?.();delete window.__ROUND_TREE_PREVIEW_SERVICE;});
+
+            await page.setViewportSize({width:844,height:430});
+            await page.evaluate(()=>{
+              if(typeof localPlayer!=='undefined'){localPlayer.x=1480;localPlayer.y=1680;localPlayer.vx=0;localPlayer.vy=0;}
+              if(typeof camera!=='undefined'){camera.x=1480;camera.y=1680;camera.targetX=1480;camera.targetY=1680;camera.lookOffsetX=0;camera.lookOffsetY=0;}
+              if(typeof input!=='undefined'){input.normX=0;input.normY=0;input.touchActive=false;}
+            });
+            await page.waitForTimeout(1200);
+            const liveAudit = await page.evaluate(()=>{
+              const prop=window.KELO_PROP_CONTRACT?.props?.find?.(p=>p.id==='plaza-round-tree-imperial');
+              return {contractVersion:window.KELO_PROP_CONTRACT?.version||null,prop:prop?{id:prop.id,asset:prop.asset,position:prop.position,size:prop.size,collider:prop.collider}:null,assetReady:window.KELO_GENERIC_PROPS?.isAssetReady?.('plazaRoundTree')===true,genericAudit:window.KELO_GENERIC_PROP_AUDIT?{ready:window.KELO_GENERIC_PROP_AUDIT.ready,failed:window.KELO_GENERIC_PROP_AUDIT.failed,registeredColliderCount:window.KELO_GENERIC_PROP_AUDIT.registeredColliderCount}:null};
+            });
+            if(!liveAudit.prop||!liveAudit.assetReady||liveAudit.genericAudit?.failed)throw new Error(`LIVE round tree failed: ${JSON.stringify(liveAudit)}`);
+            await page.screenshot({path:'artifacts/game-arbol-redondo.png',fullPage:true});
+            fs.writeFileSync('artifacts/audit.json',JSON.stringify({url,compileAudit,liveAudit,treeResponses,failedRequests:failed},null,2));
+            console.log(JSON.stringify({compileAudit,liveAudit,treeResponses,failedCount:failed.length},null,2));
+            await browser.close();
+          })().catch(error=>{console.error(error);process.exit(1);});
+          NODE
+          node capture-round-tree.cjs
+
+      - name: Upload compiler and LIVE screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: imperial-round-tree-captures
+          path: artifacts/
+          if-no-files-found: error

@@ -1,0 +1,42 @@
+name: Sprite Donor Surgery CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/creators/sprite-compiler/sprite-donor-repair.mjs'
+      - 'src/creators/sprite-compiler/sprite-donor-surgery-bridge.mjs'
+      - 'src/creators/sprite-compiler/sprite-silhouette-consistency.mjs'
+      - 'src/creators/ui/avatar-frame-surgery-editor.mjs'
+      - 'src/creators/ui/avatar-frame-surgery-workspace.mjs'
+      - 'scripts/sprite-donor-surgery-audit.mjs'
+      - '.github/workflows/sprite-donor-surgery-ci.yml'
+  pull_request:
+    paths:
+      - 'src/creators/sprite-compiler/sprite-donor-repair.mjs'
+      - 'src/creators/sprite-compiler/sprite-donor-surgery-bridge.mjs'
+      - 'src/creators/sprite-compiler/sprite-silhouette-consistency.mjs'
+      - 'src/creators/ui/avatar-frame-surgery-editor.mjs'
+      - 'src/creators/ui/avatar-frame-surgery-workspace.mjs'
+      - 'scripts/sprite-donor-surgery-audit.mjs'
+      - '.github/workflows/sprite-donor-surgery-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  donor-surgery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Syntax
+        run: |
+          node --check src/creators/sprite-compiler/sprite-donor-repair.mjs
+          node --check src/creators/sprite-compiler/sprite-donor-surgery-bridge.mjs
+          node --check src/creators/sprite-compiler/sprite-silhouette-consistency.mjs
+          node --check src/creators/ui/avatar-frame-surgery-editor.mjs
+          node --check src/creators/ui/avatar-frame-surgery-workspace.mjs
+          node --check scripts/sprite-donor-surgery-audit.mjs
+      - name: Donor surgery regression
+        run: node scripts/sprite-donor-surgery-audit.mjs

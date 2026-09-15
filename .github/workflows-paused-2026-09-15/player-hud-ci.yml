@@ -1,0 +1,68 @@
+name: Player HUD CI
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'src/ui/luxe-shell.js'
+      - 'src/ui/luxe-player-hud.js'
+      - 'src/systems/nobility.js'
+      - 'src/systems/title-system.js'
+      - 'scripts/luxe-menu-audit.mjs'
+      - 'scripts/live-luxe-menu-audit.mjs'
+      - 'scripts/pvp-quick-action-diagnostic.mjs'
+      - 'docs/systems/MAIN_MENU_SYSTEM.md'
+      - 'guide.html'
+      - '.github/workflows/player-hud-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'src/ui/luxe-shell.js'
+      - 'src/ui/luxe-player-hud.js'
+      - 'scripts/luxe-menu-audit.mjs'
+      - 'scripts/live-luxe-menu-audit.mjs'
+      - 'scripts/pvp-quick-action-diagnostic.mjs'
+      - 'docs/systems/MAIN_MENU_SYSTEM.md'
+      - 'guide.html'
+      - '.github/workflows/player-hud-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  player-hud:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install test dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Syntax and static contracts
+        run: |
+          node --check src/ui/luxe-player-hud.js
+          node --check scripts/luxe-menu-audit.mjs
+          node --check scripts/live-luxe-menu-audit.mjs
+          node --check scripts/pvp-quick-action-diagnostic.mjs
+          node scripts/luxe-menu-audit.mjs
+          node scripts/system-documentation-audit.js
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Browser HUD audit
+        run: |
+          python3 -m http.server 4173 >/tmp/kelo-player-hud-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          AUDIT_URL=http://127.0.0.1:4173/ node scripts/pvp-quick-action-diagnostic.mjs
+          AUDIT_URL=http://127.0.0.1:4173/ AUDIT_OUT=artifacts/player-hud node scripts/live-luxe-menu-audit.mjs
+      - name: Upload HUD audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: player-hud-audit
+          path: artifacts/player-hud
+          if-no-files-found: ignore

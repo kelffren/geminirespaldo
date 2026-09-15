@@ -1,0 +1,147 @@
+name: Turbo Update Guardian
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - package.json
+      - index.html
+      - sw.js
+      - version.json
+      - manifest.webmanifest
+      - netlify.toml
+      - src/core/update-system.js
+      - src/core/update-delta-core.js
+      - src/core/update-watch.js
+      - src/ui/update-ui.js
+      - src/ui/studio-launcher.js
+      - src/visuals/visual-lab-loader.js
+      - src/visuals/visual-lab.js
+      - src/visuals/visual-integration.js
+      - tests/updater-delta.test.cjs
+      - scripts/turbo-update-guardian.mjs
+      - scripts/turbo-combat-hard-stop-test.mjs
+      - scripts/turbo-boot-isolation-test.mjs
+      - scripts/turbo-build.mjs
+      - scripts/turbo-build-audit.mjs
+      - scripts/generate-turbo-manifest.mjs
+      - scripts/turbo-delta-test.mjs
+      - scripts/turbo-host-server.mjs
+      - scripts/turbo-host-integration-test.mjs
+      - scripts/turbo-live-host-audit.mjs
+      - vite.config.js
+      - vite.config.mjs
+      - vite.config.ts
+      - esbuild.config.js
+      - _headers
+      - public/_headers
+      - docs/systems/TURBO_UPDATE_CONTRACT.md
+      - docs/evidence/TURBO_UPDATE_HOSTING_EVIDENCE.md
+      - .github/workflows/turbo-update-guardian.yml
+  pull_request:
+    paths:
+      - package.json
+      - index.html
+      - sw.js
+      - version.json
+      - manifest.webmanifest
+      - netlify.toml
+      - src/core/update-system.js
+      - src/core/update-delta-core.js
+      - src/core/update-watch.js
+      - src/ui/update-ui.js
+      - src/ui/studio-launcher.js
+      - src/visuals/visual-lab-loader.js
+      - src/visuals/visual-lab.js
+      - src/visuals/visual-integration.js
+      - tests/updater-delta.test.cjs
+      - scripts/turbo-update-guardian.mjs
+      - scripts/turbo-combat-hard-stop-test.mjs
+      - scripts/turbo-boot-isolation-test.mjs
+      - scripts/turbo-build.mjs
+      - scripts/turbo-build-audit.mjs
+      - scripts/generate-turbo-manifest.mjs
+      - scripts/turbo-delta-test.mjs
+      - scripts/turbo-host-server.mjs
+      - scripts/turbo-host-integration-test.mjs
+      - scripts/turbo-live-host-audit.mjs
+      - vite.config.js
+      - vite.config.mjs
+      - vite.config.ts
+      - esbuild.config.js
+      - _headers
+      - public/_headers
+      - docs/systems/TURBO_UPDATE_CONTRACT.md
+      - docs/evidence/TURBO_UPDATE_HOSTING_EVIDENCE.md
+      - .github/workflows/turbo-update-guardian.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  turbo-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      TURBO_PRODUCTION_HOST: https://kelo-world.netlify.app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Syntax check Turbo runtime, compiler, host and guardian
+        run: |
+          node --check src/core/update-delta-core.js
+          node --check src/core/update-system.js
+          node --check src/visuals/visual-lab-loader.js
+          node --check scripts/turbo-combat-hard-stop-test.mjs
+          node --check scripts/turbo-boot-isolation-test.mjs
+          node --check scripts/turbo-build.mjs
+          node --check scripts/turbo-build-audit.mjs
+          node --check scripts/generate-turbo-manifest.mjs
+          node --check scripts/turbo-host-server.mjs
+          node --check scripts/turbo-host-integration-test.mjs
+          node --check scripts/turbo-live-host-audit.mjs
+          node --check scripts/turbo-update-guardian.mjs
+      - name: Install exact production compiler
+        run: npm install --no-save --ignore-scripts esbuild@0.25.9
+      - name: Build production Turbo/lazy surface
+        run: node scripts/turbo-build.mjs
+      - name: Prove minification tree-shaking hashed code splitting
+        run: node scripts/turbo-build-audit.mjs
+      - name: Prove host implementation revalidation immutable caching Brotli and gzip
+        run: node scripts/turbo-host-integration-test.mjs
+      - name: Prove creator tools stay out of critical boot
+        run: node scripts/turbo-boot-isolation-test.mjs
+      - name: Prove PVP combat is an absolute updater hard stop
+        run: node scripts/turbo-combat-hard-stop-test.mjs
+      - name: Generate SHA-256 Turbo manifest from actual boot bytes
+        run: node scripts/generate-turbo-manifest.mjs
+      - name: Prove one-file delta and identical-build zero asset bytes
+        run: node tests/updater-delta.test.cjs
+      - name: Prove live production headers compression CDN and HTTP2
+        run: |
+          for attempt in $(seq 1 36); do
+            if node scripts/turbo-live-host-audit.mjs; then
+              exit 0
+            fi
+            echo "Netlify production not ready for this build yet; retry $attempt/36"
+            sleep 5
+          done
+          exit 1
+      - name: Retain live hosting evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: turbo-live-host-evidence
+          path: dist/turbo-live-host-evidence.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Promote verified live evidence for this CI workspace only
+        run: |
+          test -f dist/turbo-live-host-evidence.json
+          sed -i 's/^HOSTING_HEADERS_VERIFIED: false$/HOSTING_HEADERS_VERIFIED: true/' docs/evidence/TURBO_UPDATE_HOSTING_EVIDENCE.md
+          sed -i 's/^COMPRESSION_VERIFIED: false$/COMPRESSION_VERIFIED: true/' docs/evidence/TURBO_UPDATE_HOSTING_EVIDENCE.md
+          sed -i 's/^TRANSPORT_VERIFIED: false$/TRANSPORT_VERIFIED: true/' docs/evidence/TURBO_UPDATE_HOSTING_EVIDENCE.md
+      - name: Enforce all 15 Turbo Update guarantees
+        run: npm run audit:turbo

@@ -1,0 +1,47 @@
+name: Append validated Asset Contract memory
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/append-asset-contract-memory.yml'
+permissions:
+  contents: write
+jobs:
+  append:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Append validated visual memory safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin main
+          marker='## Validated Asset Contract v2 — 2026-09-05'
+          if grep -Fq "$marker" docs/VISUAL_DIRECTION_MEMORY.md; then
+            echo 'Memory entry already present.'
+            exit 0
+          fi
+          cat >> docs/VISUAL_DIRECTION_MEMORY.md <<'EOF'
+          
+          ## Validated Asset Contract v2 — 2026-09-05
+          - Phase 1 asset-level contract is now closed as `kelo-art-asset-contract-v2`. All 11 production PNG entries declare machine-readable family, semantic version, dimensions/alpha/sampling, padding/spacing, frames, anchor, visual bounds, footprint, collider, ownership, formal render layers, priority, occlusion, district compatibility, cache policy and fallback policy. Concrete world coordinates remain owned by TileRegistry/profile/prefab data rather than duplicated into the manifest.
+          - `scripts/validate-art-assets.mjs` now validates the production metadata above, exact frame/grid coverage including padding/spacing, fallback references, formal `environment-layer-stack.js` phase parity, district compatibility and TileRegistry PNG parity. For the 9 PNGs loaded directly by TileRegistry it additionally verifies the manifest cache key/value against the actual runtime query string, preventing stale-art cache metadata from drifting silently.
+          - `scripts/live-asset-contract-audit.mjs` now requires the complete v2 manifest from published GitHub Pages and verifies LIVE environment-layer phase parity before accepting the mobile audit.
+          - Validation for implementation commit `4ac80378165c06f1b13c0b2fa12c791f1fbcdebf`: Asset Contract CI run `33947288794` PASS; Kelo CI run `33947288806` PASS; GitHub Pages run `33947288353` PASS; Live Asset Contract Audit run `33947288953` PASS; general Live mobile screenshot audit run `33947288813` PASS.
+          - LIVE Asset Contract report exposed `kelo-art-asset-contract-v2`, 11/11 assets with complete production metadata, 9 query-cache assets, 2 runtime-owner assets, TileRegistry `1.11.1`, world `world-v1.19`, layer stack `environment-layer-stack-v2.2`, 390x844 CSS / 780x1688 backing canvas, `consoleErrors=[]`, `failedRequests=[]`, `httpErrors=[]`. Manual screenshot inspection found no visual regression from this metadata/validation-only migration.
+          - Do not spend the next pipeline round on provisional art. The next structural bottleneck is Phase 2 Terrain Contract: the current authored transition system still exposes a fixed 4-neighbour `transitionMasks` table and Plaza-specific topology ownership. Generalize terrain connectivity into data so a new terrain pair can be registered without a district/terrain branch in the renderer; compare bitmask/Wang/hybrid topology only as needed to make that concrete decision.
+          EOF
+          git add docs/VISUAL_DIRECTION_MEMORY.md
+          git commit -m "Append validated Asset Contract v2 memory"
+          for attempt in 1 2 3 4 5; do
+            if git pull --rebase origin main && git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "push attempt $attempt failed; retrying"
+            sleep 2
+          done
+          exit 1

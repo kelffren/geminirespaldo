@@ -1,0 +1,39 @@
+# Kelo World Supabase configuration.
+# Production auth URLs are canonical here so automated Supabase config syncs
+# cannot reset the live project back to localhost. Localhost remains allowlisted
+# for local development, but the default auth redirect always targets GitHub Pages.
+project_id = "kelo-world"
+
+[api]
+enabled = true
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+major_version = 17
+
+[db.seed]
+enabled = false
+
+[realtime]
+enabled = true
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+site_url = "https://kelffren.github.io/gemini/"
+additional_redirect_urls = [
+  "https://kelffren.github.io/gemini/",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000"
+]
+enable_signup = true
+
+# The GitHub integration currently has production deployment disabled while
+# this foundation PR is validated. This ref is not a secret.
+[remotes.production]
+project_id = "iapxdbitjdwvtbpjghct"

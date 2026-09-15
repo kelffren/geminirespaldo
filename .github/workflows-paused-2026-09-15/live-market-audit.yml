@@ -1,0 +1,55 @@
+name: Commerce LIVE mobile audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'index.html'
+      - 'engine-net.js'
+      - 'src/systems/backpack-system.js'
+      - 'src/systems/container-system.js'
+      - 'src/systems/market-escrow-system.js'
+      - 'src/systems/commerce-authority.js'
+      - 'src/instances/instance-system.js'
+      - 'src/instances/market-instance.js'
+      - 'src/ui/market-ui.js'
+      - 'src/ui/commerce-ui.js'
+      - 'scripts/live-commerce-audit.mjs'
+      - 'scripts/live-commerce-gate.mjs'
+      - '.github/workflows/live-market-audit.yml'
+
+jobs:
+  commerce-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install Playwright
+        run: npm install --no-save playwright@1.55.0
+      - name: Syntax
+        run: |
+          node --check src/systems/container-system.js
+          node --check src/systems/commerce-authority.js
+          node --check src/instances/market-instance.js
+          node --check src/ui/commerce-ui.js
+          node --check scripts/live-commerce-gate.mjs
+          node --check scripts/live-commerce-audit.mjs
+      - name: Audit real offline commerce flow on GitHub Pages
+        env:
+          LIVE_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: |
+          set -o pipefail
+          mkdir -p artifacts
+          node scripts/live-commerce-gate.mjs 2>&1 | tee artifacts/commerce-live.log
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: commerce-live-audit
+          path: artifacts/commerce-*
+          if-no-files-found: warn

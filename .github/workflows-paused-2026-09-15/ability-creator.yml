@@ -1,0 +1,84 @@
+name: Kelo Ability Creator
+on:
+  pull_request:
+    paths:
+      - 'src/creators/**'
+      - 'src/studio/core/**'
+      - 'src/studio/ui/studio-timeline.mjs'
+      - 'src/studio/ui/studio-workspace-shell.mjs'
+      - 'src/abilities/**'
+      - 'src/visuals/fx-system.js'
+      - 'src/systems/admin-key-system.js'
+      - 'scripts/ability-creator-audit.mjs'
+      - 'scripts/ability-creator-live-audit.mjs'
+      - '.github/workflows/ability-creator.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/creators/ability/**'
+      - 'src/creators/workspaces/ability-workspace.mjs'
+      - 'src/creators/core/workspace-draft-autosave.mjs'
+      - 'src/creators/creator-entry.mjs'
+      - 'src/creators/ui/creator-hub.mjs'
+      - 'src/studio/core/studio-kernel.mjs'
+      - 'src/studio/ui/studio-timeline.mjs'
+      - 'src/studio/ui/studio-workspace-shell.mjs'
+      - 'src/abilities/**'
+      - 'src/visuals/fx-system.js'
+      - 'src/systems/admin-key-system.js'
+      - 'scripts/ability-creator-*.mjs'
+      - '.github/workflows/ability-creator.yml'
+  workflow_dispatch:
+
+jobs:
+  ability-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax
+        run: |
+          node --check src/creators/ability/ability-document.mjs
+          node --check src/creators/ability/ability-commands.mjs
+          node --check src/creators/ability/ability-preview-adapter.mjs
+          node --check src/creators/ability/ability-live-controller.mjs
+          node --check src/creators/workspaces/ability-workspace.mjs
+          node --check src/creators/creator-entry.mjs
+          node --check src/creators/ui/creator-hub.mjs
+          node --check src/systems/admin-key-system.js
+          node --check scripts/ability-creator-audit.mjs
+          node --check scripts/ability-creator-live-audit.mjs
+      - name: Ability architecture contract
+        run: node scripts/ability-creator-audit.mjs
+
+  ability-mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund playwright@1.55.0
+      - name: Serve candidate
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 >/tmp/ability-creator-http.log 2>&1 &
+          for i in {1..20}; do curl -fsS http://127.0.0.1:8000/index.html >/dev/null && exit 0; sleep 1; done
+          cat /tmp/ability-creator-http.log
+          exit 1
+      - name: Audit Ability Creator at 390x844
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/ability-creator-live-audit.mjs
+      - name: Upload Ability Creator evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ability-creator-audit
+          path: artifacts/
+          if-no-files-found: warn

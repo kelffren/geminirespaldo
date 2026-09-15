@@ -1,0 +1,43 @@
+name: Inventory UI V2 LIVE mobile audit
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'src/ui/backpack-ui.js'
+      - 'src/ui/backpack-fantasy-v1.css'
+      - 'src/ui/modal-input-lock.js'
+      - 'src/systems/backpack-system.js'
+      - 'src/systems/equipment-system.js'
+      - 'scripts/live-inventory-ui-v2-audit.mjs'
+      - '.github/workflows/live-inventory-ui-v2-audit.yml'
+jobs:
+  live-inventory-ui-v2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install
+        run: npm install
+      - name: Syntax and deterministic contract
+        run: |
+          node --check src/ui/backpack-ui.js
+          node --check src/ui/modal-input-lock.js
+          node --check scripts/live-inventory-ui-v2-audit.mjs
+          node scripts/inventory-ui-v2-audit.js
+      - name: Audit LIVE mobile inventory
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/live-inventory-ui-v2-audit.mjs
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: inventory-ui-v2-live-mobile
+          path: artifacts/
+          if-no-files-found: warn

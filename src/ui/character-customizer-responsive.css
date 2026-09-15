@@ -1,0 +1,155 @@
+/* KELO-INDEX
+ * area: UI / CHARACTERS
+ * owner: KeloCharacterCustomizer presentation
+ * keys: CHARACTER CUSTOMIZER RESPONSIVE MOBILE LANDSCAPE SAVE SLOTS SAFE AREA
+ * purpose: ajustes responsivos del mismo Character Creator para evitar overflow y mantener controles táctiles legibles
+ * consumes: markup/clases emitidas por character-customizer-ui.js
+ * state-owned: ninguno
+ * reuse: portrait/landscape mobile y pantallas de poca altura
+ * do-not: NO crear estado, listeners, gameplay ni un segundo customizer
+ * online: N/A; presentación cliente
+ */
+
+/* En teléfonos estrechos, cada guardado usa dos filas claras en vez de comprimir tres acciones. */
+@media (max-width: 480px) {
+  #kelo-character-customizer .kc-save-row {
+    grid-template-columns: 34px minmax(0, 1fr) 68px !important;
+    grid-template-rows: 40px 40px;
+    gap: 6px !important;
+    padding: 8px !important;
+  }
+  #kelo-character-customizer .kc-save-num {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+  }
+  #kelo-character-customizer .kc-save-name {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+  }
+  #kelo-character-customizer [data-kc-save] {
+    grid-column: 3;
+    grid-row: 1;
+    width: 100%;
+  }
+  #kelo-character-customizer [data-kc-load] {
+    grid-column: 2;
+    grid-row: 2;
+    width: 100%;
+  }
+  #kelo-character-customizer [data-kc-delete] {
+    grid-column: 3;
+    grid-row: 2;
+    width: 100% !important;
+  }
+  #kelo-character-customizer .kc-save-action {
+    min-width: 0 !important;
+    padding: 0 6px !important;
+    font-size: 8px !important;
+  }
+}
+
+/* 844x390 y tamaños similares: la altura manda. Nunca permitir min-height desktop. */
+@media (max-height: 520px) and (orientation: landscape) {
+  #kelo-character-customizer {
+    padding: 0 !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+  }
+  #kelo-character-customizer .kc-shell {
+    width: 100% !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    grid-template-columns: minmax(238px, 34%) minmax(0, 1fr) !important;
+    grid-template-rows: 52px minmax(0, 1fr) 54px !important;
+  }
+  #kelo-character-customizer .kc-head {
+    min-height: 0 !important;
+    padding: max(4px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) 4px max(10px, env(safe-area-inset-left)) !important;
+  }
+  #kelo-character-customizer .kc-sub {
+    display: none !important;
+  }
+  #kelo-character-customizer .kc-title {
+    font-size: 17px !important;
+  }
+  #kelo-character-customizer .kc-icon-btn,
+  #kelo-character-customizer .kc-tools-btn,
+  #kelo-character-customizer .kc-close {
+    height: 42px !important;
+    min-width: 42px !important;
+  }
+  #kelo-character-customizer .kc-preview {
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 7px 10px !important;
+    gap: 5px !important;
+  }
+  #kelo-character-customizer .kc-stage {
+    width: min(214px, 27vw) !important;
+    height: min(205px, calc(100dvh - 174px)) !important;
+    min-height: 148px;
+    margin: 0 !important;
+  }
+  #kelo-character-customizer .kc-hero {
+    width: 112px !important;
+    height: 168px !important;
+    bottom: 14px !important;
+  }
+  #kelo-character-customizer .kc-preview-controls {
+    gap: 4px !important;
+  }
+  #kelo-character-customizer .kc-control-row {
+    gap: 5px !important;
+  }
+  #kelo-character-customizer .kc-control {
+    min-width: 42px !important;
+    height: 42px !important;
+    padding: 0 9px !important;
+  }
+  #kelo-character-customizer .kc-preview-note {
+    display: none !important;
+  }
+  #kelo-character-customizer .kc-main,
+  #kelo-character-customizer .kc-content {
+    min-height: 0 !important;
+  }
+  #kelo-character-customizer .kc-tabs {
+    padding: 7px 10px !important;
+  }
+  #kelo-character-customizer .kc-tab {
+    min-height: 38px !important;
+  }
+  #kelo-character-customizer .kc-content {
+    padding: 9px 12px !important;
+  }
+  #kelo-character-customizer .kc-save-list {
+    gap: 6px !important;
+  }
+  #kelo-character-customizer .kc-save-row {
+    grid-template-columns: 54px minmax(110px, 1fr) 76px 66px 66px !important;
+    gap: 6px !important;
+    padding: 6px !important;
+  }
+  #kelo-character-customizer .kc-save-action {
+    min-width: 0 !important;
+    padding: 0 7px !important;
+  }
+  #kelo-character-customizer .kc-foot {
+    min-height: 0 !important;
+    padding: 5px max(10px, env(safe-area-inset-right)) max(5px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)) !important;
+  }
+  #kelo-character-customizer .kc-note {
+    display: none !important;
+  }
+  #kelo-character-customizer .kc-reset,
+  #kelo-character-customizer .kc-random,
+  #kelo-character-customizer .kc-done {
+    min-height: 42px !important;
+  }
+}

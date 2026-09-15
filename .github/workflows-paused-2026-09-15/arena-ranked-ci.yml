@@ -1,0 +1,61 @@
+name: Ranked Arena CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/systems/arena-system.js'
+      - 'src/systems/arena-lane-pressure.js'
+      - 'src/systems/arena-telemetry.js'
+      - 'src/systems/arena-highlights.js'
+      - 'src/systems/arena-progression.js'
+      - 'src/ui/arena-ui.js'
+      - 'src/ui/arena-highlights-ui.js'
+      - 'src/systems/pvp-world.js'
+      - 'docs/systems/ARENA_SYSTEM.md'
+      - 'docs/systems/ARENA_TELEMETRY_SYSTEM.md'
+      - 'docs/systems/ARENA_HIGHLIGHTS_SYSTEM.md'
+      - 'docs/systems/ARENA_PROGRESSION_SYSTEM.md'
+      - 'docs/system-catalog.json'
+      - 'guide.html'
+      - 'index.html'
+      - 'scripts/arena-system-audit.js'
+      - 'package.json'
+      - '.github/workflows/arena-ranked-ci.yml'
+  pull_request:
+    paths:
+      - 'src/systems/arena-system.js'
+      - 'src/systems/arena-lane-pressure.js'
+      - 'src/systems/arena-telemetry.js'
+      - 'src/systems/arena-highlights.js'
+      - 'src/systems/arena-progression.js'
+      - 'src/ui/arena-ui.js'
+      - 'src/ui/arena-highlights-ui.js'
+      - 'src/systems/pvp-world.js'
+      - 'docs/systems/ARENA_SYSTEM.md'
+      - 'docs/systems/ARENA_TELEMETRY_SYSTEM.md'
+      - 'docs/systems/ARENA_HIGHLIGHTS_SYSTEM.md'
+      - 'docs/systems/ARENA_PROGRESSION_SYSTEM.md'
+      - 'docs/system-catalog.json'
+      - 'guide.html'
+      - 'index.html'
+      - 'scripts/arena-system-audit.js'
+      - 'package.json'
+      - '.github/workflows/arena-ranked-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  arena-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npm run audit:arena
+      - run: npm run audit:docs
+      - run: npm run audit:foundation

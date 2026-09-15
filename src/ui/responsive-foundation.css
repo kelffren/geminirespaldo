@@ -1,0 +1,41 @@
+/* KELO-INDEX
+ * area: UI / RESPONSIVE FOUNDATION
+ * owner: Kelo UI tokens
+ * purpose: shared responsive tokens for mobile-first UI without owning camera/canvas sizing
+ * reuse: Luxe, Studio and future panels consume these variables instead of hard-coded device breakpoints
+ */
+:root{
+  --kelo-layout-vw:100vw;
+  --kelo-layout-vh:100vh;
+  --kelo-visual-vw:100vw;
+  --kelo-visual-vh:100vh;
+  --kelo-visual-offset-x:0px;
+  --kelo-visual-offset-y:0px;
+  --kelo-keyboard-inset:0px;
+  --kelo-ui-scale:1;
+  --kelo-touch-min:44px;
+  --kelo-space-1:clamp(4px,.8vw,6px);
+  --kelo-space-2:clamp(6px,1.2vw,9px);
+  --kelo-space-3:clamp(8px,1.8vw,12px);
+  --kelo-space-4:clamp(12px,2.4vw,16px);
+  --kelo-space-5:clamp(16px,3vw,22px);
+  --kelo-radius-sm:clamp(9px,2vw,12px);
+  --kelo-radius-md:clamp(13px,3vw,18px);
+  --kelo-radius-lg:clamp(18px,4vw,26px);
+  --kelo-font-xs:clamp(10px,2.5vw,12px);
+  --kelo-font-sm:clamp(12px,3vw,14px);
+  --kelo-font-md:clamp(14px,3.6vw,17px);
+  --kelo-font-lg:clamp(18px,4.6vw,24px);
+  --kelo-panel-max:1100px;
+}
+@supports(height:100dvh){:root{--kelo-dvh:100dvh;}}
+@supports not (height:100dvh){:root{--kelo-dvh:100vh;}}
+html[data-kelo-orientation="portrait"]{--kelo-panel-inline:min(94vw,var(--kelo-panel-max));}
+html[data-kelo-orientation="landscape"]{--kelo-panel-inline:min(90vw,var(--kelo-panel-max));}
+[data-kelo-container]{container-type:inline-size;}
+@media(pointer:coarse){
+  button,[role="button"],input,select,textarea{touch-action:manipulation;}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
+}

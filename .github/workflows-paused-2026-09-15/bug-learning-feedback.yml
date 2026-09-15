@@ -1,0 +1,68 @@
+name: Bug Learning Feedback
+
+on:
+  workflow_run:
+    workflows: ["Bug Prevention"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bug-learning-state-writes
+  cancel-in-progress: false
+
+jobs:
+  feedback:
+    if: github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      OBSERVED_HEAD: ${{ github.event.workflow_run.head_sha }}
+      OBSERVED_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+      OBSERVED_AT: ${{ github.event.workflow_run.updated_at }}
+    steps:
+      - name: Checkout latest main with history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Record sanitized prevention outcome
+        run: node scripts/bug-learning-observe.mjs --head="$OBSERVED_HEAD" --conclusion="$OBSERVED_CONCLUSION" --at="$OBSERVED_AT" --success-minutes=60
+
+      - name: Audit feedback state
+        run: node scripts/bug-learning-audit.mjs
+
+      - name: Persist feedback without overwriting concurrent learning
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- bugs/learning/STATE.json; then
+            echo 'No new prevention feedback to persist.'
+            exit 0
+          fi
+
+          git config user.name 'kelo-bug-feedback'
+          git config user.email 'kelo-bug-feedback@users.noreply.github.com'
+          git fetch origin main
+
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+            git reset --hard origin/main
+            node scripts/bug-learning-observe.mjs --head="$OBSERVED_HEAD" --conclusion="$OBSERVED_CONCLUSION" --at="$OBSERVED_AT" --success-minutes=60
+            node scripts/bug-learning-audit.mjs
+          fi
+
+          if git diff --quiet -- bugs/learning/STATE.json; then
+            echo 'Latest main already contains equivalent or recently sampled success feedback.'
+            exit 0
+          fi
+
+          git add bugs/learning/STATE.json
+          git commit -m 'chore(bugs): record prevention feedback [skip ci]'
+          git push origin HEAD:main

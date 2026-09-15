@@ -1,0 +1,207 @@
+{
+  "schema_version": 2,
+  "id": "BUG-0001",
+  "title": "Real-iPhone BrowserStack verification is blocked by expired Automate testing time",
+  "status": "BLOCKED",
+  "severity": "high",
+  "area": ["qa", "browserstack", "playwright", "ios"],
+  "source": "test",
+  "discovered_at": "2026-09-13",
+  "reported_by": ["GitHub Actions", "BrowserStack Real iPhone Gameplay + World"],
+  "reports": [],
+  "environment": {
+    "game_build": "3319a9d3778da8e45b919d2984ac919a2b0d316b",
+    "device": "iPhone 14 Pro",
+    "os": "iOS 26",
+    "browser": "Safari via BrowserStack real-device Playwright",
+    "surface": "BrowserStack real-device verification workflow"
+  },
+  "reproduction": [
+    "Run BrowserStack Real iPhone Gameplay + World on main with valid BrowserStack credentials.",
+    "Allow LIVE Pages readiness and npm install to complete.",
+    "Start any Playwright real-iPhone spec through browserstack-node-sdk.",
+    "Observe browserType.connect fail before a physical Automate session is allocated."
+  ],
+  "expected": "BrowserStack allocates the configured real iPhone Safari session so KELO WORLD can be tested through the visible player flows.",
+  "actual": "The previous reducedMotion and invalid Playwright browserName configuration failures are resolved. The SDK now reaches browserType.connect, where BrowserStack rejects session creation with 'Automate testing time expired.'",
+  "evidence": [
+    "Historical runs 34764846903 / 34764978999: reducedMotion mismatch before session creation.",
+    "Commit 926fd9ccd9fe649f029cb78ea938d07f56f1761c: explicitly reset Playwright reducedMotion to system default with null.",
+    "Commit bad25d9a4dec70d8335e7ab0d72223adb05aa423: simplify BrowserStack real-iPhone capabilities and remove unsupported extras.",
+    "Intermediate run after bad25d9a: Playwright rejected browserName='safari' locally before BrowserStack connection.",
+    "Commit 3319a9d3778da8e45b919d2984ac919a2b0d316b: use Playwright browserName='webkit' while browserstack.yml remains owner of physical Safari/iPhone selection.",
+    "GitHub Actions run 34804862366, job 103854631213: LIVE Pages readiness and dependency install passed; iphone-gameplay.spec.js and world-editor-ios-reopen.spec.js both reached BrowserStack SDK and failed at browserType.connect with 'Automate testing time expired.'",
+    "Run 34804862366 BrowserStack SDK generated build reports, confirming SDK startup and config parsing progressed beyond the old reducedMotion/browserName defects."
+  ],
+  "suspected_files": [
+    "playwright.config.js",
+    "browserstack.yml",
+    ".github/workflows/browserstack-map-forge.yml",
+    "tests/iphone-visible-guest.spec.js",
+    "tests/iphone-world-visible-flow.spec.js",
+    "tests/iphone-gameplay.spec.js",
+    "tests/world-editor-ios-reopen.spec.js"
+  ],
+  "owner_hint": "Real iOS QA / BrowserStack integration",
+  "claimed_by": null,
+  "claim_started_at": null,
+  "research": {
+    "status": "blocked",
+    "summary": "The two reproducible configuration defects have been removed. reducedMotion is explicitly reset to null for BrowserStack and Playwright uses webkit while browserstack.yml selects the real Safari/iPhone platform. The latest workflow advances through SDK initialization and fails only when BrowserStack attempts to allocate Automate capacity, returning 'Automate testing time expired.' No game code or additional capability rewrite is justified until real-device Automate access is available again.",
+    "known_facts": [
+      {
+        "id": "F1",
+        "statement": "The historical reducedMotion mismatch occurred before page navigation.",
+        "evidence": ["GitHub Actions run 34764846903", "GitHub Actions run 34764978999"]
+      },
+      {
+        "id": "F2",
+        "statement": "Playwright 1.62 only accepts chromium/firefox/webkit as browserName values; physical Safari selection must stay in BrowserStack capabilities.",
+        "evidence": ["Intermediate real-iPhone workflow error after bad25d9a", "Commit 3319a9d3778da8e45b919d2984ac919a2b0d316b"]
+      },
+      {
+        "id": "F3",
+        "statement": "After the webkit/reducedMotion corrections, the latest workflow reaches browserType.connect instead of failing config validation.",
+        "evidence": ["GitHub Actions run 34804862366", "job 103854631213"]
+      },
+      {
+        "id": "F4",
+        "statement": "Both gameplay and World real-iPhone specs receive the same immediate BrowserStack service response: Automate testing time expired.",
+        "evidence": ["GitHub Actions run 34804862366 logs"]
+      }
+    ],
+    "hypotheses": [
+      {
+        "id": "H1",
+        "theory": "The original reducedMotion mismatch came from Playwright's default no-preference value entering the BrowserStack remote context.",
+        "confidence": "high",
+        "status": "supported",
+        "why": "The mismatch disappears after reducedMotion:null and the workflow progresses to the remote-connect phase.",
+        "evidence_for": ["F1", "F3"],
+        "evidence_against": [],
+        "test_next": "Do not revisit unless a future run again reports reducedMotion mismatch."
+      },
+      {
+        "id": "H2",
+        "theory": "The remaining failure is BrowserStack Automate account/capacity entitlement rather than a KELO WORLD or Playwright context defect.",
+        "confidence": "high",
+        "status": "supported",
+        "why": "The service rejects browserType.connect with an account/service message before a device session or page is created, and the same result occurs for unrelated specs.",
+        "evidence_for": ["F3", "F4"],
+        "evidence_against": [],
+        "test_next": "Retry only after BrowserStack Automate testing time/access is restored; if a session then allocates, immediately execute the full visible acceptance contract."
+      }
+    ],
+    "ruled_out": [
+      {
+        "hypothesis_id": "OLD_REDUCED_MOTION_STILL_ACTIVE",
+        "theory": "The current workflow is still blocked by reducedMotion='no-preference'.",
+        "reason": "The latest run no longer emits that mismatch and reaches browserType.connect.",
+        "evidence": ["3319a9d3778da8e45b919d2984ac919a2b0d316b", "run 34804862366"]
+      },
+      {
+        "hypothesis_id": "PLAYWRIGHT_SAFARI_BROWSER_NAME",
+        "theory": "The current workflow still uses unsupported browserName='safari'.",
+        "reason": "playwright.config.js now uses webkit and the invalid-browserName error is gone.",
+        "evidence": ["3319a9d3778da8e45b919d2984ac919a2b0d316b", "run 34804862366"]
+      }
+    ],
+    "unknowns": [
+      {
+        "id": "U1",
+        "question": "When will the connected BrowserStack account again have Automate real-device testing time/access available?",
+        "why_it_matters": "No legitimate real-iPhone verification can be produced until BrowserStack allocates an actual session.",
+        "quickest_test": "Run the real-iPhone workflow after Automate access is restored and verify browserType.connect succeeds."
+      }
+    ],
+    "external_references": [],
+    "last_researched_at": "2026-09-14T04:08:02Z"
+  },
+  "attempt_history": [
+    {
+      "id": "A1",
+      "at": "2026-09-14",
+      "actor": "development agents",
+      "goal": "Remove the reducedMotion capability mismatch.",
+      "hypothesis_ids": ["H1"],
+      "change": {
+        "commits": ["926fd9ccd9fe649f029cb78ea938d07f56f1761c", "bad25d9a4dec70d8335e7ab0d72223adb05aa423"],
+        "files": ["playwright.config.js", "browserstack.yml"],
+        "summary": "Reset reducedMotion to null and simplify BrowserStack physical-device capabilities."
+      },
+      "validation": {
+        "environment": "GitHub Actions + BrowserStack SDK",
+        "method": "Run the real-device workflow.",
+        "result": "PARTIAL",
+        "evidence": ["reducedMotion mismatch disappeared; next failure exposed unsupported Playwright browserName='safari'."]
+      },
+      "conclusion": "The reducedMotion defect was removed, exposing a second local Playwright configuration error.",
+      "do_not_repeat_without": "A future run explicitly showing the reducedMotion mismatch again."
+    },
+    {
+      "id": "A2",
+      "at": "2026-09-14T04:06:49Z",
+      "actor": "development agent",
+      "goal": "Use the correct Playwright browser family while preserving BrowserStack ownership of the real Safari/iPhone target.",
+      "hypothesis_ids": ["H2"],
+      "change": {
+        "commits": ["3319a9d3778da8e45b919d2984ac919a2b0d316b"],
+        "files": ["playwright.config.js"],
+        "summary": "Changed remote Playwright browserName from safari to webkit; retained iPhone 14 Pro / iOS 26 / Safari selection in browserstack.yml."
+      },
+      "validation": {
+        "environment": "GitHub Actions run 34804862366 + BrowserStack SDK",
+        "method": "Execute gameplay and World real-device specs after LIVE Pages readiness.",
+        "result": "BLOCKED",
+        "evidence": ["Both specs reach browserType.connect and receive 'Automate testing time expired.'"]
+      },
+      "conclusion": "Configuration validation now progresses to remote session allocation; BrowserStack Automate availability is the remaining gate.",
+      "do_not_repeat_without": "A future log showing a different local capability/configuration validation error."
+    }
+  ],
+  "next_best_actions": [
+    {
+      "priority": 1,
+      "action": "Restore BrowserStack Automate real-device testing time/access, then rerun the full real-iPhone acceptance workflow without changing game code first.",
+      "reason": "The current failure happens before a physical device exists; more KELO code changes cannot fix an unavailable remote session entitlement.",
+      "expected_signal": "browserType.connect succeeds and BrowserStack allocates iPhone 14 Pro / iOS 26 Safari.",
+      "stop_condition": "If BrowserStack still returns Automate testing time expired, remain BLOCKED and do not claim downstream iPhone verification."
+    },
+    {
+      "priority": 2,
+      "action": "Once a session allocates, run the visible Guest and visible Menu -> Creators -> World tests plus gameplay/reopen acceptance and preserve screenshots/reports as evidence.",
+      "reason": "BUG-0002 and BUG-0003 require real user-path evidence, not programmatic shortcuts.",
+      "expected_signal": "Guest gate stays closed, gameplay remains active, World becomes interactive, and World closes/reopens without a black tab.",
+      "stop_condition": "Any user-path failure becomes new diagnostic evidence; do not promote the bugs to VERIFIED until the real-device contract passes."
+    }
+  ],
+  "fix": {
+    "status": "candidate_complete_waiting_external_verify",
+    "commits": [
+      "926fd9ccd9fe649f029cb78ea938d07f56f1761c",
+      "bad25d9a4dec70d8335e7ab0d72223adb05aa423",
+      "3319a9d3778da8e45b919d2984ac919a2b0d316b"
+    ],
+    "files": ["playwright.config.js", "browserstack.yml"],
+    "summary": "The historical reducedMotion mismatch and invalid Playwright Safari browserName have both been removed. No further config edit is justified until BrowserStack Automate can allocate a session."
+  },
+  "verification": {
+    "status": "PENDING_EXTERNAL_CAPACITY",
+    "method": "BrowserStack must allocate the configured real iPhone 14 Pro / iOS 26 Safari session and execute the real-device acceptance suite; config-only or headless evidence is insufficient.",
+    "evidence": [
+      "Run 34804862366 proves progression to browserType.connect but is not a real-device PASS because BrowserStack returned Automate testing time expired."
+    ],
+    "verified_by": null,
+    "verified_at": null
+  },
+  "blocked_by": [],
+  "duplicate_of": null,
+  "related_bugs": ["BUG-0002", "BUG-0003"],
+  "notes": [
+    "This remains a QA infrastructure blocker, not evidence that Guest or World itself fails on the device.",
+    "Do not mark BUG-0002 or BUG-0003 VERIFIED until an actual iPhone Safari session executes their visible flows.",
+    "Do not spend another pass on reducedMotion or browserName unless a future log explicitly reintroduces those errors.",
+    "The iPhone Real-Device Firewall must remain active while this bug is BLOCKED."
+  ],
+  "updated_at": "2026-09-14T04:08:02Z"
+}

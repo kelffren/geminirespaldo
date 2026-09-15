@@ -1,0 +1,55 @@
+name: Regional Logistics CI
+
+on:
+  push:
+    branches:
+      - main
+      - fix/regional-logistics-current-main
+    paths:
+      - 'src/systems/regional-economy-*.js'
+      - 'src/systems/caravan-system.js'
+      - 'src/systems/faction-clan-system.js'
+      - 'src/systems/logistics-devtools.js'
+      - 'src/systems/container-system.js'
+      - 'src/systems/combat/combat-engine.js'
+      - 'scripts/regional-logistics-audit.js'
+      - 'scripts/container-system-audit.js'
+      - 'scripts/commerce-system-audit.js'
+      - 'docs/systems/REGIONAL_ECONOMY_LOGISTICS_SYSTEM.md'
+      - 'docs/system-catalog.json'
+      - 'index.html'
+      - 'package.json'
+      - '.github/workflows/regional-logistics-ci.yml'
+  pull_request:
+    paths:
+      - 'src/systems/regional-economy-*.js'
+      - 'src/systems/caravan-system.js'
+      - 'src/systems/faction-clan-system.js'
+      - 'src/systems/logistics-devtools.js'
+      - 'src/systems/container-system.js'
+      - 'src/systems/combat/combat-engine.js'
+      - 'scripts/regional-logistics-audit.js'
+      - 'scripts/container-system-audit.js'
+      - 'scripts/commerce-system-audit.js'
+      - 'docs/systems/REGIONAL_ECONOMY_LOGISTICS_SYSTEM.md'
+      - 'docs/system-catalog.json'
+      - 'index.html'
+      - 'package.json'
+      - '.github/workflows/regional-logistics-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regional-logistics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm run audit:logistics
+      - run: npm run audit:containers
+      - run: npm run audit:commerce
+      - run: npm run audit:docs

@@ -1,0 +1,122 @@
+name: Finalize Visual System docs
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/finalize-visual-system-docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Update ENGINE_MAP and CODE_INDEX idempotently
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          engine = Path('ENGINE_MAP.md')
+          text = engine.read_text(encoding='utf-8')
+          start = '<!-- VISUAL-SYSTEM-V1:START -->'
+          end = '<!-- VISUAL-SYSTEM-V1:END -->'
+          block = r'''<!-- VISUAL-SYSTEM-V1:START -->
+          # ANIMACIÓN / VFX MODULAR — VISUAL SYSTEM V1
+
+          **Estado:** OWNER LIVE CLIENT · LIVE móvil validado en Kelo World V6.26.
+
+          Regla de ownership: `Asset → Component independiente → Sequence opcional → VisualProfile opcional → Ability event opcional`. StoneSystem no reproduce animaciones y una pieza visual debe poder ejecutarse sin Ability.
+
+          | Responsabilidad | Estado | OWNER LIVE | Notas |
+          |---|---|---|---|
+          | Visual manifests | OWNER LIVE | `src/visuals/visual-manifests.js` | definiciones data-driven; Fireball solo es piloto |
+          | Asset registry / preload | OWNER LIVE CLIENT | `src/visuals/asset-registry.js` | IDs estables, lazy/preload, sin Image por cast |
+          | Actor animation / channels / anchors | OWNER LIVE CLIENT | `src/visuals/animation-system.js` | `locomotion/action/reaction/overlay`; sockets desde `KELO_AVATAR_PRESENTATION` |
+          | VFX / projectile visuals / SFX / screen FX | OWNER LIVE CLIENT | `src/visuals/fx-system.js` | pooling, culling, KELO_PERF; no decide gameplay |
+          | Sequences | OWNER LIVE CLIENT | `src/visuals/sequence-system.js` | timeline que referencia piezas, no las posee |
+          | Ability visual profiles | OWNER LIVE CLIENT | `src/visuals/ability-visuals.js` | adapter semántico + fallback legacy; no toca StoneSystem |
+          | Visual event/context/audit | OWNER LIVE CLIENT | `src/visuals/visual-system.js` | `KeloVisualEventBus`, `KeloVisualContext`, `KELO_VISUAL_AUDIT` |
+          | World visual layers | OWNER LIVE | `engine-c.js` | `groundFX → belowActor → worldFX → foregroundFX → screenFX` |
+          | Actor visual bridge | OWNER LIVE CLIENT | `src/visuals/visual-integration.js` | final idempotent bridge: `actorBackFX → actor → actorFrontFX` |
+          | Visual Lab | DEV ONLY | `src/visuals/visual-lab.js` | solo `?visualLab=1`; previews sin combate |
+          | Semantic visual network relay | PRESENTATION-ONLY | `engine-net.js` + `server/index.js` | servidor sanea/retransmite eventos; NO es autoridad Ability gameplay |
+          | Ability gameplay actual | CLIENT/FALLBACK | `src/abilities/kelo-ability-boot.js` | mantiene gameplay + primitives legacy mientras se migra habilidad por habilidad |
+
+          Fireball usa `visualProfileId: ability_visual_fireball_01`; si el resolver visual se desactiva, el cast sigue funcionando y vuelve el primitive legacy. LIVE validó mana `100→80`, cooldown `4`, foot-root `+10 px`, movimiento `MOV-plant-audit-v1`, remote replay por el mismo bus y cero errores HTTP/consola.
+
+          Documento operativo: `docs/VISUAL_SYSTEM.md`.
+          <!-- VISUAL-SYSTEM-V1:END -->'''
+          block = '\n'.join(line[10:] if line.startswith('          ') else line for line in block.splitlines())
+          if start in text and end in text:
+              before = text.split(start,1)[0]
+              after = text.split(end,1)[1]
+              text = before + block + after
+          else:
+              anchor = '# ABILITIES Y PIEDRAS'
+              if anchor in text:
+                  text = text.replace(anchor, block + '\n\n---\n\n' + anchor, 1)
+              else:
+                  text = text.rstrip() + '\n\n---\n\n' + block + '\n'
+          engine.write_text(text, encoding='utf-8')
+
+          code = Path('docs/CODE_INDEX.md')
+          text = code.read_text(encoding='utf-8')
+          rows = '''| VISUAL ASSET REGISTRY | IDs / preload / lazy visual | `src/visuals/asset-registry.js` |
+          | ANIMATION CLIP ANCHOR | clips, channels, foot-root sockets | `src/visuals/animation-system.js` |
+          | VFX PROJECTILE SFX SCREEN | FX reutilizable / projectile visual / sonido | `src/visuals/fx-system.js` |
+          | VISUAL SEQUENCE | timelines/composición opcional | `src/visuals/sequence-system.js` |
+          | ABILITY VISUAL PROFILE | Ability event → presentation | `src/visuals/ability-visuals.js` |
+          | VISUAL EVENT AUDIT | bus/context/layers/audit | `src/visuals/visual-system.js` |
+          | VISUAL LAB | galería dev `?visualLab=1` | `src/visuals/visual-lab.js` |
+          | VISUAL ACTOR BRIDGE | actorBackFX/actorFrontFX final | `src/visuals/visual-integration.js` |
+          | NET VISUAL EVENT | relay semántico presentation-only | `engine-net.js` + `server/index.js` |'''
+          rows = '\n'.join(line[10:] if line.startswith('          ') else line for line in rows.splitlines())
+          if '| VISUAL ASSET REGISTRY |' not in text:
+              anchor = '| NET WS POSE | online room | `engine-net.js` |'
+              if anchor in text:
+                  text = text.replace(anchor, anchor + '\n' + rows, 1)
+          section_start = '<!-- CODE-INDEX-VISUAL-V1:START -->'
+          section_end = '<!-- CODE-INDEX-VISUAL-V1:END -->'
+          section = r'''<!-- CODE-INDEX-VISUAL-V1:START -->
+          ## VISUAL SYSTEM V1
+
+          Regla: visuales son piezas reutilizables; StoneSystem no conoce Animation/VFX/Sequence. El gameplay emite eventos y la presentación los consume.
+
+          Orden de carga relevante:
+          `visual core/manifests/registries → abilityData → stone-system → ability boot → ability-visuals → engine-net → sistemas tardíos → visual-lab → visual-integration final`.
+
+          Render: `groundFX → belowActor → actorBackFX → actor → actorFrontFX → worldFX → foregroundFX → screenFX → UI`.
+
+          APIs clave: `KeloAnimation.play`, `KeloAnchors.get`, `KeloFX.spawn`, `KeloProjectileVisuals.preview/attach`, `KeloSFX.play`, `KeloSequence.play`, `KeloAbilityVisuals.playCue`, `KeloVisualEventBus.emit`.
+
+          QA: `scripts/visual-system-contract-audit.js` + `scripts/live-visual-system-audit.mjs`; workflows `visual-system-ci.yml` y `visual-system-live.yml`.
+
+          Detalle: `docs/VISUAL_SYSTEM.md`.
+          <!-- CODE-INDEX-VISUAL-V1:END -->'''
+          section = '\n'.join(line[10:] if line.startswith('          ') else line for line in section.splitlines())
+          if section_start in text and section_end in text:
+              before = text.split(section_start,1)[0]
+              after = text.split(section_end,1)[1]
+              text = before + section + after
+          elif section_start not in text:
+              text = text.rstrip() + '\n\n' + section + '\n'
+          code.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit docs
+        run: |
+          if git diff --quiet -- ENGINE_MAP.md docs/CODE_INDEX.md; then
+            echo 'Docs already current'
+            exit 0
+          fi
+          git config user.name 'kelo-docs-bot'
+          git config user.email '68343904+kelffren@users.noreply.github.com'
+          git add ENGINE_MAP.md docs/CODE_INDEX.md
+          git commit -m 'Document Visual System V1 ownership'
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main

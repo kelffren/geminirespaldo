@@ -1,0 +1,81 @@
+name: Kelo Titles CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/systems/title-catalog.js'
+      - 'src/systems/player-stats.js'
+      - 'src/systems/title-system.js'
+      - 'src/ui/player-nameplate.js'
+      - 'src/ui/luxe-shell.js'
+      - 'src/systems/nobility.js'
+      - 'src/systems/nobility-authority.js'
+      - 'engine-c.js'
+      - 'engine-net.js'
+      - 'server/title-store.js'
+      - 'server/index.js'
+      - 'tests/title-system.spec.js'
+      - 'scripts/title-system-audit.js'
+      - 'docs/**'
+      - 'guide.html'
+      - 'ENGINE_MAP.md'
+      - 'index.html'
+      - 'package.json'
+      - '.github/workflows/title-system-ci.yml'
+  pull_request:
+    paths:
+      - 'src/systems/title-catalog.js'
+      - 'src/systems/player-stats.js'
+      - 'src/systems/title-system.js'
+      - 'src/ui/player-nameplate.js'
+      - 'src/ui/luxe-shell.js'
+      - 'src/systems/nobility.js'
+      - 'src/systems/nobility-authority.js'
+      - 'engine-c.js'
+      - 'engine-net.js'
+      - 'server/title-store.js'
+      - 'server/index.js'
+      - 'tests/title-system.spec.js'
+      - 'scripts/title-system-audit.js'
+      - 'docs/**'
+      - 'guide.html'
+      - 'ENGINE_MAP.md'
+      - 'index.html'
+
+jobs:
+  titles:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Syntax
+        run: |
+          node --check src/systems/title-catalog.js
+          node --check src/systems/player-stats.js
+          node --check src/systems/title-system.js
+          node --check src/ui/player-nameplate.js
+          node --check src/ui/luxe-shell.js
+          node --check src/systems/nobility.js
+          node --check src/systems/nobility-authority.js
+          node --check engine-c.js
+          node --check engine-net.js
+          node --check server/title-store.js
+          node --check server/index.js
+          node --check scripts/title-system-audit.js
+          node --check tests/title-system.spec.js
+      - name: Title authority and Foundation audit
+        run: |
+          npm run audit:titles
+          npm run audit:foundation
+          npm run audit:docs
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Mobile title UI test
+        run: |
+          python3 -m http.server 4173 >/tmp/kelo-title-http.log 2>&1 &
+          sleep 1
+          KELO_TITLE_PAGE='http://127.0.0.1:4173/' npx playwright test tests/title-system.spec.js --project=chromium

@@ -1,0 +1,73 @@
+name: Kelo Recovery Mesh CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/core/bug-observability.mjs'
+      - 'src/core/module-loader.js'
+      - 'scripts/recovery-*.mjs'
+      - 'bugs/RECOVERY_MESH.md'
+      - 'docs/systems/BUG_RECOVERY_MESH.md'
+      - 'docs/system-catalog.json'
+      - '.github/workflows/recovery-*.yml'
+      - 'package.json'
+      - 'index.html'
+  pull_request:
+    paths:
+      - 'src/core/bug-observability.mjs'
+      - 'src/core/module-loader.js'
+      - 'scripts/recovery-*.mjs'
+      - 'bugs/RECOVERY_MESH.md'
+      - 'docs/systems/BUG_RECOVERY_MESH.md'
+      - 'docs/system-catalog.json'
+      - '.github/workflows/recovery-*.yml'
+      - 'package.json'
+      - 'index.html'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  recovery-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Recovery architecture audit
+        run: npm run audit:recovery
+      - name: Documentation contract
+        run: npm run audit:docs
+      - name: Bug intelligence self-test
+        run: npm run test:bug-intelligence
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Boot profile smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p recovery-artifacts
+          python3 -m http.server 4173 --bind 127.0.0.1 > recovery-artifacts/http-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid 2>/dev/null || true' EXIT
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep .25
+          done
+          npm run recovery:profile -- --profile=boot --base=http://127.0.0.1:4173/ --artifacts=recovery-artifacts
+      - name: Upload recovery evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: recovery-mesh-${{ github.run_id }}
+          path: recovery-artifacts/
+          if-no-files-found: warn
+          retention-days: 14

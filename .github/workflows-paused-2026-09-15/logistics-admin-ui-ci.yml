@@ -1,0 +1,41 @@
+name: Logistics Admin UI CI
+
+on:
+  push:
+    branches:
+      - main
+      - feat/logistics-admin-panel-final
+    paths:
+      - 'src/ui/logistics-admin-ui.js'
+      - 'scripts/logistics-admin-ui-audit.js'
+      - 'docs/systems/LOGISTICS_ADMIN_UI.md'
+      - 'docs/system-catalog.json'
+      - 'index.html'
+      - 'package.json'
+      - '.github/workflows/logistics-admin-ui-ci.yml'
+  pull_request:
+    paths:
+      - 'src/ui/logistics-admin-ui.js'
+      - 'scripts/logistics-admin-ui-audit.js'
+      - 'docs/systems/LOGISTICS_ADMIN_UI.md'
+      - 'docs/system-catalog.json'
+      - 'index.html'
+      - 'package.json'
+      - '.github/workflows/logistics-admin-ui-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  logistics-admin-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node --check src/ui/logistics-admin-ui.js
+      - run: node scripts/logistics-admin-ui-audit.js
+      - run: npm run audit:logistics
+      - run: npm run audit:docs

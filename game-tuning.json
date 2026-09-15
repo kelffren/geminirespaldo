@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "revision": 1,
+  "publishedAt": null,
+  "publishedBy": "repo-baseline",
+  "camera": {
+    "baseZoom": 0.82,
+    "dampX": null,
+    "dampY": null,
+    "deadXRatio": null,
+    "deadYRatio": null,
+    "lookAheadDist": null,
+    "lookAheadDecay": null,
+    "dprCap": 3
+  },
+  "sprites": {
+    "localPlayerScale": 1,
+    "remotePlayerScale": 1
+  }
+}

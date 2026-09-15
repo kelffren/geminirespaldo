@@ -1,0 +1,305 @@
+/* KELO-INDEX
+ * area: UI / INTERFACE SYSTEM
+ * owner: Kelo Interface System
+ * purpose: shared software-quality hierarchy for runtime, gameplay panels, Creators, Studio and Asset Repairer
+ * principle: calm surfaces, one accent, 44px touch targets, readable hierarchy, consistent focus and motion
+ */
+
+:root{
+  --kui-bg:#07080a;
+  --kui-surface:rgba(22,23,27,.88);
+  --kui-surface-strong:rgba(29,30,35,.96);
+  --kui-surface-soft:rgba(255,255,255,.055);
+  --kui-border:rgba(255,255,255,.105);
+  --kui-border-strong:rgba(255,255,255,.17);
+  --kui-text:#f5f5f7;
+  --kui-text-2:#c7c7cc;
+  --kui-text-3:#8e8e93;
+  --kui-accent:#e7c56a;
+  --kui-accent-soft:rgba(231,197,106,.13);
+  --kui-focus:#8fc7ff;
+  --kui-danger:#ff6961;
+  --kui-success:#66d694;
+  --kui-r-sm:10px;
+  --kui-r-md:14px;
+  --kui-r-lg:20px;
+  --kui-r-xl:28px;
+  --kui-shadow:0 18px 60px rgba(0,0,0,.36);
+  --kui-font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",sans-serif;
+}
+
+/* Shared interaction contract */
+#kelo-luxe button,
+#kelo-account-auth button,
+#kelo-creators-hub button,
+#kelo-studio-live button,
+#kelo-asset-repairer button,
+#kelo-bag button,
+#kelo-market-v1 button,
+#kelo-warehouse button,
+#kelo-mount-panel button,
+#kelo-commerce-dock button,
+#kelo-commerce-modal button,
+#kelo-house-panel button,
+#hi-exit{
+  font-family:var(--kui-font)!important;
+  -webkit-tap-highlight-color:transparent;
+  transition:background-color .14s ease,border-color .14s ease,color .14s ease,transform .12s ease,box-shadow .14s ease!important;
+}
+#kelo-luxe button:focus-visible,
+#kelo-account-auth button:focus-visible,
+#kelo-account-auth input:focus-visible,
+#kelo-creators-hub button:focus-visible,
+#kelo-studio-live button:focus-visible,
+#kelo-studio-live input:focus-visible,
+#kelo-studio-live select:focus-visible,
+#kelo-asset-repairer button:focus-visible,
+#kelo-asset-repairer input:focus-visible,
+#kelo-asset-repairer select:focus-visible,
+#kelo-bag button:focus-visible,
+#kelo-market-v1 button:focus-visible,
+#kelo-warehouse button:focus-visible,
+#kelo-mount-panel button:focus-visible,
+#kelo-mount-panel select:focus-visible,
+#kelo-commerce-dock button:focus-visible,
+#kelo-commerce-modal button:focus-visible,
+#kelo-commerce-modal input:focus-visible,
+#kelo-house-panel button:focus-visible,
+#hi-exit:focus-visible{
+  outline:3px solid color-mix(in srgb,var(--kui-focus) 72%,transparent)!important;
+  outline-offset:2px!important;
+}
+#kelo-luxe button:active,
+#kelo-account-auth button:active,
+#kelo-creators-hub button:active,
+#kelo-studio-live button:active,
+#kelo-asset-repairer button:active,
+#kelo-bag button:active,
+#kelo-market-v1 button:active,
+#kelo-warehouse button:active,
+#kelo-mount-panel button:active,
+#kelo-commerce-dock button:active,
+#kelo-commerce-modal button:active,
+#kelo-house-panel button:active,
+#hi-exit:active{transform:scale(.975)!important}
+
+/* Main menu: reduce ornament, make information scannable */
+#kelo-luxe{font-family:var(--kui-font)!important;color:var(--kui-text)!important}
+#kelo-luxe .lx-menu-panel{
+  border:1px solid var(--kui-border)!important;
+  border-radius:var(--kui-r-xl)!important;
+  background:rgba(18,19,23,.90)!important;
+  box-shadow:var(--kui-shadow)!important;
+  backdrop-filter:blur(30px) saturate(135%)!important;
+  -webkit-backdrop-filter:blur(30px) saturate(135%)!important;
+  padding:16px!important;
+}
+#kelo-luxe .lx-menu-panel:before,#kelo-luxe .lx-menu-head:after{display:none!important}
+#kelo-luxe .lx-menu-head{
+  justify-content:flex-start!important;
+  min-height:54px!important;
+  padding:0 58px 0 4px!important;
+  margin-bottom:12px!important;
+  border-bottom:0!important;
+  color:var(--kui-text)!important;
+  font-family:var(--kui-font)!important;
+  font-size:22px!important;
+  font-weight:750!important;
+  letter-spacing:-.025em!important;
+  text-shadow:none!important;
+}
+#kelo-luxe .lx-menu-close{
+  width:44px!important;height:44px!important;border-radius:999px!important;
+  border:0!important;background:rgba(255,255,255,.075)!important;color:var(--kui-text)!important;
+  box-shadow:none!important;font-family:var(--kui-font)!important;font-size:20px!important;
+}
+#kelo-luxe .lx-menu-grid{gap:10px!important}
+#kelo-luxe .lx-menu-item{
+  min-height:76px!important;padding:12px 34px 12px 12px!important;
+  border:1px solid var(--kui-border)!important;border-radius:var(--kui-r-md)!important;
+  background:rgba(255,255,255,.047)!important;color:var(--kui-text)!important;
+  box-shadow:none!important;grid-template-columns:38px minmax(0,1fr)!important;gap:10px!important;
+}
+#kelo-luxe .lx-menu-item:hover{background:rgba(255,255,255,.075)!important;border-color:var(--kui-border-strong)!important}
+#kelo-luxe .lx-menu-item[data-accent="true"]{background:var(--kui-accent-soft)!important;border-color:rgba(231,197,106,.22)!important}
+#kelo-luxe .lx-menu-icon{
+  width:38px!important;height:38px!important;border:0!important;border-radius:12px!important;
+  background:rgba(255,255,255,.065)!important;color:var(--kui-accent)!important;
+  font-family:var(--kui-font)!important;font-size:18px!important;text-shadow:none!important;
+}
+#kelo-luxe .lx-menu-copy{gap:4px!important}
+#kelo-luxe .lx-menu-copy b{font-family:var(--kui-font)!important;font-size:14px!important;font-weight:700!important;letter-spacing:-.01em!important;color:var(--kui-text)!important}
+#kelo-luxe .lx-menu-copy small{font-size:11px!important;line-height:1.25!important;color:var(--kui-text-3)!important}
+#kelo-luxe .lx-menu-item:after{color:var(--kui-text-3)!important;font-family:var(--kui-font)!important;font-size:18px!important}
+#kelo-luxe .lx-side-menu,#kelo-luxe .lx-side-pvp,#kelo-luxe .lx-top-btn{
+  border:1px solid var(--kui-border)!important;background:rgba(22,23,27,.88)!important;
+  box-shadow:0 8px 28px rgba(0,0,0,.28)!important;backdrop-filter:blur(20px)!important;
+}
+
+/* Account UI: one calm sheet, standard form hierarchy */
+#kelo-account-auth{font-family:var(--kui-font)!important;color:var(--kui-text)!important;background:rgba(5,5,7,.84)!important;backdrop-filter:blur(28px)!important}
+#kelo-account-auth .ka-card{
+  border:1px solid var(--kui-border)!important;border-radius:var(--kui-r-xl)!important;
+  background:rgba(24,25,29,.94)!important;box-shadow:var(--kui-shadow)!important;
+}
+#kelo-account-auth .ka-mark{border:0!important;background:var(--kui-accent-soft)!important;box-shadow:none!important;color:var(--kui-accent)!important}
+#kelo-account-auth .ka-title{font-family:var(--kui-font)!important;font-size:28px!important;font-weight:760!important;letter-spacing:-.035em!important;color:var(--kui-text)!important}
+#kelo-account-auth .ka-sub{color:var(--kui-text-3)!important;font-size:14px!important}
+#kelo-account-auth .ka-tabs{border:0!important;background:rgba(255,255,255,.055)!important;padding:3px!important}
+#kelo-account-auth .ka-tab{min-height:40px!important;font-size:13px!important;font-weight:650!important}
+#kelo-account-auth .ka-tab.is-on{background:rgba(255,255,255,.10)!important;color:var(--kui-text)!important;box-shadow:0 1px 3px rgba(0,0,0,.22)!important}
+#kelo-account-auth .ka-label{font-size:12px!important;letter-spacing:0!important;text-transform:none!important;color:var(--kui-text-2)!important}
+#kelo-account-auth .ka-input{min-height:50px!important;border:1px solid var(--kui-border)!important;border-radius:12px!important;background:rgba(255,255,255,.055)!important;color:var(--kui-text)!important}
+#kelo-account-auth .ka-primary,#kelo-account-auth .ka-secondary{min-height:50px!important;border-radius:12px!important;font-size:15px!important;font-weight:700!important;letter-spacing:0!important}
+#kelo-account-auth .ka-primary{border:0!important;background:var(--kui-accent)!important;color:#18150d!important;box-shadow:none!important}
+#kelo-account-auth .ka-secondary{border:1px solid var(--kui-border)!important;background:rgba(255,255,255,.06)!important;color:var(--kui-text)!important}
+#kelo-account-auth .ka-ghost{min-height:44px!important;color:var(--kui-text-2)!important;font-size:14px!important;font-weight:600!important}
+
+/* Creators: software workspace hierarchy, not a wall of decorated cards */
+#kelo-creators-hub{font-family:var(--kui-font)!important;background:rgba(10,10,12,.96)!important;color:var(--kui-text)!important}
+#kelo-creators-hub .kc-head{min-height:64px!important;padding:12px 18px!important;border-bottom:1px solid var(--kui-border)!important;background:rgba(18,18,21,.92)!important}
+#kelo-creators-hub .kc-mark{width:38px!important;height:38px!important;transform:none!important;border:0!important;border-radius:12px!important;background:var(--kui-accent-soft)!important;color:var(--kui-accent)!important}
+#kelo-creators-hub .kc-mark span{transform:none!important}
+#kelo-creators-hub .kc-title strong{font-size:16px!important;font-weight:720!important;letter-spacing:-.015em!important}
+#kelo-creators-hub .kc-title small{font-size:12px!important;color:var(--kui-text-3)!important}
+#kelo-creators-hub .kc-close{min-width:44px!important;min-height:44px!important;border:0!important;border-radius:999px!important;background:rgba(255,255,255,.07)!important;color:var(--kui-text)!important;padding:0 15px!important}
+#kelo-creators-hub .kc-nav{border-color:var(--kui-border)!important;background:rgba(16,16,19,.72)!important}
+#kelo-creators-hub .kc-nav button{min-height:44px!important;border-radius:10px!important;color:var(--kui-text-3)!important;font-size:13px!important;font-weight:600!important}
+#kelo-creators-hub .kc-nav button[aria-selected="true"]{background:rgba(255,255,255,.075)!important;color:var(--kui-text)!important}
+#kelo-creators-hub .kc-main h1{font-size:clamp(28px,4vw,42px)!important;font-weight:760!important;letter-spacing:-.04em!important}
+#kelo-creators-hub .kc-lead{color:var(--kui-text-3)!important;font-size:14px!important}
+#kelo-creators-hub .kc-section h2{font-size:12px!important;letter-spacing:.04em!important;color:var(--kui-text-3)!important}
+#kelo-creators-hub .kc-card{min-height:112px!important;border:1px solid var(--kui-border)!important;border-radius:var(--kui-r-md)!important;background:rgba(255,255,255,.045)!important;box-shadow:none!important}
+#kelo-creators-hub .kc-card.active{border-color:var(--kui-border)!important}
+#kelo-creators-hub .kc-card.active:hover{background:rgba(255,255,255,.075)!important}
+#kelo-creators-hub .kc-card strong{font-size:16px!important;font-weight:700!important;letter-spacing:-.015em!important}
+#kelo-creators-hub .kc-card small{font-size:12px!important;color:var(--kui-text-3)!important}
+#kelo-creators-hub .kc-pill{background:var(--kui-accent-soft)!important;color:var(--kui-accent)!important;letter-spacing:0!important;font-weight:650!important}
+
+/* Studio: calm chrome and consistent control hierarchy */
+#kelo-studio-live{font-family:var(--kui-font)!important;color:var(--kui-text)!important;--ks-gold:var(--kui-accent)!important;--ks-gold-2:var(--kui-text)!important;--ks-line:var(--kui-border)!important;--ks-line-soft:var(--kui-border)!important}
+#kelo-studio-live .ks-top,#kelo-studio-live .ks-left,#kelo-studio-live .ks-right{
+  border:1px solid var(--kui-border)!important;background:rgba(20,21,24,.91)!important;box-shadow:var(--kui-shadow)!important;backdrop-filter:blur(28px) saturate(125%)!important;
+}
+#kelo-studio-live .ks-top{border-radius:20px!important}
+#kelo-studio-live .ks-left,#kelo-studio-live .ks-right{border-radius:18px!important}
+#kelo-studio-live .ks-brand-mark{border:0!important;background:var(--kui-accent-soft)!important;color:var(--kui-accent)!important;box-shadow:none!important}
+#kelo-studio-live .ks-title{font-family:var(--kui-font)!important;font-size:14px!important;font-weight:720!important;letter-spacing:-.01em!important;color:var(--kui-text)!important}
+#kelo-studio-live .ks-subtitle{font-size:10px!important;font-weight:500!important;letter-spacing:0!important;color:var(--kui-text-3)!important}
+#kelo-studio-live .ks-top button,#kelo-studio-live .ks-mini,#kelo-studio-live .ks-deck button,#kelo-studio-live .ks-tabs button,#kelo-studio-live .ks-compact-bar button{
+  min-height:40px!important;border:1px solid var(--kui-border)!important;border-radius:10px!important;background:rgba(255,255,255,.055)!important;color:var(--kui-text-2)!important;font-size:12px!important;font-weight:650!important;letter-spacing:0!important;box-shadow:none!important;
+}
+#kelo-studio-live .ks-top button.on,#kelo-studio-live .ks-deck button.on,#kelo-studio-live .ks-tabs button.on,#kelo-studio-live .ks-compact-bar button.on{background:var(--kui-accent-soft)!important;border-color:rgba(231,197,106,.3)!important;color:var(--kui-accent)!important}
+#kelo-studio-live .ks-top .primary,#kelo-studio-live .ks-compact-bar .primary{background:var(--kui-accent)!important;border-color:transparent!important;color:#17140c!important}
+#kelo-studio-live .ks-panel-head{font-size:12px!important;font-weight:680!important;letter-spacing:0!important;color:var(--kui-text-2)!important}
+#kelo-studio-live .ks-search{height:42px!important;border:1px solid var(--kui-border)!important;border-radius:10px!important;background:rgba(255,255,255,.055)!important}
+
+/* Asset Repairer: task-first, fewer ornaments, larger language */
+#kelo-asset-repairer{font-family:var(--kui-font)!important;background:#0b0b0d!important;color:var(--kui-text)!important}
+#kelo-asset-repairer .kar-top{min-height:64px!important;padding:0 18px!important;border-bottom:1px solid var(--kui-border)!important;background:rgba(18,18,21,.95)!important;box-shadow:none!important}
+#kelo-asset-repairer .kar-gem{width:36px!important;height:36px!important;transform:none!important;border:0!important;border-radius:12px!important;background:var(--kui-accent-soft)!important;box-shadow:none!important}
+#kelo-asset-repairer .kar-gem:after{transform:none!important;font-family:var(--kui-font)!important;color:var(--kui-accent)!important}
+#kelo-asset-repairer .kar-title strong{font-family:var(--kui-font)!important;font-size:15px!important;font-weight:740!important;letter-spacing:-.015em!important;color:var(--kui-text)!important}
+#kelo-asset-repairer .kar-title small{font-size:11px!important;letter-spacing:0!important;color:var(--kui-text-3)!important;text-transform:none!important}
+#kelo-asset-repairer .kar-step span{font-size:11px!important;letter-spacing:0!important;padding:7px 10px!important;color:var(--kui-text-3)!important}
+#kelo-asset-repairer .kar-step span.on{background:rgba(255,255,255,.075)!important;border-color:transparent!important;color:var(--kui-text)!important}
+#kelo-asset-repairer .kar-btn{min-height:40px!important;height:40px!important;padding:0 14px!important;border:1px solid var(--kui-border)!important;border-radius:10px!important;background:rgba(255,255,255,.055)!important;color:var(--kui-text-2)!important;font-size:12px!important;font-weight:650!important;letter-spacing:0!important}
+#kelo-asset-repairer .kar-btn.primary{border-color:transparent!important;background:var(--kui-accent)!important;color:#18150d!important}
+#kelo-asset-repairer .kar-tools,#kelo-asset-repairer .kar-side{background:#111114!important;border-color:var(--kui-border)!important}
+#kelo-asset-repairer .kar-kicker{font-size:11px!important;font-weight:650!important;letter-spacing:0!important;text-transform:none!important;color:var(--kui-text-3)!important}
+#kelo-asset-repairer .kar-tool{min-height:54px!important;margin-bottom:7px!important;border:1px solid transparent!important;border-radius:12px!important;background:transparent!important;color:var(--kui-text-2)!important}
+#kelo-asset-repairer .kar-tool:hover{background:rgba(255,255,255,.055)!important}
+#kelo-asset-repairer .kar-tool.on{border-color:transparent!important;background:rgba(255,255,255,.08)!important;color:var(--kui-text)!important}
+#kelo-asset-repairer .kar-tool b{color:var(--kui-accent)!important}
+#kelo-asset-repairer .kar-tool strong{font-size:12px!important;font-weight:650!important;letter-spacing:0!important}
+#kelo-asset-repairer .kar-tool small{font-size:10px!important;color:var(--kui-text-3)!important}
+#kelo-asset-repairer .kar-stage-head h2{font-family:var(--kui-font)!important;font-size:15px!important;font-weight:700!important;letter-spacing:-.01em!important;color:var(--kui-text)!important}
+#kelo-asset-repairer .kar-preview,#kelo-asset-repairer .kar-card,#kelo-asset-repairer .kar-progress{border:1px solid var(--kui-border)!important;border-radius:14px!important;background:#151518!important}
+#kelo-asset-repairer .kar-preview h3,#kelo-asset-repairer .kar-card-head{font-size:11px!important;font-weight:650!important;letter-spacing:0!important;color:var(--kui-text-3)!important;border-color:var(--kui-border)!important}
+#kelo-asset-repairer .kar-ready{font-family:var(--kui-font)!important;letter-spacing:0!important;border-color:var(--kui-border)!important}
+#kelo-asset-repairer .kar-frame{border:1px solid transparent!important;border-radius:12px!important;background:rgba(255,255,255,.045)!important}
+#kelo-asset-repairer .kar-frame.on{border-color:rgba(231,197,106,.35)!important;background:var(--kui-accent-soft)!important;box-shadow:none!important}
+
+/* Backpack: preserve fantasy item art, simplify the software chrome around it */
+#kelo-bag.kb-overlay{background:rgba(4,4,6,.68)!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important;font-family:var(--kui-font)!important;color:var(--kui-text)!important}
+#kelo-bag .kb-shell{border:1px solid var(--kui-border)!important;border-radius:var(--kui-r-lg)!important;background:rgba(20,21,24,.97)!important;box-shadow:var(--kui-shadow)!important}
+#kelo-bag .kb-shell:before,#kelo-bag .kb-shell:after{display:none!important}
+#kelo-bag .kb-top{background:rgba(25,26,30,.96)!important;border-bottom:1px solid var(--kui-border)!important;padding:12px!important}
+#kelo-bag .kb-main-tab{min-height:48px!important;border:0!important;border-radius:11px!important;background:transparent!important;color:var(--kui-text-3)!important;font-family:var(--kui-font)!important;font-size:15px!important;font-weight:680!important;letter-spacing:0!important;box-shadow:none!important}
+#kelo-bag .kb-main-tab.active{background:rgba(255,255,255,.08)!important;color:var(--kui-text)!important;box-shadow:none!important}
+#kelo-bag .kb-close{width:44px!important;height:44px!important;border:0!important;border-radius:999px!important;background:rgba(255,255,255,.07)!important;color:var(--kui-text)!important;font-size:22px!important;box-shadow:none!important}
+#kelo-bag .kb-character-zone,#kelo-bag .kb-stats-card,#kelo-bag .kb-appearance,#kelo-bag .kb-detail{border:1px solid var(--kui-border)!important;border-radius:var(--kui-r-md)!important;background:rgba(255,255,255,.035)!important;box-shadow:none!important}
+#kelo-bag .kb-card-title{font-family:var(--kui-font)!important;font-size:15px!important;font-weight:700!important;letter-spacing:-.01em!important;color:var(--kui-text)!important;border-color:var(--kui-border)!important}
+#kelo-bag .kb-category-tabs{background:rgba(20,21,24,.98)!important;border-color:var(--kui-border)!important;gap:6px!important}
+#kelo-bag .kb-category{min-height:44px!important;border:0!important;border-radius:10px!important;background:rgba(255,255,255,.045)!important;color:var(--kui-text-3)!important;font-size:11px!important;font-weight:650!important;letter-spacing:0!important}
+#kelo-bag .kb-category.active{background:var(--kui-accent-soft)!important;color:var(--kui-accent)!important}
+#kelo-bag .kb-action,#kelo-bag .kb-sort,#kelo-bag .kb-expand{min-height:44px!important;border:1px solid var(--kui-border)!important;border-radius:10px!important;background:rgba(255,255,255,.055)!important;color:var(--kui-text-2)!important;font-size:12px!important;font-weight:650!important;letter-spacing:0!important;box-shadow:none!important}
+#kelo-bag .kb-action.primary{border-color:transparent!important;background:var(--kui-accent)!important;color:#18150d!important}
+#kelo-bag .kb-action.danger{border-color:rgba(255,105,97,.30)!important;background:rgba(255,105,97,.08)!important;color:#ffb3ae!important}
+#kelo-bag .kb-equip-label,#kelo-bag .kb-meta,#kelo-bag .kb-desc,#kelo-bag .kb-move-note{font-size:10px!important;letter-spacing:0!important;text-transform:none!important}
+
+/* Market + Warehouse: one compact sheet language */
+#kelo-market-v1.km-panel,#kelo-warehouse.kw-panel{border:1px solid var(--kui-border)!important;border-radius:var(--kui-r-lg)!important;background:rgba(24,25,29,.96)!important;box-shadow:var(--kui-shadow)!important;color:var(--kui-text)!important;font-family:var(--kui-font)!important;backdrop-filter:blur(24px)!important;-webkit-backdrop-filter:blur(24px)!important;padding:14px!important}
+#kelo-market-v1 .km-title,#kelo-warehouse .kw-title{font-family:var(--kui-font)!important;font-size:17px!important;font-weight:720!important;letter-spacing:-.02em!important;color:var(--kui-text)!important}
+#kelo-market-v1 .km-close,#kelo-warehouse .kw-close{width:44px!important;height:44px!important;border:0!important;border-radius:999px!important;background:rgba(255,255,255,.07)!important;color:var(--kui-text)!important}
+#kelo-market-v1 .km-tab,#kelo-warehouse .kw-tab{min-height:44px!important;border:0!important;border-radius:10px!important;background:rgba(255,255,255,.045)!important;color:var(--kui-text-3)!important;font-size:12px!important;font-weight:650!important;letter-spacing:0!important}
+#kelo-market-v1 .km-tab.active,#kelo-warehouse .kw-tab.active{background:rgba(255,255,255,.09)!important;color:var(--kui-text)!important}
+#kelo-market-v1 .km-note,#kelo-warehouse .kw-meta{font-size:11px!important;color:var(--kui-text-3)!important}
+#kelo-market-v1 .km-card,#kelo-warehouse .kw-slot{border:1px solid var(--kui-border)!important;background:rgba(255,255,255,.04)!important;box-shadow:none!important}
+#kelo-market-v1 .km-card{min-height:64px!important;border-radius:12px!important}
+#kelo-market-v1 .km-card.selected,#kelo-warehouse .kw-slot.selected{border-color:rgba(231,197,106,.38)!important;box-shadow:0 0 0 2px var(--kui-accent-soft)!important}
+#kelo-market-v1 .km-name,#kelo-warehouse .kw-name{font-size:13px!important;font-weight:680!important;color:var(--kui-text)!important}
+#kelo-market-v1 .km-sub,#kelo-market-v1 .km-price,#kelo-warehouse .kw-sub{font-size:11px!important}
+#kelo-market-v1 .km-detail,#kelo-warehouse .kw-detail{border:1px solid var(--kui-border)!important;border-radius:12px!important;background:rgba(255,255,255,.025)!important}
+#kelo-market-v1 .km-cancel,#kelo-warehouse .kw-step button,#kelo-market-v1 .kb-market-step button{min-width:44px!important;min-height:44px!important;height:44px!important;border-radius:10px!important;font-size:12px!important;font-weight:650!important}
+#kelo-warehouse .kw-step button,#kelo-market-v1 .kb-market-step button{border:1px solid var(--kui-border)!important;background:rgba(255,255,255,.055)!important;color:var(--kui-text-2)!important}
+#kelo-warehouse .kw-step .kw-go,#kelo-market-v1 .kb-market-step .kb-market-go{background:var(--kui-accent)!important;border-color:transparent!important;color:#18150d!important}
+
+/* Mount panel: same modal hierarchy; mount art/content can stay fantastical */
+#kelo-mount-panel{border:1px solid var(--kui-border)!important;border-radius:var(--kui-r-lg)!important;background:rgba(24,25,29,.97)!important;box-shadow:var(--kui-shadow)!important;color:var(--kui-text)!important;font-family:var(--kui-font)!important;backdrop-filter:blur(24px)!important;-webkit-backdrop-filter:blur(24px)!important}
+#kelo-mount-panel button{min-height:44px!important;border:1px solid var(--kui-border)!important;border-radius:10px!important;background:rgba(255,255,255,.055)!important;color:var(--kui-text-2)!important;padding:0 13px!important;font-size:12px!important;font-weight:650!important;letter-spacing:0!important}
+#kelo-mount-panel button[data-kui-role="primary"]{background:var(--kui-accent)!important;border-color:transparent!important;color:#18150d!important}
+#kelo-mount-panel select{min-height:44px!important;border:1px solid var(--kui-border)!important;border-radius:10px!important;background:#1d1e22!important;color:var(--kui-text)!important;padding:0 11px!important;font-family:var(--kui-font)!important;font-size:12px!important}
+
+/* Commerce: one modal and one action hierarchy */
+#kelo-commerce-dock{border:1px solid var(--kui-border)!important;border-radius:16px!important;background:rgba(24,25,29,.92)!important;box-shadow:0 14px 40px rgba(0,0,0,.34)!important;backdrop-filter:blur(24px)!important}
+#kelo-commerce-dock button{min-height:44px!important;border:0!important;border-radius:10px!important;background:transparent!important;color:var(--kui-text-2)!important;font-size:12px!important;font-weight:650!important;letter-spacing:0!important}
+#kelo-commerce-dock button.primary{background:var(--kui-accent)!important;color:#18150d!important}
+#kelo-commerce-dock button.exit{color:#ffaaa5!important}
+#kelo-commerce-modal{background:rgba(4,4,6,.68)!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important;font-family:var(--kui-font)!important}
+#kelo-commerce-modal .kc-shell{border:1px solid var(--kui-border)!important;border-radius:var(--kui-r-lg)!important;background:rgba(24,25,29,.97)!important;box-shadow:var(--kui-shadow)!important;color:var(--kui-text)!important}
+#kelo-commerce-modal .kc-head{background:rgba(24,25,29,.97)!important}
+#kelo-commerce-modal .kc-kicker{font-size:11px!important;letter-spacing:0!important;color:var(--kui-text-3)!important}
+#kelo-commerce-modal .kc-title,#kelo-commerce-modal .kc-request-name{font-family:var(--kui-font)!important;font-size:18px!important;font-weight:720!important;letter-spacing:-.02em!important;color:var(--kui-text)!important}
+#kelo-commerce-modal .kc-close{width:44px!important;height:44px!important;border:0!important;border-radius:999px!important;background:rgba(255,255,255,.07)!important;color:var(--kui-text)!important}
+#kelo-commerce-modal .kc-card,#kelo-commerce-modal .kc-status,#kelo-commerce-modal .kc-final,#kelo-commerce-modal .kc-request{border:1px solid var(--kui-border)!important;background:rgba(255,255,255,.035)!important;box-shadow:none!important}
+#kelo-commerce-modal .kc-btn{min-height:44px!important;border:1px solid var(--kui-border)!important;border-radius:10px!important;background:rgba(255,255,255,.055)!important;color:var(--kui-text-2)!important;font-size:12px!important;font-weight:650!important}
+#kelo-commerce-modal .kc-btn.primary{background:var(--kui-accent)!important;border-color:transparent!important;color:#18150d!important}
+#kelo-commerce-modal .kc-input{height:44px!important;border:1px solid var(--kui-border)!important;background:#1d1e22!important;color:var(--kui-text)!important;font-size:13px!important}
+
+/* House: small sheet, obvious primary and exit */
+#kelo-house-panel{border:1px solid var(--kui-border)!important;border-radius:var(--kui-r-lg)!important;background:rgba(24,25,29,.97)!important;box-shadow:var(--kui-shadow)!important;color:var(--kui-text)!important;font-family:var(--kui-font)!important;backdrop-filter:blur(24px)!important;-webkit-backdrop-filter:blur(24px)!important}
+#kelo-house-panel .hi-title{font-size:18px!important;font-weight:720!important;letter-spacing:-.02em!important;color:var(--kui-text)!important}
+#kelo-house-panel .hi-sub{font-size:12px!important;color:var(--kui-text-3)!important}
+#kelo-house-panel .hi-btn{min-height:52px!important;border:1px solid var(--kui-border)!important;border-radius:12px!important;background:rgba(255,255,255,.055)!important;color:var(--kui-text-2)!important;font-size:12px!important;font-weight:650!important}
+#kelo-house-panel .hi-btn.primary{background:var(--kui-accent)!important;border-color:transparent!important;color:#18150d!important}
+#kelo-house-panel .hi-close{width:44px!important;height:44px!important;right:8px!important;top:7px!important;border-radius:999px!important;background:rgba(255,255,255,.07)!important;color:var(--kui-text)!important;font-size:20px!important}
+#hi-exit{min-height:44px!important;border:1px solid var(--kui-border)!important;border-radius:12px!important;background:rgba(24,25,29,.92)!important;color:var(--kui-text)!important;font-size:12px!important;font-weight:650!important;box-shadow:0 8px 24px rgba(0,0,0,.28)!important;backdrop-filter:blur(20px)!important}
+
+@media(max-width:700px){
+  #kelo-luxe .lx-menu-panel{left:max(8px,env(safe-area-inset-left))!important;right:max(78px,calc(env(safe-area-inset-right) + 70px))!important;padding:12px!important;border-radius:22px!important}
+  #kelo-luxe .lx-menu-grid{grid-template-columns:1fr!important}
+  #kelo-luxe .lx-menu-item{min-height:68px!important}
+  #kelo-creators-hub .kc-grid{grid-template-columns:1fr!important}
+  #kelo-asset-repairer .kar-tools{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #kelo-asset-repairer .kar-tool{min-height:58px!important}
+  #kelo-bag .kb-main-tab{font-size:14px!important}
+  #kelo-bag .kb-category{font-size:10px!important}
+  #kelo-bag .kb-equip-label{font-size:9px!important}
+  #kelo-commerce-dock{max-width:calc(100vw - 16px)!important;overflow-x:auto!important}
+  #kelo-commerce-dock button{white-space:nowrap!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  #kelo-luxe *,#kelo-account-auth *,#kelo-creators-hub *,#kelo-studio-live *,#kelo-asset-repairer *,#kelo-bag *,#kelo-market-v1 *,#kelo-warehouse *,#kelo-mount-panel *,#kelo-commerce-dock *,#kelo-commerce-modal *,#kelo-house-panel *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}

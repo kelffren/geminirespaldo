@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="768" viewBox="0 0 512 768" shape-rendering="crispEdges">
+  <defs>
+    <symbol id="pair" viewBox="0 0 128 192">
+      <path fill="#10282d" d="M48 116h14l-2 37H45zm18 0h14l3 37H68z"/>
+      <path fill="#1d4b49" d="M48 116h32v9H48z"/>
+      <path fill="#d8b85d" d="M61 116h6v37h-6z"/>
+      <path fill="#07171b" d="M45 145h15v9H44zm23 0h15l1 9H68z"/>
+    </symbol>
+    <symbol id="side" viewBox="0 0 128 192">
+      <path fill="#10282d" d="M50 116h25l6 37H63l-3-24-4 24H43z"/>
+      <path fill="#1d4b49" d="M49 116h27v9H49z"/>
+      <path fill="#d8b85d" d="M57 116h5v37h-5z"/>
+    </symbol>
+  </defs>
+  <use href="#pair" x="0" y="0" width="128" height="192"/><use href="#pair" x="128" y="0" width="128" height="192"/><use href="#pair" x="256" y="0" width="128" height="192"/><use href="#pair" x="384" y="0" width="128" height="192"/>
+  <use href="#side" x="0" y="192" width="128" height="192"/><use href="#side" x="128" y="192" width="128" height="192"/><use href="#side" x="256" y="192" width="128" height="192"/><use href="#side" x="384" y="192" width="128" height="192"/>
+  <use href="#side" x="0" y="384" width="128" height="192"/><use href="#side" x="128" y="384" width="128" height="192"/><use href="#side" x="256" y="384" width="128" height="192"/><use href="#side" x="384" y="384" width="128" height="192"/>
+  <use href="#pair" x="0" y="576" width="128" height="192"/><use href="#pair" x="128" y="576" width="128" height="192"/><use href="#pair" x="256" y="576" width="128" height="192"/><use href="#pair" x="384" y="576" width="128" height="192"/>
+</svg>

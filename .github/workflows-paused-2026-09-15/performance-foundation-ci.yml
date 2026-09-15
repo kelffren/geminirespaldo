@@ -1,0 +1,69 @@
+name: Performance Foundation CI
+
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'engine-net.js'
+      - 'server/**'
+      - 'src/core/**'
+      - 'src/environment/**'
+      - 'src/abilities/kelo-ability-boot.js'
+      - 'src/systems/performance-governor.js'
+      - 'src/systems/pvp-combat-runtime-loader.js'
+      - 'src/visuals/**'
+      - 'src/ui/profile-panel-close.js'
+      - 'scripts/performance-foundation-audit.js'
+      - 'docs/systems/PERFORMANCE_FOUNDATION.md'
+      - 'docs/system-catalog.json'
+      - 'package.json'
+      - '.github/workflows/performance-foundation-ci.yml'
+  push:
+    branches: [ main ]
+    paths:
+      - 'index.html'
+      - 'engine-net.js'
+      - 'server/**'
+      - 'src/core/**'
+      - 'src/environment/**'
+      - 'src/abilities/kelo-ability-boot.js'
+      - 'src/systems/performance-governor.js'
+      - 'src/systems/pvp-combat-runtime-loader.js'
+      - 'src/visuals/**'
+      - 'src/ui/profile-panel-close.js'
+      - 'scripts/performance-foundation-audit.js'
+      - 'docs/systems/PERFORMANCE_FOUNDATION.md'
+      - 'docs/system-catalog.json'
+      - 'package.json'
+
+permissions:
+  contents: read
+
+jobs:
+  performance-foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax — touched runtime
+        run: |
+          node --check src/core/kelo-runtime-bootstrap.js
+          node --check src/core/simulation-extension-system.js
+          node --check src/core/render-extension-system.js
+          node --check src/abilities/kelo-ability-boot.js
+          node --check src/systems/performance-governor.js
+          node --check src/systems/pvp-combat-runtime-loader.js
+          node --check src/visuals/visual-system.js
+          node --check src/environment/atlas-contract.js
+          node --check src/environment/world-map.js
+          node --check src/ui/profile-panel-close.js
+          node --check engine-net.js
+          node --check server/index.js
+          node --check scripts/performance-foundation-audit.js
+      - name: Performance Foundation contract
+        run: node scripts/performance-foundation-audit.js
+      - name: Documentation contract
+        run: node scripts/system-documentation-audit.js

@@ -1,0 +1,140 @@
+{
+  "version": "kelo-png-validation-policy-v1",
+  "excludedFromWorldContract": [
+    {
+      "path": "assets/hero.PNG",
+      "scope": "non-world-ui",
+      "reason": "Player/UI sprite is outside the Kelo World environment asset contract."
+    },
+    {
+      "path": "assets/hero-spartan-spritesheet.png",
+      "scope": "non-world-ui",
+      "reason": "Main player character spritesheet is owned by KeloAvatar actor presentation, not the environment world-art contract."
+    },
+    {
+      "path": "assets/base-zoo/Idle/rotations/south.png",
+      "scope": "non-world-ui",
+      "reason": "Base Zoo south-facing player frame is owned by KeloAvatar actor presentation, not environment world art."
+    },
+    {
+      "path": "assets/base-zoo/Idle/rotations/south-east.png",
+      "scope": "non-world-ui",
+      "reason": "Base Zoo south-east player frame is owned by KeloAvatar actor presentation, not environment world art."
+    },
+    {
+      "path": "assets/base-zoo/Idle/rotations/east.png",
+      "scope": "non-world-ui",
+      "reason": "Base Zoo east-facing player frame is owned by KeloAvatar actor presentation, not environment world art."
+    },
+    {
+      "path": "assets/base-zoo/Idle/rotations/north-east.png",
+      "scope": "non-world-ui",
+      "reason": "Base Zoo north-east player frame is owned by KeloAvatar actor presentation, not environment world art."
+    },
+    {
+      "path": "assets/base-zoo/Idle/rotations/north.png",
+      "scope": "non-world-ui",
+      "reason": "Base Zoo north-facing player frame is owned by KeloAvatar actor presentation, not environment world art."
+    },
+    {
+      "path": "assets/base-zoo/Idle/rotations/north-west.png",
+      "scope": "non-world-ui",
+      "reason": "Base Zoo north-west player frame is owned by KeloAvatar actor presentation, not environment world art."
+    },
+    {
+      "path": "assets/base-zoo/Idle/rotations/west.png",
+      "scope": "non-world-ui",
+      "reason": "Base Zoo west-facing player frame is owned by KeloAvatar actor presentation, not environment world art."
+    },
+    {
+      "path": "assets/base-zoo/Idle/rotations/south-west.png",
+      "scope": "non-world-ui",
+      "reason": "Base Zoo south-west player frame is owned by KeloAvatar actor presentation, not environment world art."
+    },
+    {
+      "path": "assets/kelo-hero-body-base-8dir.png",
+      "scope": "source-sheet",
+      "reason": "Eight-direction hero body source is retained for avatar authoring and is outside the environment world-art runtime contract."
+    },
+    {
+      "path": "assets/fx/sword-swap/activation-eye.PNG",
+      "scope": "non-world-ui",
+      "reason": "Sword Swap activation eye is an actor presentation VFX asset owned by the modular Visual System, not the environment art contract."
+    },
+    {
+      "path": "assets/fx/sword-swap/activation-eye-anim.PNG",
+      "scope": "non-world-ui",
+      "reason": "Sword Swap animated activation eye is an actor presentation spritesheet owned by the modular Visual System, not the environment art contract."
+    },
+    {
+      "path": "assets/fx/sword-swap/katana-throw.PNG",
+      "scope": "non-world-ui",
+      "reason": "Sword Swap katana throw is a reusable projectile presentation spritesheet owned by the modular Visual System, not the environment art contract."
+    },
+    {
+      "path": "assets/fx/sword-swap/a.PNG",
+      "scope": "non-world-ui",
+      "reason": "Sword Swap landing and planted-sword impact spritesheet is gameplay presentation VFX, not an environment world-art asset."
+    },
+    {
+      "path": "assets/fx/sword-swap/clavandose .PNG",
+      "scope": "non-world-ui",
+      "reason": "Sword Swap planted-sword impact animation is active ability presentation VFX and is not owned by the environment world-art contract."
+    },
+    {
+      "path": "assets/fx/sword-swap/loop.PNG",
+      "scope": "non-world-ui",
+      "reason": "Sword Swap planted-sword idle loop is reusable ability presentation VFX, outside the environment world-art contract."
+    },
+    {
+      "path": "assets/fx/sword-swap/loop2.PNG",
+      "scope": "non-world-ui",
+      "reason": "Sword Swap PvP planted-sword loop is active ability presentation VFX and is not owned by the environment world-art contract."
+    },
+    {
+      "path": "assets/fx/sword-swap/regreso2.PNG",
+      "scope": "non-world-ui",
+      "reason": "Sword Swap recall and handle-first return spritesheet is reusable ability presentation VFX, outside the environment world-art contract."
+    },
+    {
+      "path": "assets/fx/sword-swap/teleport .PNG",
+      "scope": "non-world-ui",
+      "reason": "Sword Swap instant exchange and teleport spritesheet is reusable character ability VFX, outside the environment world-art contract."
+    },
+    {
+      "path": "assets/fuentekelo.PNG",
+      "scope": "source-sheet",
+      "reason": "Original Kelo-uploaded fountain source is retained untouched for authoring history; LIVE now uses assets/justicia_fountain_v2.PNG."
+    },
+    {
+      "path": "assets/fuentekelo-runtime.PNG",
+      "scope": "superseded-archive",
+      "reason": "Previous alpha-clean fountain runtime derivative is retained for history but has been superseded by assets/justicia_fountain_v2.PNG."
+    },
+    {
+      "path": "assets/plaza.PNG",
+      "scope": "superseded-archive",
+      "reason": "Legacy Plaza raster retained for history and not part of the LIVE generic world pipeline."
+    },
+    {
+      "path": "assets/cesped.PNG",
+      "scope": "source-sheet",
+      "reason": "Original Kelo-uploaded HD grass sheet retained as visual source-of-truth; LIVE uses assets/cesped-runtime.PNG."
+    },
+    {
+      "path": "assets/cespedsindivisiones.PNG",
+      "scope": "source-sheet",
+      "reason": "Kelo-uploaded PNG retained as importer input only; it is not a runtime asset until explicitly processed and integrated."
+    },
+    {
+      "path": "assets/world/plaza/forest-plaza-tileset.png",
+      "scope": "superseded-archive",
+      "reason": "Forest Plaza V1 atlas is retained for history; the LIVE compiled plaza package uses the V2 atlas and generated manifest."
+    },
+    {
+      "path": "assets/world/roads/kelo-organic-roads-atlas.png",
+      "scope": "source-sheet",
+      "reason": "Organic roads atlas is retained as an authoring source until a generated runtime package formally registers it in the world asset contract."
+    }
+  ]
+}

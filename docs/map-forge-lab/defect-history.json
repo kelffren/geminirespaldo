@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-11",
+  "cycles": [
+    {
+      "cycle": 1,
+      "status": "DEPLOY_PENDING",
+      "baseCommit": "05cb1e2b8f78a83d44fa794a984167c17f9f7eb8",
+      "finalCommit": "3bc05bf842ff3fa320a0be636a97f4617fae0fb7",
+      "defect": "PAVING_BLOB",
+      "severity": "critical",
+      "owner": "KeloMapForge candidate builder + validator",
+      "hypothesis": "The 72% independent stone probability in plaza/royal/commerce creates accidental connected paving masses; replacing it with small connected semantic plans and enforcing hard gates will remove the failure class.",
+      "seeds": {
+        "rangePerRecipe": [1, 100],
+        "canary": {"recipeId": "KELO_ROYAL_CAPITAL_V1", "seed": 68}
+      },
+      "before": {
+        "royalCapitalAverageLargestRatio": 0.2236,
+        "royalCapitalMaxLargestRatio": 0.3571,
+        "royalCapitalMaxSeed": 68,
+        "villageAverageLargestRatio": 0.2029,
+        "villageMaxLargestRatio": 0.3194,
+        "villageMaxSeed": 2
+      },
+      "afterLocal": {
+        "royalCapitalAverageLargestRatio": 0.0242,
+        "royalCapitalMaxLargestRatio": 0.0417,
+        "villageAverageLargestRatio": 0.0603,
+        "villageMaxLargestRatio": 0.0833,
+        "forestAverageLargestRatio": 0,
+        "validMaps": 300,
+        "invalidMaps": 0,
+        "holdoutValidMaps": 30,
+        "holdoutPavingHardGateFailures": 0,
+        "generationP95ChangePercent": {
+          "KELO_ROYAL_CAPITAL_V1": 1.6,
+          "KELO_VILLAGE_V1": 0.5,
+          "KELO_FOREST_V1": -2.0
+        }
+      },
+      "hardGates": ["paving_intent_missing", "paving_blob_excessive"],
+      "artifacts": {
+        "beforeDesktop": "map-forge-cycle-01-before-seed-68-desktop.jpg",
+        "afterDesktop": "actions:10177815921/map-forge-paving-after-seed-68-1440x900.png",
+        "beforeMobile": null,
+        "afterMobile": "actions:10177815921/map-forge-paving-after-seed-68-390x844.png",
+        "afterExteriorDesktop": "actions:10177815921/map-forge-paving-exterior-seed-68-1440x900.png",
+        "afterExteriorMobile": "actions:10177815921/map-forge-paving-exterior-seed-68-390x844.png",
+        "branchWorkflowRun": 34542519816,
+        "pagesDeployRun": 34542519251
+      },
+      "decision": "DEPLOY_PENDING",
+      "liveVerification": {
+        "servedGeneratorVersion": "1.1.0",
+        "servedHardGates": ["paving_intent_missing", "paving_blob_excessive"],
+        "interactiveWorkflow": "Map Forge Live Paving",
+        "workflowCommit": "f93b652b9294a7bf05c3957092d4c9172d3e8da5",
+        "forwardCompatibilityCommit": "07336cd31ee800cd015a2ff33dd11517b9ca8db4",
+        "status": "QUEUED_BY_ACTIONS_SATURATION"
+      },
+      "knownPreExistingRegressions": [
+        "map-forge-block-overlap-audit reports 70 Royal Capital near-touching pairs on both the baseline and candidate"
+      ]
+    },
+    {
+      "cycle": 2,
+      "status": "DEPLOY_PENDING",
+      "baseCommit": "1e59df7b6abaa67e1c65d6d757f1f8a2987334cc",
+      "finalCommit": "3d3f5c794a1d529f225413a30826526da1d8a60c",
+      "defect": "ASSET_SCALE_WRONG",
+      "relatedDefect": "PROP_REPETITION",
+      "severity": "high",
+      "owner": "Map Forge World Draft semantic importer",
+      "hypothesis": "Ordinary market_prop decorations look like repeated buildings because the generic market rule projects each one as a 160x160 kiosk; a specific rule using the real 128x96 market cart will reduce visual mass while preserving kiosks for market landmarks.",
+      "seeds": {
+        "rangePerRecipe": [1, 20],
+        "recipes": ["KELO_ROYAL_CAPITAL_V1", "KELO_VILLAGE_V1", "KELO_FOREST_V1"]
+      },
+      "before": {
+        "marketPropAsset": "imperial:kiosco",
+        "marketPropCount": 257,
+        "projectedFootprintPixels": 6579200
+      },
+      "afterLocal": {
+        "marketPropAsset": "imperial:carrito-mercado",
+        "marketPropCount": 257,
+        "projectedFootprintPixels": 3158016,
+        "footprintReductionPercent": 52,
+        "semanticPlacementsChecked": 7383,
+        "wrongSemanticPlacements": 0,
+        "deterministicReplays": 3
+      },
+      "tests": [
+        "map-forge-semantic-variety-audit",
+        "map-forge-studio-handoff-audit",
+        "map-forge-paving-intent-audit",
+        "map-forge-core-audit"
+      ],
+      "artifacts": {
+        "beforeDesktop": "actions:10177815921/map-forge-paving-after-seed-68-1440x900.png",
+        "afterDesktop": null,
+        "afterMobile": null,
+        "afterExteriorDesktop": null,
+        "afterExteriorMobile": null
+      },
+      "decision": "DEPLOY_PENDING"
+    }
+  ]
+}

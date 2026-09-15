@@ -1,0 +1,82 @@
+name: Bug Self Learning
+
+on:
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'bugs/registry/**'
+      - 'bugs/incoming/**'
+      - 'bugs/investigacion/**'
+      - 'bugs/RISK_MAP.json'
+      - 'scripts/bug-*.mjs'
+      - 'scripts/lib/bug-*.mjs'
+      - 'src/creators/evolution/**'
+      - '.github/workflows/bug-self-learning.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bug-learning-state-writes
+  cancel-in-progress: false
+
+jobs:
+  learn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify KeloEvolution core
+        run: node scripts/kelo-evolution-audit.mjs
+
+      - name: Audit canonical bug evidence before learning
+        run: |
+          node scripts/bug-report-audit.mjs
+          node scripts/bug-registry-audit.mjs
+
+      - name: Learn bounded risk policy and hotspots
+        run: node scripts/bug-learning-autopilot.mjs --write
+
+      - name: Audit learned state
+        run: node scripts/bug-learning-audit.mjs --strict
+
+      - name: Persist learned state only when evidence changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- bugs/learning/STATE.json; then
+            echo 'No learned-state change; nothing to persist.'
+            exit 0
+          fi
+
+          git config user.name 'kelo-bug-learner'
+          git config user.email 'kelo-bug-learner@users.noreply.github.com'
+
+          # main is busy: refresh before writing so learned state is never knowingly committed from stale canonical evidence.
+          git fetch origin main
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+            git reset --hard origin/main
+            node scripts/bug-learning-autopilot.mjs --write
+            node scripts/bug-learning-audit.mjs --strict
+          fi
+
+          if git diff --quiet -- bugs/learning/STATE.json; then
+            echo 'Fresh main already contains equivalent learning; nothing to persist.'
+            exit 0
+          fi
+
+          git add bugs/learning/STATE.json
+          git commit -m 'chore(bugs): learn from new defect evidence [skip ci]'
+          git push origin HEAD:main

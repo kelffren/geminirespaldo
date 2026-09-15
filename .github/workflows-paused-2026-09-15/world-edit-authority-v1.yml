@@ -1,0 +1,90 @@
+name: World Edit Authority V1
+on:
+  workflow_dispatch:
+  push:
+    branches: [ feature/world-edit-live-v1, main ]
+    paths:
+      - 'src/world/**'
+      - 'src/environment/world-builder-system.js'
+      - 'src/environment/world-builder-property-renderer.js'
+      - 'src/environment/tile-registry.js'
+      - 'src/environment/art-asset-manifest.json'
+      - 'src/systems/admin-key-system.js'
+      - 'src/ui/world-builder-ui.js'
+      - 'assets/Arboleskelo1.atlas.json'
+      - 'scripts/world-edit-authority-audit.mjs'
+      - 'scripts/world-builder-browser-audit.mjs'
+      - 'scripts/validate-terrain-contract.mjs'
+      - 'docs/WORLD_EDIT_AUTHORITY_MEMORY.md'
+      - 'docs/WORLD_BUILDER_MEMORY.md'
+      - 'ENGINE_MAP.md'
+      - 'docs/CODE_INDEX.md'
+      - 'docs/ONLINE_FIRST.md'
+      - '.github/workflows/world-edit-authority-v1.yml'
+permissions:
+  contents: read
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax and architecture contracts
+        run: |
+          node --check src/world/world-draft-store.js
+          node --check src/world/world-revision-system.js
+          node --check src/world/authorities/local-world-edit-authority.js
+          node --check src/world/authorities/remote-world-edit-authority.js
+          node --check src/world/world-edit-authority.js
+          node --check src/environment/world-builder-system.js
+          node --check src/environment/world-builder-property-renderer.js
+          node --check src/ui/world-builder-ui.js
+          node --check src/systems/admin-key-system.js
+          node --check scripts/world-edit-authority-audit.mjs
+          node --check scripts/world-builder-browser-audit.mjs
+          node --check scripts/validate-terrain-contract.mjs
+          node scripts/validate-terrain-contract.mjs
+          node - <<'NODE'
+          const fs=require('fs');
+          const ui=fs.readFileSync('src/ui/world-builder-ui.js','utf8');
+          if(/localStorage|indexedDB|fetch\s*\(|WebSocket/.test(ui)) throw new Error('World Builder UI bypasses KELO_WORLD_EDIT boundary');
+          const source=fs.readFileSync('src/world/authorities/local-world-edit-authority.js','utf8');
+          for(const op of [
+            'world:draft:create','world:draft:get','world:draft:list','world:draft:save','world:draft:discard',
+            'world:draft:submit','world:draft:approve','world:draft:reject',
+            'world:placement:create','world:placement:move','world:placement:rotate','world:placement:remove',
+            'world:tile:paint','world:tile:clear',
+            'world:collision:create','world:collision:update','world:collision:remove',
+            'world:publish','world:revision:get','world:revision:list','world:rollback'
+          ]) if(!source.includes(`'${op}'`)) throw new Error('Missing operation '+op);
+          const wb=fs.readFileSync('src/environment/world-builder-system.js','utf8');
+          if(/localStorage|indexedDB/.test(wb)) throw new Error('World Builder runtime must not persist directly');
+          const manifest=JSON.parse(fs.readFileSync('src/environment/art-asset-manifest.json','utf8'));
+          const tree=manifest.assets.find(x=>x.id==='arboleskelo1-atlas-v1');
+          if(!tree||tree.path!=='assets/Arboleskelo1.PNG'||tree.frames?.metadata!=='assets/Arboleskelo1.atlas.json'||!fs.existsSync(tree.path)||!fs.existsSync(tree.frames.metadata)) throw new Error('World Builder tree atlas contract missing');
+          NODE
+      - name: Existing Property regression
+        run: node scripts/property-editor-audit.js
+      - name: Install browser audit dependency
+        run: npm install --no-save playwright@1.55.0
+      - name: Serve candidate
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/world-edit-http.log 2>&1 &
+          for i in {1..20}; do curl -fsS http://127.0.0.1:8000/index.html >/dev/null && exit 0; sleep 1; done
+          cat /tmp/world-edit-http.log
+          exit 1
+      - name: Draft review publish rollback mobile desktop audit
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/world-edit-authority-audit.mjs
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-edit-authority-v1-audit
+          path: artifacts/world-edit-authority-*
+          if-no-files-found: warn

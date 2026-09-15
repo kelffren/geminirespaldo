@@ -1,0 +1,55 @@
+name: PvP Knockback Retention CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'engine-c.js'
+      - 'src/systems/pvp-world.js'
+      - 'src/systems/melee/**'
+      - 'src/ui/pvp-social-touch-guard.js'
+      - 'scripts/audit-pvp-training-knockback.js'
+      - 'scripts/live-pvp-knockback-judge.mjs'
+      - '.github/workflows/pvp-knockback-retention-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  knockback-retention:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Deterministic 60/90/120 retention
+        run: node scripts/audit-pvp-training-knockback.js
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Wait for exact knockback owners on Pages
+        run: |
+          python3 - <<'PY'
+          import hashlib, pathlib, time, urllib.request
+          base='https://kelffren.github.io/gemini/'
+          targets=['engine-c.js','src/systems/pvp-world.js','src/systems/melee/melee-weapon-profiles.js','src/ui/pvp-social-touch-guard.js']
+          expected={p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in targets}
+          for attempt in range(60):
+              bad=[]
+              for p in targets:
+                  try:
+                      body=urllib.request.urlopen(base+p+'?kb-deploy='+str(time.time_ns()),timeout=15).read()
+                      if hashlib.sha256(body).hexdigest()!=expected[p]:bad.append(p)
+                  except Exception:bad.append(p)
+              if not bad:
+                  print('Exact knockback runtime live')
+                  raise SystemExit(0)
+              print('Waiting for Pages',attempt+1,bad)
+              time.sleep(10)
+          raise SystemExit('Exact knockback runtime did not appear')
+          PY
+      - name: Judge mobile and desktop knockback
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+        run: node scripts/live-pvp-knockback-judge.mjs

@@ -1,0 +1,174 @@
+# KELO-INDEX
+# area: CI / CREATORS
+# keys: SPRITE ABILITY BUILDER SPRITESHEET AUTO FIT IRREGULAR IMPORT LOOSE PNG BACKGROUND CLEANUP MANUAL CUT REPAIR ANIMATION ABILITY MOBILE EVENT LAB LAUNCH TRANSACTION
+# purpose: valida launcher + persistence + entradas irregulares/sueltas + auto-fit + corte/reparación manual + eventos + flujo real normalize → preview → generate a 390x844
+name: Sprite Ability Builder CI
+on:
+  pull_request:
+    paths:
+      - 'src/creators/sprite-ability/**'
+      - 'src/creators/workspaces/sprite-ability-workspace.mjs'
+      - 'src/creators/core/creator-project.mjs'
+      - 'src/creators/creator-entry.mjs'
+      - 'src/creators/repository/indexeddb-creator-state-adapter.mjs'
+      - 'src/creators/repository/local-creator-project-repository.mjs'
+      - 'src/creators/ui/creator-hub.mjs'
+      - 'src/creators/animation/animation-document.mjs'
+      - 'src/creators/animation/animation-preview-adapter.mjs'
+      - 'scripts/creator-hub-sprite-launch-audit.mjs'
+      - 'scripts/sprite-ability-launch-live-diagnostic.mjs'
+      - 'scripts/sprite-ability-builder-audit.mjs'
+      - 'scripts/sprite-ability-builder-live-audit.mjs'
+      - 'scripts/sprite-ability-event-lab-audit.mjs'
+      - 'scripts/sprite-ability-manual-cutter-audit.mjs'
+      - 'scripts/sprite-ability-repair-audit.mjs'
+      - 'scripts/sprite-ability-repair-live-audit.mjs'
+      - 'scripts/sprite-ability-irregular-import-audit.mjs'
+      - 'scripts/sprite-ability-irregular-import-live-audit.mjs'
+      - 'scripts/sprite-ability-loose-import-audit.mjs'
+      - 'scripts/sprite-ability-loose-import-live-audit.mjs'
+      - '.github/workflows/sprite-ability-builder-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/creators/sprite-ability/**'
+      - 'src/creators/workspaces/sprite-ability-workspace.mjs'
+      - 'src/creators/core/creator-project.mjs'
+      - 'src/creators/creator-entry.mjs'
+      - 'src/creators/repository/indexeddb-creator-state-adapter.mjs'
+      - 'src/creators/repository/local-creator-project-repository.mjs'
+      - 'src/creators/ui/creator-hub.mjs'
+      - 'src/creators/animation/animation-document.mjs'
+      - 'src/creators/animation/animation-preview-adapter.mjs'
+      - 'scripts/creator-hub-sprite-launch-audit.mjs'
+      - 'scripts/sprite-ability-launch-live-diagnostic.mjs'
+      - 'scripts/sprite-ability-builder-audit.mjs'
+      - 'scripts/sprite-ability-builder-live-audit.mjs'
+      - 'scripts/sprite-ability-event-lab-audit.mjs'
+      - 'scripts/sprite-ability-manual-cutter-audit.mjs'
+      - 'scripts/sprite-ability-repair-audit.mjs'
+      - 'scripts/sprite-ability-repair-live-audit.mjs'
+      - 'scripts/sprite-ability-irregular-import-audit.mjs'
+      - 'scripts/sprite-ability-irregular-import-live-audit.mjs'
+      - 'scripts/sprite-ability-loose-import-audit.mjs'
+      - 'scripts/sprite-ability-loose-import-live-audit.mjs'
+      - '.github/workflows/sprite-ability-builder-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Syntax
+        run: |
+          node --check src/creators/sprite-ability/spritesheet-auto-fit.mjs
+          node --check src/creators/sprite-ability/sprite-ability-document.mjs
+          node --check src/creators/sprite-ability/sprite-ability-live-controller.mjs
+          node --check src/creators/sprite-ability/sprite-ability-event-lab.mjs
+          node --check src/creators/sprite-ability/sprite-ability-manual-cutter.mjs
+          node --check src/creators/sprite-ability/sprite-ability-repair-studio.mjs
+          node --check src/creators/sprite-ability/sprite-ability-irregular-import.mjs
+          node --check src/creators/sprite-ability/sprite-ability-loose-import.mjs
+          node --check src/creators/workspaces/sprite-ability-workspace.mjs
+          node --check src/creators/creator-entry.mjs
+          node --check src/creators/repository/indexeddb-creator-state-adapter.mjs
+          node --check src/creators/repository/local-creator-project-repository.mjs
+          node --check src/creators/ui/creator-hub.mjs
+          node --check src/creators/animation/animation-document.mjs
+          node --check src/creators/animation/animation-preview-adapter.mjs
+          node --check scripts/creator-hub-sprite-launch-audit.mjs
+          node --check scripts/sprite-ability-launch-live-diagnostic.mjs
+          node --check scripts/sprite-ability-builder-audit.mjs
+          node --check scripts/sprite-ability-builder-live-audit.mjs
+          node --check scripts/sprite-ability-event-lab-audit.mjs
+          node --check scripts/sprite-ability-manual-cutter-audit.mjs
+          node --check scripts/sprite-ability-repair-audit.mjs
+          node --check scripts/sprite-ability-repair-live-audit.mjs
+          node --check scripts/sprite-ability-irregular-import-audit.mjs
+          node --check scripts/sprite-ability-irregular-import-live-audit.mjs
+          node --check scripts/sprite-ability-loose-import-audit.mjs
+          node --check scripts/sprite-ability-loose-import-live-audit.mjs
+      - name: Launcher transaction contract
+        run: node scripts/creator-hub-sprite-launch-audit.mjs
+      - name: Builder contract
+        run: node scripts/sprite-ability-builder-audit.mjs
+      - name: Manual cutter contract
+        run: node scripts/sprite-ability-manual-cutter-audit.mjs
+      - name: Sprite Repair contract
+        run: node scripts/sprite-ability-repair-audit.mjs
+      - name: Irregular import contract
+        run: node scripts/sprite-ability-irregular-import-audit.mjs
+      - name: Loose import cleanup contract
+        run: node scripts/sprite-ability-loose-import-audit.mjs
+      - name: Event preview regression
+        run: node scripts/sprite-ability-event-lab-audit.mjs
+      - name: Architecture guardrails
+        run: |
+          grep -q "SPRITE_ABILITY" src/creators/core/creator-project.mjs
+          grep -q "registerSpriteAbilityWorkspace" src/creators/creator-entry.mjs
+          grep -q "installSpriteAbilityRepairStudio" src/creators/creator-entry.mjs
+          grep -q "installSpriteAbilityIrregularImport" src/creators/creator-entry.mjs
+          grep -q "installSpriteAbilityLooseImport" src/creators/creator-entry.mjs
+          grep -q "bounded-transactions" src/creators/repository/indexeddb-creator-state-adapter.mjs
+          grep -q "persistAfterMutation" src/creators/repository/local-creator-project-repository.mjs
+          grep -q "sprite-ability" src/creators/ui/creator-hub.mjs
+          grep -q "analyzeAndNormalizeSpritesheet" src/creators/sprite-ability/sprite-ability-live-controller.mjs
+          ! grep -Eq "\.hp[[:space:]]*=|damageTarget|attackSweep|resolveMelee" src/creators/sprite-ability/sprite-ability-live-controller.mjs
+
+  mobile-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund playwright@1.55.0
+      - name: Serve candidate
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 >/tmp/sprite-ability-http.log 2>&1 &
+          for i in {1..20}; do curl -fsS http://127.0.0.1:8000/index.html >/dev/null && exit 0; sleep 1; done
+          cat /tmp/sprite-ability-http.log
+          exit 1
+      - name: Diagnose Hub to Sprite Ability launch at 390x844
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/sprite-ability-launch-live-diagnostic.mjs
+      - name: Import free-form irregular sprite at 390x844
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/sprite-ability-irregular-import-live-audit.mjs
+      - name: Import loose PNGs and clean flat backgrounds at 390x844
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/sprite-ability-loose-import-live-audit.mjs
+      - name: Repair bad sprite manually at 390x844
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/sprite-ability-repair-live-audit.mjs
+      - name: Upload irregular sheet, auto-fit, preview and generate at 390x844
+        env:
+          AUDIT_URL: http://127.0.0.1:8000/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/sprite-ability-builder-live-audit.mjs
+      - name: Upload mobile evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sprite-ability-builder-mobile
+          path: |
+            artifacts/sprite-ability-builder/
+            artifacts/sprite-ability-repair/
+            artifacts/sprite-ability-irregular/
+            artifacts/sprite-ability-loose/
+          if-no-files-found: warn
+          retention-days: 14

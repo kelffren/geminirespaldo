@@ -1,0 +1,34 @@
+name: Atlas Contract CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/environment/atlas-contract.js'
+      - 'src/environment/world-map.js'
+      - 'src/environment/gardens-atlas.js'
+      - 'src/environment/gardens-joins.js'
+      - 'src/environment/tile-registry.js'
+      - 'src/environment/art-asset-manifest.json'
+      - 'scripts/validate-atlas-contract.mjs'
+      - '.github/workflows/atlas-contract-ci.yml'
+  pull_request:
+    paths:
+      - 'src/environment/atlas-contract.js'
+      - 'src/environment/world-map.js'
+      - 'src/environment/gardens-atlas.js'
+      - 'src/environment/gardens-joins.js'
+      - 'src/environment/tile-registry.js'
+      - 'src/environment/art-asset-manifest.json'
+      - 'scripts/validate-atlas-contract.mjs'
+      - '.github/workflows/atlas-contract-ci.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/validate-atlas-contract.mjs

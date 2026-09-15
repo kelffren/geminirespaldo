@@ -1,0 +1,75 @@
+name: Integrate Kelo Cesped Ground
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'assets/cesped.PNG'
+      - 'scripts/integrate_cesped_ground.py'
+      - '.github/workflows/integrate-cesped-ground.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install image tooling
+        run: python -m pip install --disable-pip-version-check pillow numpy
+      - name: Build and integrate cesped runtime atlas
+        run: python scripts/integrate_cesped_ground.py
+      - name: Syntax and focused rebuild-surface contract checks
+        run: |
+          node --check src/environment/tile-registry.js
+          node --check src/environment/atlas-contract.js
+          node --check src/environment/surface-ground.js
+          node scripts/validate-asset-integrity.mjs
+          node - <<'NODE'
+          const fs=require('fs');
+          const registry=fs.readFileSync('src/environment/tile-registry.js','utf8');
+          const atlas=fs.readFileSync('src/environment/atlas-contract.js','utf8');
+          const surface=fs.readFileSync('src/environment/surface-ground.js','utf8');
+          const index=fs.readFileSync('index.html','utf8');
+          const manifest=JSON.parse(fs.readFileSync('src/environment/art-asset-manifest.json','utf8'));
+          const policy=JSON.parse(fs.readFileSync('src/environment/png-validation-policy.json','utf8'));
+          const asset=manifest.assets.find(a=>a.id==='cesped-ground-v1');
+          if(!asset) throw new Error('cesped-ground-v1 missing from Asset Contract');
+          if(asset.path!=='assets/cesped-runtime.PNG'||asset.width!==160||asset.height!==160) throw new Error('bad cesped Asset Contract dimensions/path');
+          if(asset.cache?.value!=='501') throw new Error('bad cesped cache version');
+          if(!registry.includes("src:'assets/cesped-runtime.PNG?art=501'")||!registry.includes('cesped:cespedAtlas')||!registry.includes('surfaceGround:Object.freeze')) throw new Error('TileRegistry cesped registration missing');
+          if(!atlas.includes("cesped:'core'")) throw new Error('Atlas Contract cesped role missing');
+          if(!surface.includes("id:'kelo-surface-ground'")||!surface.includes("visibleDuringReset:true")||!surface.includes("ownership:'surface-ground-v1'")) throw new Error('generic reset-visible surface layer missing');
+          if(!index.includes('src/environment/surface-ground.js?v=1')||!index.includes('assets/cesped-runtime.PNG?art=501')) throw new Error('cesped runtime not loaded/preloaded');
+          const source=policy.excludedFromWorldContract.find(x=>x.path==='assets/cesped.PNG');
+          if(source?.scope!=='source-sheet') throw new Error('cesped source-sheet policy missing');
+          console.log('CESPED_FOCUSED_CONTRACT_PASS');
+          NODE
+          git diff --check
+      - name: Verify cesped runtime binary
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          p='assets/cesped-runtime.PNG'
+          im=Image.open(p)
+          assert im.size==(160,160), im.size
+          assert im.mode in ('RGB','RGBA'), im.mode
+          print('PASS',p,im.size,im.mode)
+          PY
+      - name: Commit cesped integration
+        run: |
+          if git diff --quiet && git diff --cached --quiet; then
+            echo 'No changes to commit'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/cesped-runtime.PNG src/environment/tile-registry.js src/environment/atlas-contract.js src/environment/surface-ground.js src/environment/art-asset-manifest.json src/environment/png-validation-policy.json index.html
+          git commit -m 'Cover rebuild world with Kelo cesped'
+          git push origin HEAD:main
+# focused: reset-era validators currently include superseded TileRegistry registrations; this job validates the new rebuild surface itself.

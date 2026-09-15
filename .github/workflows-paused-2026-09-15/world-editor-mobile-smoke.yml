@@ -1,0 +1,74 @@
+name: World Editor Mobile Smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/creators/**'
+      - 'src/studio/**'
+      - 'src/core/bug-observability.mjs'
+      - 'tests/world-editor-ios-reopen.spec.js'
+      - 'playwright.config.js'
+      - 'package.json'
+      - '.github/workflows/world-editor-mobile-smoke.yml'
+  pull_request:
+    paths:
+      - 'src/creators/**'
+      - 'src/studio/**'
+      - 'src/core/bug-observability.mjs'
+      - 'tests/world-editor-ios-reopen.spec.js'
+      - 'playwright.config.js'
+      - 'package.json'
+      - '.github/workflows/world-editor-mobile-smoke.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: world-editor-mobile-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  world-reopen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      KELO_PAGES: http://127.0.0.1:4173/
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --no-package-lock --no-audit --no-fund
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Serve checkout
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/kelo-world-http.log 2>&1 &
+          echo $! > /tmp/kelo-world-http.pid
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/kelo-world-http.log
+          exit 1
+
+      - name: World open + stale-session reopen
+        run: npx playwright test tests/world-editor-ios-reopen.spec.js --project=chromium --workers=1
+
+      - name: Upload World diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-editor-mobile-smoke-${{ github.run_id }}
+          if-no-files-found: ignore
+          retention-days: 7
+          path: |
+            test-results/**
+            playwright-report.json
+            /tmp/kelo-world-http.log

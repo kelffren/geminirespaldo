@@ -1,0 +1,38 @@
+name: Mobile Performance LIVE audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/environment/mobile-performance-contract.js'
+      - 'src/environment/atlas-contract.js'
+      - 'src/environment/world-map.js'
+      - 'engine-h.js'
+      - 'index.html'
+      - 'scripts/live-mobile-performance-audit.mjs'
+      - '.github/workflows/mobile-performance-live.yml'
+  workflow_dispatch:
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax
+        run: node --check scripts/live-mobile-performance-audit.mjs
+      - name: Install Playwright
+        run: npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund playwright@1.55.0
+      - name: Audit deployed mobile art budgets
+        env:
+          AUDIT_URL: https://kelffren.github.io/gemini/
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/live-mobile-performance-audit.mjs
+      - name: Upload mobile performance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-performance-live
+          path: artifacts/
+          if-no-files-found: error

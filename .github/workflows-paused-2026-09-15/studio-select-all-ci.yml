@@ -1,0 +1,32 @@
+name: Studio Select All CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/studio/input/studio-select-all-controller.mjs'
+      - 'src/studio/studio-entry.mjs'
+      - 'scripts/studio-select-all-audit.mjs'
+      - '.github/workflows/studio-select-all-ci.yml'
+  pull_request:
+    paths:
+      - 'src/studio/input/studio-select-all-controller.mjs'
+      - 'src/studio/studio-entry.mjs'
+      - 'scripts/studio-select-all-audit.mjs'
+      - '.github/workflows/studio-select-all-ci.yml'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax check
+        run: |
+          node --check src/studio/input/studio-select-all-controller.mjs
+          node --check src/studio/studio-entry.mjs
+          node --check scripts/studio-select-all-audit.mjs
+      - name: Select all contract
+        run: node scripts/studio-select-all-audit.mjs

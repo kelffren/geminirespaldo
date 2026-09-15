@@ -1,0 +1,41 @@
+name: Asset Contract CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'assets/**'
+      - 'src/environment/art-asset-manifest.json'
+      - 'src/environment/png-validation-policy.json'
+      - 'src/environment/tile-registry.js'
+      - 'src/environment/district-decals-registry.js'
+      - 'scripts/validate-art-assets.mjs'
+      - 'scripts/png-validation-core.mjs'
+      - 'scripts/validate-png-pipeline.mjs'
+      - 'scripts/test-png-validation.mjs'
+      - 'docs/ASSET_CONTRACT.md'
+      - '.github/workflows/asset-contract-ci.yml'
+  pull_request:
+    paths:
+      - 'assets/**'
+      - 'src/environment/art-asset-manifest.json'
+      - 'src/environment/png-validation-policy.json'
+      - 'src/environment/tile-registry.js'
+      - 'src/environment/district-decals-registry.js'
+      - 'scripts/validate-art-assets.mjs'
+      - 'scripts/png-validation-core.mjs'
+      - 'scripts/validate-png-pipeline.mjs'
+      - 'scripts/test-png-validation.mjs'
+      - 'docs/ASSET_CONTRACT.md'
+      - '.github/workflows/asset-contract-ci.yml'
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate authored PNG contract
+        run: node scripts/validate-art-assets.mjs
+      - name: Validate complete PNG pipeline
+        run: node scripts/validate-png-pipeline.mjs
+      - name: Prove corrupted PNGs fail closed
+        run: node scripts/test-png-validation.mjs
